@@ -1,0 +1,24 @@
+edgeos:
+  #Hostname / IP
+  host: !secret edge_os_host
+  #Supports SSL (true/false)
+  ssl: !secret edge_os_ssl
+  #Username of EdgeOS
+  username: !secret edge_os_username
+  #Password of EdgeOS
+  password: !secret edge_os_password
+  #Path to the certificate (full-chain)
+  cert_file: !secret ssl_certificate	
+  #List of interfaces
+  monitored_interfaces: 				
+    - eth0
+  #List of network devices to monitor
+  monitored_devices:
+    - PC1
+    - PC2
+
+device_tracker:
+  - platform: edgeos
+    #List of network devices to treat as device tracker
+    hosts:
+      - MOBILE-PHONE
