@@ -26,6 +26,8 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util import slugify
 
+REQUIREMENTS = ['websocket-client']
+
 DOMAIN = 'edgeos'
 DATA_EDGEOS = 'edgeos_ham'
 SIGNAL_UPDATE_EDGEOS = "edgeos_update"
