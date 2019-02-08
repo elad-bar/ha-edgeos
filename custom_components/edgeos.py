@@ -297,7 +297,11 @@ class EdgeOS(requests.Session):
         result = False
 
         try:
-            login_response = self.post(self._edgeos_url, data=credentials, verify=self._cert_file)
+            if self._is_ssl:
+                login_response = self.post(self._edgeos_url, data=credentials, verify=False)
+            else:
+                login_response = self.post(self._edgeos_url, data=credentials)
+
             login_response.raise_for_status()
 
             _LOGGER.debug("Sleeping 5 to make sure the session id is in the filesystem")
