@@ -19,7 +19,7 @@ import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (CONF_SSL, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON, ATTR_FRIENDLY_NAME, HTTP_OK,
+                                 EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON, STATE_UNAVAILABLE, ATTR_FRIENDLY_NAME, HTTP_OK,
                                  STATE_UNKNOWN, ATTR_NAME, ATTR_UNIT_OF_MEASUREMENT, EVENT_TIME_CHANGED)
 
 from homeassistant.helpers.event import track_time_interval
@@ -179,7 +179,7 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up an Home Automation Manager component."""
     try:
-        conf = config[DOMAIN]
+        conf = config.get(DOMAIN, {})
 
         is_ssl = conf.get(CONF_SSL)
         host = conf.get(CONF_HOST)
@@ -268,10 +268,10 @@ class EdgeOS(requests.Session):
     def ws_handler(self, payload=None):
         if payload is not None:
             for key in payload:
-                if key in self._ws_handlers:
-                    data = payload[key]
-                    handler = self._ws_handlers[key]
+                data = payload.get(key)
+                handler = self._ws_handlers.get(key)
 
+                if handler is not None:
                     handler(data)
 
     def heartbeat(self, max_age=HEARTBEAT_MAX_AGE):
@@ -320,6 +320,9 @@ class EdgeOS(requests.Session):
             result = {}
 
             previous_result = self.get_devices()
+            if previous_result is None:
+                previous_result = {}
+
             get_req_url = self.get_edgeos_api_endpoint(EDGEOS_API_GET)
 
             if self._is_ssl:
@@ -331,52 +334,41 @@ class EdgeOS(requests.Session):
                 result_json = get_result.json()
 
                 if RESPONSE_SUCCESS_KEY in result_json:
-                    success_key = str(result_json[RESPONSE_SUCCESS_KEY]).lower()
+                    success_key = str(result_json.get(RESPONSE_SUCCESS_KEY, '')).lower()
 
                     if success_key == TRUE_STR:
                         if EDGEOS_API_GET.upper() in result_json:
-                            get_data = result_json[EDGEOS_API_GET.upper()]
+                            get_data = result_json.get(EDGEOS_API_GET.upper(), {})
+                            service_data = get_data.get(SERVICE, {})
+                            dhcp_server_data = service_data.get(DHCP_SERVER, {})
+                            shared_network_name_data = dhcp_server_data.get(SHARED_NETWORK_NAME, {})
 
-                            if SERVICE in get_data:
-                                service_data = get_data[SERVICE]
+                            for shared_network_name_key in shared_network_name_data:
+                                dhcp_network_allocation = shared_network_name_data.get(shared_network_name_key, {})
+                                subnet = dhcp_network_allocation.get(SUBNET, {})
 
-                                if DHCP_SERVER in service_data:
-                                    dhcp_server_data = service_data[DHCP_SERVER]
+                                for subnet_mask_key in subnet:
+                                    subnet_mask = subnet.get(subnet_mask_key, {})
+                                    static_mapping = subnet_mask.get(STATIC_MAPPING, {})
 
-                                    if SHARED_NETWORK_NAME in dhcp_server_data:
-                                        shared_network_name_data = dhcp_server_data[SHARED_NETWORK_NAME]
+                                    for host_name in static_mapping:
+                                        host_data = static_mapping.get(host_name, {})
+                                        host_ip = host_data.get(IP_ADDRESS)
+                                        host_mac = host_data.get(MAC_ADDRESS)
 
-                                        for shared_network_name_key in shared_network_name_data:
-                                            dhcp_network_allocation = shared_network_name_data[shared_network_name_key]
+                                        data = {
+                                            IP: host_ip,
+                                            MAC: host_mac
+                                        }
 
-                                            if SUBNET in dhcp_network_allocation:
-                                                subnet = dhcp_network_allocation[SUBNET]
+                                        previous_host_data = previous_result.get(host_name, {})
 
-                                                for subnet_mask_key in subnet:
-                                                    subnet_mask = subnet[subnet_mask_key]
+                                        for previous_key in previous_host_data:
+                                            data[previous_key] = previous_host_data.get(previous_key)
 
-                                                    if STATIC_MAPPING in subnet_mask:
-                                                        static_mapping = subnet_mask[STATIC_MAPPING]
+                                        result[host_name] = data
 
-                                                        for host_name in static_mapping:
-                                                            host_data = static_mapping[host_name]
-                                                            host_ip = host_data[IP_ADDRESS]
-                                                            host_mac = host_data[MAC_ADDRESS]
-
-                                                            data = {
-                                                                IP: host_ip,
-                                                                MAC: host_mac
-                                                            }
-
-                                                            if host_name in previous_result:
-                                                                previous_host_data = previous_result[host_name]
-
-                                                                for previous_key in previous_host_data:
-                                                                    data[previous_key] = previous_host_data[previous_key]
-
-                                                            result[host_name] = data
-
-                                                            self.create_device_sensor(host_name, data)
+                                        self.create_device_sensor(host_name, data)
                     else:
                         _LOGGER.error('Failed, {}'.format(result_json[RESPONSE_ERROR_KEY]))
                 else:
@@ -397,7 +389,7 @@ class EdgeOS(requests.Session):
                 interface_data = None
 
                 if interface in data:
-                    interface_data = data[interface]
+                    interface_data = data.get(interface)
 
                 interface_data_item = self.get_interface_data(interface_data)
 
@@ -414,14 +406,14 @@ class EdgeOS(requests.Session):
         result = {}
 
         for item in interface_data:
-            data = interface_data[item]
+            data = interface_data.get(item)
 
             if ADDRESS_LIST == item:
                 result[item] = ', '.join(data)
 
             elif INTERFACES_STATS == item:
                 for stats_item in INTERFACES_STATS_MAP:
-                    result[stats_item] = data[stats_item]
+                    result[stats_item] = data.get(stats_item)
 
             else:
                 if item in INTERFACES_MAIN_MAP:
@@ -445,18 +437,18 @@ class EdgeOS(requests.Session):
         try:
             result = self.get_edgeos_data(DISCOVER_KEY)
 
-            devices_data = data[DEVICE_LIST]
+            devices_data = data.get(DEVICE_LIST, [])
 
             for device_data in devices_data:
                 for key in DISCOVER_DEVICE_ITEMS:
-                    device_data_item = device_data[key]
+                    device_data_item = device_data.get(key, {})
 
                     if key == ADDRESS_LIST:
                         discover_addresses = {}
 
                         for address in device_data_item:
-                            hwaddr = address[ADDRESS_HWADDR]
-                            ipv4 = address[ADDRESS_IPV4]
+                            hwaddr = address.get(ADDRESS_HWADDR)
+                            ipv4 = address.get(ADDRESS_IPV4)
 
                             discover_addresses[hwaddr] = ipv4
 
@@ -481,13 +473,13 @@ class EdgeOS(requests.Session):
 
         try:
             data = data_response.json()
-            if str(data[RESPONSE_SUCCESS_KEY]) == RESPONSE_FAILURE_CODE:
-                error = data[RESPONSE_ERROR_KEY]
+            if str(data.get(RESPONSE_SUCCESS_KEY, '')) == RESPONSE_FAILURE_CODE:
+                error = data.get(RESPONSE_ERROR_KEY, '')
 
                 _LOGGER.error('Failed to load {}, Reason: {}'.format(item, error))
                 result = None
             else:
-                result = data[RESPONSE_OUTPUT]
+                result = data.get(RESPONSE_OUTPUT)
         except Exception as ex:
             _LOGGER.error('Failed to load {}, Error: {}'.format(item, str(ex)))
             result = None
@@ -501,10 +493,10 @@ class EdgeOS(requests.Session):
             result = self.get_devices()
 
             for hostname in result:
-                host_data = result[hostname]
+                host_data = result.get(hostname, {})
 
                 if IP in host_data:
-                    host_data_ip = host_data[IP]
+                    host_data_ip = host_data.get(IP)
 
                     if host_data_ip in data:
 
@@ -513,18 +505,18 @@ class EdgeOS(requests.Session):
                             host_data_traffic[item] = int(0)
 
                         host_data[CONNECTED] = TRUE_STR
-                        device_data = data[host_data_ip]
+                        device_data = data.get(host_data_ip, {})
 
                         for service in device_data:
-                            service_data = device_data[service]
+                            service_data = device_data.get(service, {})
                             for item in service_data:
-                                current_value = int(host_data_traffic[item])
-                                service_data_item_value = int(service_data[item])
+                                current_value = int(host_data_traffic.get(item, 0))
+                                service_data_item_value = int(service_data.get(item, 0))
 
                                 host_data_traffic[item] = current_value + service_data_item_value
 
                         for traffic_data_item in host_data_traffic:
-                            host_data[traffic_data_item] = host_data_traffic[traffic_data_item]
+                            host_data[traffic_data_item] = host_data_traffic.get(traffic_data_item)
 
                         del data[host_data_ip]
                     else:
@@ -551,23 +543,20 @@ class EdgeOS(requests.Session):
         _LOGGER.error('Invalid payload received, Payload: {}'.format(data))
 
     def get_edgeos_data(self, storage):
-        data = {}
-
-        if storage in self._edgeos_data:
-            data = self._edgeos_data[storage]
+        data = self._edgeos_data.get(storage, {})
 
         return data
 
     def update_edgeos_data(self):
         self.heartbeat()
 
-        self._special_handlers[STATIC_DEVICES_KEY]()
+        handler = self._special_handlers.get(STATIC_DEVICES_KEY)
+
+        if handler is not None:
+            handler()
 
     def update_data(self, storage, data):
         self._edgeos_data[storage] = data
-
-        if storage in self._special_handlers:
-            _LOGGER.debug('Data changed for {}, New data: {}'.format(storage, data))
 
         dispatcher_send(self._hass, SIGNAL_UPDATE_EDGEOS)
 
@@ -604,37 +593,28 @@ class EdgeOS(requests.Session):
 
     def get_device(self, hostname):
         devices = self.get_devices()
-
-        device = None
-        if hostname in devices:
-            device = devices[hostname]
+        device = devices.get(hostname, {})
 
         return device
 
-    def get_device_name(self, hostname):
-        device = self.get_device(hostname)
-
-        name = hostname
-        if device is not None:
-            name = '{} {}'.format(DEFAULT_NAME, hostname)
+    @staticmethod
+    def get_device_name(hostname):
+        name = '{} {}'.format(DEFAULT_NAME, hostname)
 
         return name
 
     def get_device_mac(self, hostname):
         device = self.get_device(hostname)
 
-        mac = None
-        if device is not None and MAC in device:
-            mac = device[MAC]
+        mac = device.get(MAC)
 
         return mac
 
     def is_device_online(self, hostname):
         device = self.get_device(hostname)
 
-        is_online = False
-        if device is not None and CONNECTED in device and device[CONNECTED] == TRUE_STR:
-            is_online = True
+        connected = device.get(CONNECTED, FALSE_STR)
+        is_online = connected == TRUE_STR
 
         return is_online
 
@@ -644,13 +624,13 @@ class EdgeOS(requests.Session):
                 attributes = {}
 
                 for data_item_key in data:
-                    value = data[data_item_key]
+                    value = data.get(data_item_key)
                     attr = self.get_interface_attributes(data_item_key)
 
                     if attr is None:
                         attributes[data_item_key] = value
                     else:
-                        name = attr[ATTR_NAME]
+                        name = attr.get(ATTR_NAME)
 
                         if ATTR_UNIT_OF_MEASUREMENT not in attr:
                             attributes[name] = value
@@ -659,9 +639,9 @@ class EdgeOS(requests.Session):
                     attr = self.get_interface_attributes(data_item_key)
 
                     if attr is not None and ATTR_UNIT_OF_MEASUREMENT in attr:
-                        value = data[data_item_key]
-                        name = attr[ATTR_NAME]
-                        unit = attr[ATTR_UNIT_OF_MEASUREMENT]
+                        value = data.get(data_item_key, STATE_UNAVAILABLE)
+                        name = attr.get(ATTR_NAME)
+                        unit = attr.get(ATTR_UNIT_OF_MEASUREMENT)
 
                         entity_id = ENTITY_ID_INTERFACE_SENSOR.format(slugify(key), slugify(name))
 
@@ -674,7 +654,7 @@ class EdgeOS(requests.Session):
                             device_attributes[ATTR_DEVICE_CLASS] = DEVICE_CLASS_CONNECTIVITY
 
                             for attr_key in attributes:
-                                device_attributes[attr_key] = attributes[attr_key]
+                                device_attributes[attr_key] = attributes.get(attr_key)
 
                             entity_id = ENTITY_ID_INTERFACE_BINARY_SENSOR.format(slugify(key))
 
@@ -701,28 +681,28 @@ class EdgeOS(requests.Session):
                 attributes = {}
 
                 for data_item_key in data:
-                    value = data[data_item_key]
+                    value = data.get(data_item_key)
                     attr = self.get_device_attributes(data_item_key)
 
                     if attr is None:
                         attributes[data_item_key] = value
                     else:
-                        name = attr[ATTR_NAME]
+                        name = attr.get(ATTR_NAME)
 
                         if ATTR_UNIT_OF_MEASUREMENT not in attr:
                             attributes[name] = value
 
                 for data_item_key in data:
                     attr = self.get_device_attributes(data_item_key)
-                    value = data[data_item_key]
+                    value = data.get(data_item_key)
                     entity_id = None
                     state = None
                     device_attributes = None
 
-                    if attr is not None and ATTR_UNIT_OF_MEASUREMENT in attr:
+                    if ATTR_UNIT_OF_MEASUREMENT in attr:
 
-                        name = attr[ATTR_NAME]
-                        unit = attr[ATTR_UNIT_OF_MEASUREMENT]
+                        name = attr.get(ATTR_NAME)
+                        unit = attr.get(ATTR_UNIT_OF_MEASUREMENT)
 
                         entity_id = ENTITY_ID_DEVICE_SENSOR.format(slugify(key), slugify(name))
 
@@ -738,7 +718,7 @@ class EdgeOS(requests.Session):
                         }
 
                         for attr_key in attributes:
-                            device_attributes[attr_key] = attributes[attr_key]
+                            device_attributes[attr_key] = attributes.get(attr_key)
 
                         entity_id = ENTITY_ID_DEVICE_BINARY_SENSOR.format(slugify(key))
 
@@ -753,17 +733,20 @@ class EdgeOS(requests.Session):
 
                         if current_entity is not None and current_entity.state == state:
                             entity_attributes = current_entity.attributes
-
-                            if EVENT_TIME_CHANGED in entity_attributes:
-                                attributes[EVENT_TIME_CHANGED] = entity_attributes[EVENT_TIME_CHANGED]
+                            attributes[EVENT_TIME_CHANGED] = entity_attributes.get(EVENT_TIME_CHANGED)
 
                     if entity_id is not None:
                         self._hass.states.set(entity_id, state, device_attributes)
 
         except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
             _LOGGER.error(
-                'Failed to create device sensor {} with the following data: {}, Error: {}'.format(key, str(data),
-                                                                                                  str(ex)))
+                'Failed to create device sensor {} with the following data: {}, Error: {}, Line: {}'.format(key,
+                                                                                                            str(data),
+                                                                                                            str(ex),
+                                                                                                            line_number))
 
     def create_unknown_device_sensor(self, devices, devices_count):
         try:
@@ -781,22 +764,16 @@ class EdgeOS(requests.Session):
 
     @staticmethod
     def get_device_attributes(key):
-        result = None
-
-        if key in DEVICE_SERVICES_STATS_MAP:
-            result = DEVICE_SERVICES_STATS_MAP[key]
+        result = DEVICE_SERVICES_STATS_MAP.get(key, {})
 
         return result
 
     @staticmethod
     def get_interface_attributes(key):
-        result = None
+        result = INTERFACES_MAIN_MAP.get(key)
 
-        if key in INTERFACES_MAIN_MAP:
-            result = INTERFACES_MAIN_MAP[key]
-
-        if key in INTERFACES_STATS_MAP:
-            result = INTERFACES_STATS_MAP[key]
+        if result is None:
+            result = INTERFACES_STATS_MAP.get(key, {})
 
         return result
 
@@ -819,6 +796,7 @@ class EdgeOSWebSocket:
         self._ws = None
         self._ws_url = None
         self._thread = None
+        self._stopping = False
 
         self._timeout = SCAN_INTERVAL.seconds
 
@@ -922,7 +900,8 @@ class EdgeOSWebSocket:
     def on_close(self):
         _LOGGER.info("### closed ###")
 
-        self.initialize()
+        if not self._stopping:
+            self.initialize()
 
     def on_open(self):
         _LOGGER.debug("Subscribing")
@@ -933,6 +912,8 @@ class EdgeOSWebSocket:
         try:
             if self._ws is not None:
                 self.stop()
+
+            self._stopping = False
 
             self._ws = websocket.WebSocketApp(self._ws_url,
                                               on_message=self.on_message,
@@ -959,6 +940,7 @@ class EdgeOSWebSocket:
             _LOGGER.info("Stopping")
 
             if self._ws is not None:
+                self._stopping = True
                 self._ws.close()
                 self._ws = None
 
