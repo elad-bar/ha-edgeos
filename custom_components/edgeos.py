@@ -219,6 +219,7 @@ class EdgeOS(requests.Session):
         self._cert_file = cert_file
         self._monitored_interfaces = monitored_interfaces
         self._monitored_devices = monitored_devices
+        self._is_ssl = is_ssl
 
         protocol = PROTOCOL_UNSECURED
         if is_ssl:
@@ -280,7 +281,12 @@ class EdgeOS(requests.Session):
 
                 heartbeat_req_url = self.get_edgeos_api_endpoint(EDGEOS_API_HEARTBREAT)
                 heartbeat_req_full_url = API_URL_HEARTBEAT_TEMPLATE.format(heartbeat_req_url, current_ts)
-                heartbeat_response = self.get(heartbeat_req_full_url)
+
+                if self._is_ssl:
+                    heartbeat_response = self.get(heartbeat_req_full_url, verify=False)
+                else:
+                    heartbeat_response = self.get(heartbeat_req_full_url)
+
                 heartbeat_response.raise_for_status()
 
                 self._last_valid = ts
@@ -309,7 +315,11 @@ class EdgeOS(requests.Session):
 
             previous_result = self.get_devices()
             get_req_url = self.get_edgeos_api_endpoint(EDGEOS_API_GET)
-            get_result = self.get(get_req_url)
+
+            if self._is_ssl:
+                get_result = self.get(get_req_url, verify=False)
+            else:
+                get_result = self.get(get_req_url)
 
             if get_result.status_code == HTTP_OK:
                 result_json = get_result.json()
@@ -455,7 +465,12 @@ class EdgeOS(requests.Session):
     def _data(self, item):
         data_req_url = self.get_edgeos_api_endpoint(EDGEOS_API_DATA)
         data_req_full_url = API_URL_DATA_TEMPLATE.format(data_req_url, item.replace('-', '_'))
-        data_response = self.get(data_req_full_url)
+
+        if self._is_ssl:
+            data_response = self.get(data_req_full_url, verify=False)
+        else:
+            data_response = self.get(data_req_full_url)
+
         data_response.raise_for_status()
 
         try:
