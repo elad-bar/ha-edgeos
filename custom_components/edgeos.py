@@ -90,6 +90,8 @@ DEVICE_SERVICES_STATS_MAP = {
 
 INTERFACES_STATS = 'stats'
 
+BITS_PER_BYTE = 8
+
 INTERFACES_KEY = 'interfaces'
 SYSTEM_STATS_KEY = 'system-stats'
 EXPORT_KEY = 'export'
@@ -195,7 +197,10 @@ def setup(hass, config):
 
         return True
     except Exception as ex:
-        _LOGGER.error('Error while initializing EdgeOS, exception: {}'.format(str(ex)))
+        exc_type, exc_obj, tb = sys.exc_info()
+        line_number = tb.tb_lineno
+
+        _LOGGER.error('Error while initializing EdgeOS, exception: {}, Line: {}'.format(str(ex), line_number))
 
         hass.components.persistent_notification.create(
             'Error: {}<br />'
@@ -268,13 +273,19 @@ class EdgeOS(requests.Session):
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, edgeos_stop)
 
     def ws_handler(self, payload=None):
-        if payload is not None:
-            for key in payload:
-                data = payload.get(key)
-                handler = self._ws_handlers.get(key)
+        try:
+            if payload is not None:
+                for key in payload:
+                    data = payload.get(key)
+                    handler = self._ws_handlers.get(key)
 
-                if handler is not None:
-                    handler(data)
+                    if handler is not None:
+                        handler(data)
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to handle WS message, Error: {}, Line: {}'.format(str(ex), line_number))
 
     def heartbeat(self, max_age=HEARTBEAT_MAX_AGE):
         try:
@@ -295,7 +306,10 @@ class EdgeOS(requests.Session):
 
                 self._last_valid = ts
         except Exception as ex:
-            _LOGGER.error('Failed to perform heartbeat, Error: {}'.format(str(ex)))
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to perform heartbeat, Error: {}, Line: {}'.format(str(ex), line_number))
 
     def login(self, credentials):
         result = False
@@ -313,7 +327,10 @@ class EdgeOS(requests.Session):
 
             result = True
         except Exception as ex:
-            _LOGGER.error('Failed to login due to: {}'.format(str(ex)))
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to login due to: {}, Line: {}'.format(str(ex), line_number))
 
         return result
 
@@ -381,10 +398,16 @@ class EdgeOS(requests.Session):
 
             self.update_data(STATIC_DEVICES_KEY, result)
         except Exception as ex:
-            _LOGGER.error('Failed to load {}, Error: {}'.format(STATIC_DEVICES_KEY, str(ex)))
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to load {}, Error: {}, Line: {}'.format(STATIC_DEVICES_KEY, str(ex), line_number))
 
     def handle_interfaces(self, data):
         try:
+            if data is None:
+                return
+
             result = self.get_edgeos_data(INTERFACES_KEY)
 
             for interface in data:
@@ -401,7 +424,10 @@ class EdgeOS(requests.Session):
 
             self.update_data(INTERFACES_KEY, result)
         except Exception as ex:
-            _LOGGER.error('Failed to load {}, Error: {}'.format(INTERFACES_KEY, str(ex)))
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to load {}, Error: {}, Line: {}'.format(INTERFACES_KEY, str(ex), line_number))
 
     @staticmethod
     def get_interface_data(interface_data):
@@ -425,6 +451,9 @@ class EdgeOS(requests.Session):
 
     def handle_system_stats(self, data):
         try:
+            if data is None:
+                return
+
             for item in data:
                 entity_id = 'sensor.edgeos_system_{}'.format(item)
                 state = data[item]
@@ -433,10 +462,16 @@ class EdgeOS(requests.Session):
 
             self.update_data(SYSTEM_STATS_KEY, data)
         except Exception as ex:
-            _LOGGER.error('Failed to load {}, Error: {}'.format(SYSTEM_STATS_KEY, str(ex)))
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to load {}, Error: {}, Line: {}'.format(SYSTEM_STATS_KEY, str(ex), line_number))
 
     def handle_discover(self, data):
         try:
+            if data is None or data == '':
+                return
+
             result = self.get_edgeos_data(DISCOVER_KEY)
 
             devices_data = data.get(DEVICE_LIST, [])
@@ -460,7 +495,10 @@ class EdgeOS(requests.Session):
 
             self.update_data(DISCOVER_KEY, result)
         except Exception as ex:
-            _LOGGER.error('Failed to load {}, Error: {}'.format(DISCOVER_KEY, str(ex)))
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to load {}, Original Message: {}, Error: {}, Line: {}'.format(DISCOVER_KEY, data, str(ex), line_number))
 
     def _data(self, item):
         data_req_url = self.get_edgeos_api_endpoint(EDGEOS_API_DATA)
@@ -483,7 +521,10 @@ class EdgeOS(requests.Session):
             else:
                 result = data.get(RESPONSE_OUTPUT)
         except Exception as ex:
-            _LOGGER.error('Failed to load {}, Error: {}'.format(item, str(ex)))
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to load {}, Error: {}, Line: {}'.format(item, str(ex), line_number))
             result = None
 
         return result
@@ -513,7 +554,7 @@ class EdgeOS(requests.Session):
                             service_data = device_data.get(service, {})
                             for item in service_data:
                                 current_value = int(host_data_traffic.get(item, 0))
-                                service_data_item_value = int(service_data.get(item, 0))
+                                service_data_item_value = int(service_data.get(item, 0)) * BITS_PER_BYTE
 
                                 host_data_traffic[item] = current_value + service_data_item_value
 
@@ -538,6 +579,7 @@ class EdgeOS(requests.Session):
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
+
             _LOGGER.error('Failed to load {}, Error: {}, Line: {}'.format(EXPORT_KEY, str(ex), line_number))
 
     @staticmethod
@@ -760,9 +802,12 @@ class EdgeOS(requests.Session):
 
             self._hass.states.set(entity_id, state, attributes)
         except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
             _LOGGER.error(
-                'Failed to create unknown device sensor with the following data: {}, Error: {}'.format(str(devices),
-                                                                                                       str(ex)))
+                'Failed to create unknown device sensor with the following data: {}, Error: {}, Line: {}'.format(str(devices),
+                                                                                                       str(ex), line_number))
 
     @staticmethod
     def get_device_attributes(key):
@@ -869,7 +914,10 @@ class EdgeOSWebSocket:
             else:
                 self._consumer_handler(payload)
         except Exception as ex:
-            _LOGGER.error('Failed to invoke handler, Payload: {}, Error: {}'.format(payload, str(ex)))
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to invoke handler, Payload: {}, Error: {}, Line: {}'.format(payload, str(ex), line_number))
 
     def extract_payload(self, payload_json, original_message, delayed_message=None):
         try:
@@ -894,7 +942,10 @@ class EdgeOSWebSocket:
             else:
                 _LOGGER.warning('Connection error, Description: {}'.format(error))
         except Exception as ex:
-            _LOGGER.error('Failed to handle error: {}, Exception: {}'.format(error, str(ex)))
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to handle error: {}, Exception: {}, Line: {}'.format(error, str(ex), line_number))
 
     def on_close(self):
         _LOGGER.info("### closed ###")
@@ -932,7 +983,10 @@ class EdgeOSWebSocket:
             self._thread.start()
 
         except Exception as ex:
-            _LOGGER.error('Failed, {}'.format(str(ex)))
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed, {}, Line: {}'.format(str(ex), line_number))
 
     def stop(self):
         try:
@@ -949,5 +1003,8 @@ class EdgeOSWebSocket:
 
             _LOGGER.info("Stopped")
         except Exception as ex:
-            _LOGGER.error('Failed to stop, Error: {}'.format(str(ex)))
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to stop, Error: {}, Line: {}'.format(str(ex), line_number))
 
