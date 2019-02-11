@@ -29,7 +29,7 @@ from homeassistant.util import slugify
 REQUIREMENTS = ['websocket-client']
 
 DOMAIN = 'edgeos'
-DATA_EDGEOS = 'edgeos_ham'
+DATA_EDGEOS = 'edgeos_data'
 SIGNAL_UPDATE_EDGEOS = "edgeos_update"
 DEFAULT_NAME = 'EdgeOS'
 
@@ -169,7 +169,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_CERT_FILE, default=None): cv.string,
+        vol.Optional(CONF_CERT_FILE, default=''): cv.string,
         vol.Optional(CONF_MONITORED_INTERFACES, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_MONITORED_DEVICES, default=[]): vol.All(cv.ensure_list, [cv.string])
     }),
@@ -181,13 +181,13 @@ def setup(hass, config):
     try:
         conf = config.get(DOMAIN, {})
 
-        is_ssl = conf.get(CONF_SSL)
+        is_ssl = conf.get(CONF_SSL, False)
         host = conf.get(CONF_HOST)
-        username = conf.get(CONF_USERNAME)
+        username = conf.get(CONF_USERNAME, DEFAULT_USERNAME)
         password = conf.get(CONF_PASSWORD)
-        cert_file = conf.get(CONF_CERT_FILE)
-        monitored_interfaces = conf.get(CONF_MONITORED_INTERFACES)
-        monitored_devices = conf.get(CONF_MONITORED_DEVICES)
+        cert_file = conf.get(CONF_CERT_FILE, '')
+        monitored_interfaces = conf.get(CONF_MONITORED_INTERFACES, [])
+        monitored_devices = conf.get(CONF_MONITORED_DEVICES, [])
 
         data = EdgeOS(hass, host, is_ssl, username, password, cert_file, monitored_interfaces, monitored_devices)
 
@@ -224,7 +224,7 @@ class EdgeOS(requests.Session):
         self._is_ssl = is_ssl
 
         protocol = PROTOCOL_UNSECURED
-        if is_ssl:
+        if self._is_ssl:
             protocol = PROTOCOL_SECURED
 
         self._last_valid = EMPTY_LAST_VALID
@@ -238,6 +238,7 @@ class EdgeOS(requests.Session):
 
         self.load_ws_handlers()
         self.load_special_handlers()
+        self._ws_connection = None
 
         ''' This function turns off InsecureRequestWarnings '''
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -249,12 +250,13 @@ class EdgeOS(requests.Session):
 
                 self._ws_connection = EdgeOSWebSocket(self._edgeos_url, self.cookies,
                                                       self._subscribed_topics, self.ws_handler,
-                                                      self._cert_file, is_ssl)
+                                                      self._cert_file, self._is_ssl)
                 self._ws_connection.initialize()
 
         def edgeos_stop(event_time):
             _LOGGER.info('Stop begun at {}'.format(event_time))
-            self._ws_connection.stop()
+            if self._ws_connection is not None:
+                self._ws_connection.stop()
 
         def edgeos_refresh(event_time):
             _LOGGER.debug('Refresh begun at {}'.format(event_time))
@@ -786,7 +788,7 @@ class EdgeOSWebSocket:
         self._consumer_handler = consumer_handler
         self._cert_file = cert_file
         self._cookies = cookies
-        self._ssl = is_ssl
+        self._is_ssl = is_ssl
 
         self._delayed_messages = []
 
@@ -821,17 +823,10 @@ class EdgeOSWebSocket:
 
         self._subscription_data = subscription_data
 
-        if self._ssl:
-            # if self._cert_file is None:
+        if self._is_ssl:
             self._ssl_options = {
                 SSL_OPTIONS_CERT_REQS: ssl.CERT_NONE,
             }
-        # else:
-        #    self._ssl_options = {
-        #        SSL_OPTIONS_CERT_REQS: ssl.CERT_REQUIRED,
-        #        SSL_OPTIONS_SSL_VERSION: ssl.PROTOCOL_TLSv1_2,
-        #        SSL_OPTIONS_CA_CERTS: self._cert_file
-        #    }
         else:
             self._ssl_options = {}
 
@@ -841,6 +836,10 @@ class EdgeOSWebSocket:
         _LOGGER.debug('{} - {}'.format(continue_flag, message[:30]))
 
     def on_message(self, message):
+        if self._stopping:
+            _LOGGER.warning('Received a message while WS is closed, ignoring message: {}'.format(message))
+            return
+
         data_arr = message.split('\n')
 
         content_length_str = data_arr[0]
@@ -939,14 +938,14 @@ class EdgeOSWebSocket:
         try:
             _LOGGER.info("Stopping")
 
+            if self._thread is not None:
+                self._thread._running = False
+                self._thread = None
+
             if self._ws is not None:
                 self._stopping = True
                 self._ws.close()
                 self._ws = None
-
-            if self._thread is not None:
-                self._thread._running = False
-                self._thread = None
 
             _LOGGER.info("Stopped")
         except Exception as ex:
