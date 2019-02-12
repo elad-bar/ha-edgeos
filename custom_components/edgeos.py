@@ -405,7 +405,7 @@ class EdgeOS(requests.Session):
 
     def handle_interfaces(self, data):
         try:
-            if data is None:
+            if data is None or data == '':
                 return
 
             result = self.get_edgeos_data(INTERFACES_KEY)
@@ -451,7 +451,7 @@ class EdgeOS(requests.Session):
 
     def handle_system_stats(self, data):
         try:
-            if data is None:
+            if data is None or data == '':
                 return
 
             for item in data:
@@ -501,17 +501,17 @@ class EdgeOS(requests.Session):
             _LOGGER.error('Failed to load {}, Original Message: {}, Error: {}, Line: {}'.format(DISCOVER_KEY, data, str(ex), line_number))
 
     def _data(self, item):
-        data_req_url = self.get_edgeos_api_endpoint(EDGEOS_API_DATA)
-        data_req_full_url = API_URL_DATA_TEMPLATE.format(data_req_url, item.replace('-', '_'))
-
-        if self._is_ssl:
-            data_response = self.get(data_req_full_url, verify=False)
-        else:
-            data_response = self.get(data_req_full_url)
-
-        data_response.raise_for_status()
-
         try:
+            data_req_url = self.get_edgeos_api_endpoint(EDGEOS_API_DATA)
+            data_req_full_url = API_URL_DATA_TEMPLATE.format(data_req_url, item.replace('-', '_'))
+
+            if self._is_ssl:
+                data_response = self.get(data_req_full_url, verify=False)
+            else:
+                data_response = self.get(data_req_full_url)
+
+            data_response.raise_for_status()
+
             data = data_response.json()
             if str(data.get(RESPONSE_SUCCESS_KEY, '')) == RESPONSE_FAILURE_CODE:
                 error = data.get(RESPONSE_ERROR_KEY, '')
@@ -885,28 +885,29 @@ class EdgeOSWebSocket:
             _LOGGER.warning('Received a message while WS is closed, ignoring message: {}'.format(message))
             return
 
-        data_arr = message.split('\n')
-
-        content_length_str = data_arr[0]
         payload = None
 
-        if content_length_str.isdigit():
-            content_length = int(content_length_str)
-            payload_str = message[len(content_length_str) + 1:]
-
-            if content_length == len(payload_str):
-                payload = self.extract_payload(payload_str, message)
-            else:
-                self._delayed_messages.append(payload_str)
-
-        elif len(self._delayed_messages) == 1:
-            self._delayed_messages.append(message)
-
-            payload_str = ''.join(self._delayed_messages)
-
-            payload = self.extract_payload(payload_str, message, message)
-
         try:
+            data_arr = message.split('\n')
+
+            content_length_str = data_arr[0]
+
+            if content_length_str.isdigit():
+                content_length = int(content_length_str)
+                payload_str = message[len(content_length_str) + 1:]
+
+                if content_length == len(payload_str):
+                    payload = self.extract_payload(payload_str, message)
+                else:
+                    self._delayed_messages.append(payload_str)
+
+            elif len(self._delayed_messages) == 1:
+                self._delayed_messages.append(message)
+
+                payload_str = ''.join(self._delayed_messages)
+
+                payload = self.extract_payload(payload_str, message, message)
+
             if payload is None:
                 _LOGGER.debug('Payload is empty')
             elif WS_PAYLOAD_ERROR in payload:
