@@ -265,12 +265,25 @@ class EdgeOS(requests.Session):
 
         def edgeos_refresh(event_time):
             _LOGGER.debug('Refresh begun at {}'.format(event_time))
-            self.update_edgeos_data()
+            self.refresh_data()
 
         track_time_interval(hass, edgeos_refresh, self._scan_interval)
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, edgeos_initialize)
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, edgeos_stop)
+
+    def refresh_data(self):
+        try:
+            self.update_edgeos_data()
+            self.update_interfaces()
+            self.update_devices()
+            self.update_unknown_devices()
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to refresh data, Error: {}, Line: {}'.format(str(ex), line_number))
 
     def ws_handler(self, payload=None):
         try:
@@ -386,8 +399,6 @@ class EdgeOS(requests.Session):
                                             data[previous_key] = previous_host_data.get(previous_key)
 
                                         result[host_name] = data
-
-                                        self.create_device_sensor(host_name, data)
                     else:
                         _LOGGER.error('Failed, {}'.format(result_json[RESPONSE_ERROR_KEY]))
                 else:
@@ -418,8 +429,6 @@ class EdgeOS(requests.Session):
 
                 interface_data_item = self.get_interface_data(interface_data)
 
-                self.create_interface_sensor(interface, interface_data_item)
-
                 result[interface] = interface_data_item
 
             self.update_data(INTERFACES_KEY, result)
@@ -428,6 +437,51 @@ class EdgeOS(requests.Session):
             line_number = tb.tb_lineno
 
             _LOGGER.error('Failed to load {}, Error: {}, Line: {}'.format(INTERFACES_KEY, str(ex), line_number))
+
+    def update_devices(self):
+        try:
+            result = self.get_devices()
+
+            for hostname in result:
+                host_data = result.get(hostname, {})
+
+                self.create_device_sensor(hostname, host_data)
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to updated devices, Error: {}, Line: {}'.format(str(ex), line_number))
+
+    def update_unknown_devices(self):
+        try:
+            unknown_devices = self.get_edgeos_data(UNKOWN_DEVICES_KEY)
+
+            unknown_devices_count = len(unknown_devices)
+
+            self.create_unknown_device_sensor(', '.join(unknown_devices), unknown_devices_count)
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to updated unknown devices, Error: {}, Line: {}'.format(str(ex), line_number))
+
+    def update_interfaces(self):
+        try:
+            result = self.get_edgeos_data(INTERFACES_KEY)
+
+            for interface in result:
+                interface_data = result.get(interface)
+
+                interface_data_item = self.get_interface_data(interface_data)
+
+                self.create_interface_sensor(interface, interface_data_item)
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to update {}, Error: {}, Line: {}'.format(INTERFACES_KEY, str(ex), line_number))
 
     @staticmethod
     def get_interface_data(interface_data):
@@ -565,14 +619,9 @@ class EdgeOS(requests.Session):
                     else:
                         host_data[CONNECTED] = FALSE_STR
 
-                self.create_device_sensor(hostname, host_data)
-
             unknown_devices = []
             for host_ip in data:
                 unknown_devices.append(host_ip)
-
-            unknown_devices_count = len(unknown_devices)
-            self.create_unknown_device_sensor(', '.join(unknown_devices), unknown_devices_count)
 
             self.update_data(STATIC_DEVICES_KEY, result)
             self.update_data(UNKOWN_DEVICES_KEY, unknown_devices)
@@ -952,6 +1001,8 @@ class EdgeOSWebSocket:
         _LOGGER.info("### closed ###")
 
         if not self._stopping:
+            _LOGGER.info("### restarting ###")
+
             self.initialize()
 
     def on_open(self):
@@ -991,21 +1042,29 @@ class EdgeOSWebSocket:
 
     def stop(self):
         try:
-            _LOGGER.info("Stopping")
-
-            if self._thread is not None:
-                self._thread._running = False
-                self._thread = None
+            _LOGGER.info("Stopping WebSocket")
 
             if self._ws is not None:
                 self._stopping = True
-                self._ws.close()
-                self._ws = None
+                self._ws.keep_running = False
 
-            _LOGGER.info("Stopped")
+            _LOGGER.info("WebSocket Stopped")
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error('Failed to stop, Error: {}, Line: {}'.format(str(ex), line_number))
+            _LOGGER.error('Failed to stop WebSocket, Error: {}, Line: {}'.format(str(ex), line_number))
+
+        try:
+            _LOGGER.info("Stopping daemon thread")
+
+            if self._thread is not None:
+                self._thread.join()
+
+            _LOGGER.info("Daemon thread stopped")
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to stop daemon thread, Error: {}, Line: {}'.format(str(ex), line_number))
 
