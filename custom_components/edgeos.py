@@ -91,7 +91,8 @@ DEVICE_SERVICES_STATS_MAP = {
 
 INTERFACES_STATS = 'stats'
 
-BYTE = 8
+BITS_IN_BYTE = 8
+BYTE = 1
 KILO_BYTE = BYTE * 1024
 MEGA_BYTE = KILO_BYTE * 1024
 
@@ -493,9 +494,7 @@ class EdgeOS(requests.Session):
             for interface in result:
                 interface_data = result.get(interface)
 
-                interface_data_item = self.get_interface_data(interface_data)
-
-                self.create_interface_sensor(interface, interface_data_item)
+                self.create_interface_sensor(interface, interface_data)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -623,7 +622,7 @@ class EdgeOS(requests.Session):
                             service_data = device_data.get(service, {})
                             for item in service_data:
                                 current_value = int(host_data_traffic.get(item, 0))
-                                service_data_item_value = int(service_data.get(item, 0)) * self._unit_size
+                                service_data_item_value = (int(service_data.get(item, 0)) * BITS_IN_BYTE) / self._unit_size
 
                                 host_data_traffic[item] = current_value + service_data_item_value
 
@@ -665,6 +664,8 @@ class EdgeOS(requests.Session):
 
     def update_data(self, storage, data):
         self._edgeos_data[storage] = data
+
+        _LOGGER.debug('Update {}: {}'.format(storage, data))
 
         dispatcher_send(self._hass, SIGNAL_UPDATE_EDGEOS)
 
@@ -842,10 +843,9 @@ class EdgeOS(requests.Session):
 
     @staticmethod
     def get_interface_attributes(key):
-        result = INTERFACES_MAIN_MAP.get(key)
+        all_attributes = {**INTERFACES_MAIN_MAP, **INTERFACES_STATS_MAP}
 
-        if result is None:
-            result = INTERFACES_STATS_MAP.get(key, {})
+        result = all_attributes.get(key, {})
 
         return result
 
