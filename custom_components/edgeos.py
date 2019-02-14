@@ -19,7 +19,7 @@ import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (CONF_SSL, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON, STATE_UNAVAILABLE, ATTR_FRIENDLY_NAME, HTTP_OK,
+                                 EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON, ATTR_FRIENDLY_NAME, HTTP_OK,
                                  STATE_UNKNOWN, ATTR_NAME, ATTR_UNIT_OF_MEASUREMENT, EVENT_TIME_CHANGED)
 
 from homeassistant.helpers.event import track_time_interval
@@ -43,6 +43,7 @@ NOTIFICATION_TITLE = 'EdgeOS Setup'
 CONF_CERT_FILE = 'cert_file'
 CONF_MONITORED_INTERFACES = 'monitored_interfaces'
 CONF_MONITORED_DEVICES = 'monitored_devices'
+CONF_UNIT = 'unit'
 
 API_URL_TEMPLATE = '{}://{}'
 WEBSOCKET_URL_TEMPLATE = 'wss://{}/ws/stats'
@@ -68,29 +69,35 @@ INTERFACES_MAIN_MAP = {
 }
 
 INTERFACES_STATS_MAP = {
-    # 'rx_packets': {ATTR_NAME: 'Packets (Received)'},
-    # 'tx_packets': {ATTR_NAME: 'Packets (Sent)'},
-    'rx_bytes': {ATTR_NAME: 'Bytes (Received)', ATTR_UNIT_OF_MEASUREMENT: 'Bytes'},
-    'tx_bytes': {ATTR_NAME: 'Bytes (Sent)', ATTR_UNIT_OF_MEASUREMENT: 'Bytes'},
-    # 'rx_errors': {ATTR_NAME: 'Errors (Received)'},
-    # 'tx_errors': {ATTR_NAME: 'Errors (Sent)'},
-    # 'rx_dropped': {ATTR_NAME: 'Dropped Packets (Received)'},
-    # 'tx_dropped': {ATTR_NAME: 'Dropped Packets (Sent)'},
-    'rx_bps': {ATTR_NAME: 'Bps (Received)', ATTR_UNIT_OF_MEASUREMENT: 'Bps'},
-    'tx_bps': {ATTR_NAME: 'Bps (Sent)', ATTR_UNIT_OF_MEASUREMENT: 'Bps'},
-    # 'multicast': {ATTR_NAME: 'Multicast'}
+    'rx_packets': {ATTR_NAME: 'Packets (Received)'},
+    'tx_packets': {ATTR_NAME: 'Packets (Sent)'},
+    'rx_bytes': {ATTR_NAME: '{}Bytes (Received)', ATTR_UNIT_OF_MEASUREMENT: 'Bytes'},
+    'tx_bytes': {ATTR_NAME: '{}Bytes (Sent)', ATTR_UNIT_OF_MEASUREMENT: 'Bytes'},
+    'rx_errors': {ATTR_NAME: 'Errors (Received)'},
+    'tx_errors': {ATTR_NAME: 'Errors (Sent)'},
+    'rx_dropped': {ATTR_NAME: 'Dropped Packets (Received)'},
+    'tx_dropped': {ATTR_NAME: 'Dropped Packets (Sent)'},
+    'rx_bps': {ATTR_NAME: '{}Bps (Received)', ATTR_UNIT_OF_MEASUREMENT: 'Bps'},
+    'tx_bps': {ATTR_NAME: '{}Bps (Sent)', ATTR_UNIT_OF_MEASUREMENT: 'Bps'},
+    'multicast': {ATTR_NAME: 'Multicast'}
 }
 
 DEVICE_SERVICES_STATS_MAP = {
-    'rx_bytes': {ATTR_NAME: 'Bytes (Received)', ATTR_UNIT_OF_MEASUREMENT: 'Bytes'},
-    'tx_bytes': {ATTR_NAME: 'Bytes (Sent)', ATTR_UNIT_OF_MEASUREMENT: 'Bytes'},
-    'rx_rate': {ATTR_NAME: 'Bps (Received)', ATTR_UNIT_OF_MEASUREMENT: 'Bps'},
-    'tx_rate': {ATTR_NAME: 'Bps (Sent)', ATTR_UNIT_OF_MEASUREMENT: 'Bps'},
+    'rx_bytes': {ATTR_NAME: '{}Bytes (Received)', ATTR_UNIT_OF_MEASUREMENT: 'Bytes'},
+    'tx_bytes': {ATTR_NAME: '{}Bytes (Sent)', ATTR_UNIT_OF_MEASUREMENT: 'Bytes'},
+    'rx_rate': {ATTR_NAME: '{}Bps (Received)', ATTR_UNIT_OF_MEASUREMENT: 'Bps'},
+    'tx_rate': {ATTR_NAME: '{}Bps (Sent)', ATTR_UNIT_OF_MEASUREMENT: 'Bps'},
 }
 
 INTERFACES_STATS = 'stats'
 
-BITS_PER_BYTE = 8
+BYTE = 8
+KILO_BYTE = BYTE * 1024
+MEGA_BYTE = KILO_BYTE * 1024
+
+ATTR_KILO = 'K'
+ATTR_MEGA = 'M'
+ATTR_BYTE = ''
 
 INTERFACES_KEY = 'interfaces'
 SYSTEM_STATS_KEY = 'system-stats'
@@ -103,10 +110,14 @@ SYS_INFO_KEY = 'sys_info'
 NUM_ROUTES_KEY = 'num-routes'
 USERS_KEY = 'users'
 DISCOVER_KEY = 'discover'
-UNKOWN_DEVICES_KEY = 'unknown-devices'
+UNKNOWN_DEVICES_KEY = 'unknown-devices'
 
-SYSTEM_STATS_ITEMS = ['cpu', 'mem', 'uptime']
+UPTIME = 'uptime'
+
+SYSTEM_STATS_ITEMS = ['cpu', 'mem', UPTIME]
 DISCOVER_DEVICE_ITEMS = ['hostname', 'product', 'uptime', 'fwversion', 'system_status']
+
+ALLOWED_UNITS = {ATTR_BYTE: BYTE, ATTR_KILO: KILO_BYTE, ATTR_MEGA: MEGA_BYTE}
 
 DEVICE_LIST = 'devices'
 ADDRESS_LIST = 'addresses'
@@ -173,7 +184,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_CERT_FILE, default=''): cv.string,
         vol.Optional(CONF_MONITORED_INTERFACES, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_MONITORED_DEVICES, default=[]): vol.All(cv.ensure_list, [cv.string])
+        vol.Optional(CONF_MONITORED_DEVICES, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_UNIT, default=ATTR_BYTE): vol.In(ALLOWED_UNITS)
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -190,8 +202,11 @@ def setup(hass, config):
         cert_file = conf.get(CONF_CERT_FILE, '')
         monitored_interfaces = conf.get(CONF_MONITORED_INTERFACES, [])
         monitored_devices = conf.get(CONF_MONITORED_DEVICES, [])
+        unit = conf.get(CONF_UNIT, ATTR_BYTE)
+        scan_interval = SCAN_INTERVAL
 
-        data = EdgeOS(hass, host, is_ssl, username, password, cert_file, monitored_interfaces, monitored_devices)
+        data = EdgeOS(hass, host, is_ssl, username, password, cert_file, monitored_interfaces,
+                      monitored_devices, unit, scan_interval)
 
         hass.data[DATA_EDGEOS] = data
 
@@ -213,7 +228,8 @@ def setup(hass, config):
 
 
 class EdgeOS(requests.Session):
-    def __init__(self, hass, host, is_ssl, username, password, cert_file, monitored_interfaces, monitored_devices):
+    def __init__(self, hass, host, is_ssl, username, password, cert_file, monitored_interfaces,
+                 monitored_devices, unit, scan_interval):
         requests.Session.__init__(self)
 
         credentials = {
@@ -221,12 +237,14 @@ class EdgeOS(requests.Session):
             CONF_PASSWORD: password
         }
 
-        self._scan_interval = SCAN_INTERVAL
+        self._scan_interval = scan_interval
         self._hass = hass
         self._cert_file = cert_file
         self._monitored_interfaces = monitored_interfaces
         self._monitored_devices = monitored_devices
         self._is_ssl = is_ssl
+        self._unit = unit
+        self._unit_size = ALLOWED_UNITS.get(self._unit, BYTE)
 
         protocol = PROTOCOL_UNSECURED
         if self._is_ssl:
@@ -251,12 +269,12 @@ class EdgeOS(requests.Session):
         def edgeos_initialize(event_time):
             _LOGGER.info('Initialization begun at {}'.format(event_time))
             if self.login(credentials):
-                self.update_edgeos_data()
-
                 self._ws_connection = EdgeOSWebSocket(self._edgeos_url, self.cookies,
                                                       self._subscribed_topics, self.ws_handler,
                                                       self._cert_file, self._is_ssl)
                 self._ws_connection.initialize()
+
+                self.refresh_data()
 
         def edgeos_stop(event_time):
             _LOGGER.info('Stop begun at {}'.format(event_time))
@@ -264,7 +282,8 @@ class EdgeOS(requests.Session):
                 self._ws_connection.stop()
 
         def edgeos_refresh(event_time):
-            _LOGGER.debug('Refresh begun at {}'.format(event_time))
+            _LOGGER.info('Refresh EdgeOS components ({})'.format(event_time))
+
             self.refresh_data()
 
         track_time_interval(hass, edgeos_refresh, self._scan_interval)
@@ -278,6 +297,7 @@ class EdgeOS(requests.Session):
             self.update_interfaces()
             self.update_devices()
             self.update_unknown_devices()
+            self.create_system_sensor()
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -455,7 +475,7 @@ class EdgeOS(requests.Session):
 
     def update_unknown_devices(self):
         try:
-            unknown_devices = self.get_edgeos_data(UNKOWN_DEVICES_KEY)
+            unknown_devices = self.get_edgeos_data(UNKNOWN_DEVICES_KEY)
 
             unknown_devices_count = len(unknown_devices)
 
@@ -491,7 +511,7 @@ class EdgeOS(requests.Session):
             data = interface_data.get(item)
 
             if ADDRESS_LIST == item:
-                result[item] = ', '.join(data)
+                result[item] = data
 
             elif INTERFACES_STATS == item:
                 for stats_item in INTERFACES_STATS_MAP:
@@ -507,12 +527,6 @@ class EdgeOS(requests.Session):
         try:
             if data is None or data == '':
                 return
-
-            for item in data:
-                entity_id = 'sensor.edgeos_system_{}'.format(item)
-                state = data[item]
-
-                self._hass.states.set(entity_id, state)
 
             self.update_data(SYSTEM_STATS_KEY, data)
         except Exception as ex:
@@ -552,7 +566,8 @@ class EdgeOS(requests.Session):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error('Failed to load {}, Original Message: {}, Error: {}, Line: {}'.format(DISCOVER_KEY, data, str(ex), line_number))
+            _LOGGER.error('Failed to load {}, Original Message: {}, Error: {}, Line: {}'.format(DISCOVER_KEY, data,
+                                                                                                str(ex), line_number))
 
     def _data(self, item):
         try:
@@ -608,7 +623,7 @@ class EdgeOS(requests.Session):
                             service_data = device_data.get(service, {})
                             for item in service_data:
                                 current_value = int(host_data_traffic.get(item, 0))
-                                service_data_item_value = int(service_data.get(item, 0)) * BITS_PER_BYTE
+                                service_data_item_value = int(service_data.get(item, 0)) * self._unit_size
 
                                 host_data_traffic[item] = current_value + service_data_item_value
 
@@ -624,7 +639,7 @@ class EdgeOS(requests.Session):
                 unknown_devices.append(host_ip)
 
             self.update_data(STATIC_DEVICES_KEY, result)
-            self.update_data(UNKOWN_DEVICES_KEY, unknown_devices)
+            self.update_data(UNKNOWN_DEVICES_KEY, unknown_devices)
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -712,142 +727,78 @@ class EdgeOS(requests.Session):
         return is_online
 
     def create_interface_sensor(self, key, data):
-        try:
-            if key in self._monitored_interfaces:
-                attributes = {}
-
-                for data_item_key in data:
-                    value = data.get(data_item_key)
-                    attr = self.get_interface_attributes(data_item_key)
-
-                    if attr is None:
-                        attributes[data_item_key] = value
-                    else:
-                        name = attr.get(ATTR_NAME)
-
-                        if ATTR_UNIT_OF_MEASUREMENT not in attr:
-                            attributes[name] = value
-
-                for data_item_key in data:
-                    attr = self.get_interface_attributes(data_item_key)
-
-                    if attr is not None and ATTR_UNIT_OF_MEASUREMENT in attr:
-                        value = data.get(data_item_key, STATE_UNAVAILABLE)
-                        name = attr.get(ATTR_NAME)
-                        unit = attr.get(ATTR_UNIT_OF_MEASUREMENT)
-
-                        entity_id = ENTITY_ID_INTERFACE_SENSOR.format(slugify(key), slugify(name))
-
-                        device_attributes = {
-                            ATTR_UNIT_OF_MEASUREMENT: unit,
-                            ATTR_FRIENDLY_NAME: 'EdgeOS {} {}'.format(key, name)
-                        }
-
-                        if data_item_key == LINK_UP:
-                            device_attributes[ATTR_DEVICE_CLASS] = DEVICE_CLASS_CONNECTIVITY
-
-                            for attr_key in attributes:
-                                device_attributes[attr_key] = attributes.get(attr_key)
-
-                            entity_id = ENTITY_ID_INTERFACE_BINARY_SENSOR.format(slugify(key))
-
-                            if str(value).lower() == TRUE_STR:
-                                state = STATE_ON
-                            else:
-                                state = STATE_OFF
-                        else:
-                            state = value
-
-                        self._hass.states.set(entity_id, state, device_attributes)
-
-        except Exception as ex:
-            exc_type, exc_obj, tb = sys.exc_info()
-            line_number = tb.tb_lineno
-
-            _LOGGER.error(
-                'Failed to create interface sensor {} with the following data: {}, Error: {}, Line: {}'.format(key, str(
-                    data), str(ex), line_number))
+        self.create_sensor(key, data, self._monitored_interfaces,
+                           ENTITY_ID_INTERFACE_BINARY_SENSOR, 'Interface',
+                           LINK_UP, self.get_interface_attributes)
 
     def create_device_sensor(self, key, data):
+        self.create_sensor(key, data, self._monitored_devices,
+                           ENTITY_ID_DEVICE_BINARY_SENSOR, 'Device',
+                           CONNECTED, self.get_device_attributes)
+
+    def create_sensor(self, key, data, allowed_items, entity_id_template, sensor_type,
+                      main_attribute, get_attributes):
         try:
-            if key in self._monitored_devices:
-                attributes = {}
+            if key in allowed_items:
+                entity_id = entity_id_template.format(slugify(key))
+                main_entity_details = data.get(main_attribute)
 
-                for data_item_key in data:
-                    value = data.get(data_item_key)
-                    attr = self.get_device_attributes(data_item_key)
+                if main_entity_details is not None:
+                    device_attributes = {
+                        ATTR_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
+                        ATTR_FRIENDLY_NAME: 'EdgeOS {} {}'.format(sensor_type, key)
+                    }
 
-                    if attr is None:
-                        attributes[data_item_key] = value
+                    for data_item_key in data:
+                        if data_item_key != main_attribute:
+                            value = data.get(data_item_key)
+                            attr = get_attributes(data_item_key)
+
+                            name = attr.get(ATTR_NAME, data_item_key)
+                            unit_of_measurement = attr.get(ATTR_UNIT_OF_MEASUREMENT)
+
+                            if unit_of_measurement is None:
+                                device_attributes[name] = value
+                            else:
+                                name = name.format(self._unit)
+
+                                device_attributes[name] = int(value) * self._unit_size
+
+                    if str(main_entity_details).lower() == TRUE_STR:
+                        state = STATE_ON
                     else:
-                        name = attr.get(ATTR_NAME)
+                        state = STATE_OFF
 
-                        if ATTR_UNIT_OF_MEASUREMENT not in attr:
-                            attributes[name] = value
+                    current_entity = self._hass.states.get(entity_id)
 
-                for data_item_key in data:
-                    attr = self.get_device_attributes(data_item_key)
-                    value = data.get(data_item_key)
-                    entity_id = None
-                    state = None
-                    device_attributes = None
+                    device_attributes[EVENT_TIME_CHANGED] = datetime.now()
 
-                    if ATTR_UNIT_OF_MEASUREMENT in attr:
+                    if current_entity is not None and current_entity.state == state:
+                        entity_attributes = current_entity.attributes
+                        device_attributes[EVENT_TIME_CHANGED] = entity_attributes.get(EVENT_TIME_CHANGED)
 
-                        name = attr.get(ATTR_NAME)
-                        unit = attr.get(ATTR_UNIT_OF_MEASUREMENT)
-
-                        entity_id = ENTITY_ID_DEVICE_SENSOR.format(slugify(key), slugify(name))
-
-                        device_attributes = {
-                            ATTR_UNIT_OF_MEASUREMENT: unit,
-                            ATTR_FRIENDLY_NAME: 'EdgeOS {} {}'.format(key, name)
-                        }
-
-                        state = value
-                    elif data_item_key == CONNECTED:
-                        device_attributes = {
-                            ATTR_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY
-                        }
-
-                        for attr_key in attributes:
-                            device_attributes[attr_key] = attributes.get(attr_key)
-
-                        entity_id = ENTITY_ID_DEVICE_BINARY_SENSOR.format(slugify(key))
-
-                        if str(value).lower() == TRUE_STR:
-                            state = STATE_ON
-                        else:
-                            state = STATE_OFF
-
-                        current_entity = self._hass.states.get(entity_id)
-
-                        attributes[EVENT_TIME_CHANGED] = datetime.now()
-
-                        if current_entity is not None and current_entity.state == state:
-                            entity_attributes = current_entity.attributes
-                            attributes[EVENT_TIME_CHANGED] = entity_attributes.get(EVENT_TIME_CHANGED)
-
-                    if entity_id is not None:
-                        self._hass.states.set(entity_id, state, device_attributes)
+                    self._hass.states.set(entity_id, state, device_attributes)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
             _LOGGER.error(
-                'Failed to create device sensor {} with the following data: {}, Error: {}, Line: {}'.format(key,
-                                                                                                            str(data),
-                                                                                                            str(ex),
-                                                                                                            line_number))
+                'Failed to create {} sensor {} with the following data: {}, Error: {}, Line: {}'.format(key,
+                                                                                                        sensor_type,
+                                                                                                        str(data),
+                                                                                                        str(ex),
+                                                                                                        line_number))
 
     def create_unknown_device_sensor(self, devices, devices_count):
         try:
             entity_id = ENTITY_ID_UNKNOWN_DEVICES
             state = devices_count
-            attributes = {
-                STATE_UNKNOWN: devices
-            }
+
+            attributes = {}
+
+            if devices_count > 0:
+                attributes[STATE_UNKNOWN] = devices
 
             self._hass.states.set(entity_id, state, attributes)
         except Exception as ex:
@@ -855,8 +806,33 @@ class EdgeOS(requests.Session):
             line_number = tb.tb_lineno
 
             _LOGGER.error(
-                'Failed to create unknown device sensor with the following data: {}, Error: {}, Line: {}'.format(str(devices),
-                                                                                                       str(ex), line_number))
+                'Failed to create unknown device sensor, Data: {}, Error: {}, Line: {}'.format(str(devices),
+                                                                                               str(ex),
+                                                                                               line_number))
+
+    def create_system_sensor(self):
+        try:
+            data = self.get_edgeos_data(SYSTEM_STATS_KEY)
+
+            if data is not None:
+                attributes = {
+                    ATTR_UNIT_OF_MEASUREMENT: 'seconds',
+                    ATTR_FRIENDLY_NAME: 'EdgeOS System Uptime'
+                }
+
+                for key in data:
+                    if key != UPTIME:
+                        attributes[key] = data[key]
+
+                entity_id = 'sensor.edgeos_system_uptime'
+                state = data.get(UPTIME, 0)
+
+                self._hass.states.set(entity_id, state, attributes)
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+            _LOGGER.error(
+                'Failed to create system sensor, Error: {}, Line: {}'.format(str(ex), line_number))
 
     @staticmethod
     def get_device_attributes(key):
@@ -926,9 +902,6 @@ class EdgeOSWebSocket:
 
         self._consumer_handler()
 
-    def on_cont_message(self, message, continue_flag):
-        _LOGGER.debug('{} - {}'.format(continue_flag, message[:30]))
-
     def on_message(self, message):
         if self._stopping:
             _LOGGER.warning('Received a message while WS is closed, ignoring message: {}'.format(message))
@@ -967,7 +940,9 @@ class EdgeOSWebSocket:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error('Failed to invoke handler, Payload: {}, Error: {}, Line: {}'.format(payload, str(ex), line_number))
+            _LOGGER.error('Failed to invoke handler, Payload: {}, Error: {}, Line: {}'.format(payload,
+                                                                                              str(ex),
+                                                                                              line_number))
 
     def extract_payload(self, payload_json, original_message, delayed_message=None):
         try:
@@ -1067,4 +1042,3 @@ class EdgeOSWebSocket:
             line_number = tb.tb_lineno
 
             _LOGGER.error('Failed to stop daemon thread, Error: {}, Line: {}'.format(str(ex), line_number))
-

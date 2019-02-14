@@ -16,6 +16,11 @@ edgeos:
   monitored_devices:
     - PC1
     - PC2
+  #Optional - Allowed values:
+  #  '' - represents bytes
+  #  'K' - represents Kilobytes
+  #  'M' - represents Megabytes
+  unit: 'M'
 
 device_tracker:
   - platform: edgeos
