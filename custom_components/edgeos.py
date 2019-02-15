@@ -599,8 +599,6 @@ class EdgeOS(requests.Session):
 
     def handle_export(self, data):
         try:
-            _LOGGER.debug(EXPORT_KEY)
-
             result = self.get_devices()
 
             for hostname in result:
@@ -723,7 +721,11 @@ class EdgeOS(requests.Session):
         device = self.get_device(hostname)
 
         connected = device.get(CONNECTED, FALSE_STR)
-        is_online = connected == TRUE_STR
+
+        if connected == TRUE_STR:
+            is_online = True
+        else:
+            is_online = False
 
         return is_online
 
@@ -742,43 +744,42 @@ class EdgeOS(requests.Session):
         try:
             if key in allowed_items:
                 entity_id = entity_id_template.format(slugify(key))
-                main_entity_details = data.get(main_attribute)
+                main_entity_details = data.get(main_attribute, FALSE_STR)
 
-                if main_entity_details is not None:
-                    device_attributes = {
-                        ATTR_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
-                        ATTR_FRIENDLY_NAME: 'EdgeOS {} {}'.format(sensor_type, key)
-                    }
+                device_attributes = {
+                    ATTR_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
+                    ATTR_FRIENDLY_NAME: 'EdgeOS {} {}'.format(sensor_type, key)
+                }
 
-                    for data_item_key in data:
-                        if data_item_key != main_attribute:
-                            value = data.get(data_item_key)
-                            attr = get_attributes(data_item_key)
+                for data_item_key in data:
+                    if data_item_key != main_attribute:
+                        value = data.get(data_item_key)
+                        attr = get_attributes(data_item_key)
 
-                            name = attr.get(ATTR_NAME, data_item_key)
-                            unit_of_measurement = attr.get(ATTR_UNIT_OF_MEASUREMENT)
+                        name = attr.get(ATTR_NAME, data_item_key)
+                        unit_of_measurement = attr.get(ATTR_UNIT_OF_MEASUREMENT)
 
-                            if unit_of_measurement is None:
-                                device_attributes[name] = value
-                            else:
-                                name = name.format(self._unit)
+                        if unit_of_measurement is None:
+                            device_attributes[name] = value
+                        else:
+                            name = name.format(self._unit)
 
-                                device_attributes[name] = int(value) * self._unit_size
+                            device_attributes[name] = int(value) * self._unit_size
 
-                    if str(main_entity_details).lower() == TRUE_STR:
-                        state = STATE_ON
-                    else:
-                        state = STATE_OFF
+                if str(main_entity_details).lower() == TRUE_STR:
+                    state = STATE_ON
+                else:
+                    state = STATE_OFF
 
-                    current_entity = self._hass.states.get(entity_id)
+                current_entity = self._hass.states.get(entity_id)
 
-                    device_attributes[EVENT_TIME_CHANGED] = datetime.now()
+                device_attributes[EVENT_TIME_CHANGED] = datetime.now()
 
-                    if current_entity is not None and current_entity.state == state:
-                        entity_attributes = current_entity.attributes
-                        device_attributes[EVENT_TIME_CHANGED] = entity_attributes.get(EVENT_TIME_CHANGED)
+                if current_entity is not None and current_entity.state == state:
+                    entity_attributes = current_entity.attributes
+                    device_attributes[EVENT_TIME_CHANGED] = entity_attributes.get(EVENT_TIME_CHANGED)
 
-                    self._hass.states.set(entity_id, state, device_attributes)
+                self._hass.states.set(entity_id, state, device_attributes)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
