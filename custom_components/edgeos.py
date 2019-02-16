@@ -179,6 +179,8 @@ DEVICE_CLASS_CONNECTIVITY = 'connectivity'
 
 DEFAULT_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
+EDGEOS_DATA_LOG = 'edgeos_data.log'
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
@@ -298,13 +300,20 @@ class EdgeOS(requests.Session):
 
             self.refresh_data()
 
+        def edgeos_save_debug_data(event_time):
+            _LOGGER.info('Save EdgeOS debug data ({})'.format(event_time))
+
+            self.log_edgeos_data()
+
         self.i_edgeos_initialize = edgeos_initialize
         self.i_edgeos_stop = edgeos_stop
         self.i_edgeos_restart = edgeos_restart
         self.i_edgeos_refresh = edgeos_refresh
+        self.i_edgeos_save_debug_data = edgeos_save_debug_data
 
         hass.services.register(DOMAIN, 'stop', edgeos_stop)
         hass.services.register(DOMAIN, 'restart', edgeos_restart)
+        hass.services.register(DOMAIN, 'save_debug_data', edgeos_save_debug_data)
 
         track_time_interval(hass, edgeos_refresh, self._scan_interval)
 
@@ -324,6 +333,19 @@ class EdgeOS(requests.Session):
             line_number = tb.tb_lineno
 
             _LOGGER.error('Failed to refresh data, Error: {}, Line: {}'.format(str(ex), line_number))
+
+    def log_edgeos_data(self):
+        try:
+            path = self._hass.config.path(EDGEOS_DATA_LOG)
+
+            with open(path, 'w+') as out:
+                out.write(str(self._edgeos_data))
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error('Failed to log EdgeOS data, Error: {}, Line: {}'.format(str(ex), line_number))
 
     def ws_handler(self, payload=None):
         try:
