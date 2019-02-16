@@ -177,6 +177,8 @@ ENTITY_ID_UNKNOWN_DEVICES = 'sensor.edgeos_unknown_devices'
 ATTR_DEVICE_CLASS = 'device_class'
 DEVICE_CLASS_CONNECTIVITY = 'connectivity'
 
+DEFAULT_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
@@ -282,10 +284,27 @@ class EdgeOS(requests.Session):
             if self._ws_connection is not None:
                 self._ws_connection.stop()
 
+        def edgeos_restart(event_time):
+            _LOGGER.info('Restart begun at {}'.format(event_time))
+            if self._ws_connection is not None:
+                self._ws_connection.stop()
+
+            self._ws_connection.initialize()
+
+            self.refresh_data()
+
         def edgeos_refresh(event_time):
             _LOGGER.info('Refresh EdgeOS components ({})'.format(event_time))
 
             self.refresh_data()
+
+        self.i_edgeos_initialize = edgeos_initialize
+        self.i_edgeos_stop = edgeos_stop
+        self.i_edgeos_restart = edgeos_restart
+        self.i_edgeos_refresh = edgeos_refresh
+
+        hass.services.register(DOMAIN, 'stop', edgeos_stop)
+        hass.services.register(DOMAIN, 'restart', edgeos_restart)
 
         track_time_interval(hass, edgeos_refresh, self._scan_interval)
 
@@ -620,7 +639,7 @@ class EdgeOS(requests.Session):
                             service_data = device_data.get(service, {})
                             for item in service_data:
                                 current_value = int(host_data_traffic.get(item, 0))
-                                service_data_item_value = (int(service_data.get(item, 0)) * BITS_IN_BYTE) / self._unit_size
+                                service_data_item_value = int(service_data.get(item, 0))
 
                                 host_data_traffic[item] = current_value + service_data_item_value
 
@@ -764,7 +783,7 @@ class EdgeOS(requests.Session):
                         else:
                             name = name.format(self._unit)
 
-                            device_attributes[name] = int(value) * self._unit_size
+                            device_attributes[name] = (int(value) * BITS_IN_BYTE) * self._unit_size
 
                 if str(main_entity_details).lower() == TRUE_STR:
                     state = STATE_ON
@@ -773,7 +792,7 @@ class EdgeOS(requests.Session):
 
                 current_entity = self._hass.states.get(entity_id)
 
-                device_attributes[EVENT_TIME_CHANGED] = datetime.now()
+                device_attributes[EVENT_TIME_CHANGED] = datetime.now().strftime(DEFAULT_DATE_FORMAT)
 
                 if current_entity is not None and current_entity.state == state:
                     entity_attributes = current_entity.attributes
