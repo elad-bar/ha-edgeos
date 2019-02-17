@@ -805,7 +805,7 @@ class EdgeOS(requests.Session):
                         else:
                             name = name.format(self._unit)
 
-                            device_attributes[name] = (int(value) * BITS_IN_BYTE) * self._unit_size
+                            device_attributes[name] = (int(value) * BITS_IN_BYTE) / self._unit_size
 
                 if str(main_entity_details).lower() == TRUE_STR:
                     state = STATE_ON
