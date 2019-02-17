@@ -1041,15 +1041,7 @@ class EdgeOSWebSocket:
                                               on_open=self.on_open,
                                               cookie=self._cookies_as_str)
 
-            kwargs = {
-                ARG_SSL_OPTIONS: self._ssl_options,
-                ARG_ORIGIN: self._edgeos_url
-            }
-
-            self._thread = threading.Thread(target=self._ws.run_forever, kwargs=kwargs)
-            self._thread.daemon = True
-            self._thread._running = True
-            self._thread.start()
+            self._ws.run_forever(sslopt=self._ssl_options, origin=self._edgeos_url)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -1064,6 +1056,7 @@ class EdgeOSWebSocket:
             if self._ws is not None:
                 self._stopping = True
                 self._ws.keep_running = False
+                self._ws.close()
 
             _LOGGER.info("WebSocket Stopped")
         except Exception as ex:
@@ -1072,15 +1065,3 @@ class EdgeOSWebSocket:
 
             _LOGGER.error('Failed to stop WebSocket, Error: {}, Line: {}'.format(str(ex), line_number))
 
-        try:
-            _LOGGER.info("Stopping daemon thread")
-
-            if self._thread is not None:
-                self._thread.join()
-
-            _LOGGER.info("Daemon thread stopped")
-        except Exception as ex:
-            exc_type, exc_obj, tb = sys.exc_info()
-            line_number = tb.tb_lineno
-
-            _LOGGER.error('Failed to stop daemon thread, Error: {}, Line: {}'.format(str(ex), line_number))
