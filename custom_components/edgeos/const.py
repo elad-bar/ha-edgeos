@@ -1,4 +1,7 @@
 """Constants for the cloud component."""
+from datetime import datetime, timedelta
+from homeassistant.const import (ATTR_NAME, ATTR_UNIT_OF_MEASUREMENT)
+
 DOMAIN = 'edgeos'
 DATA_EDGEOS = 'edgeos_data'
 SIGNAL_UPDATE_EDGEOS = "edgeos_update"
@@ -110,6 +113,8 @@ ENTITY_ID_DEVICE_BINARY_SENSOR = 'binary_sensor.edgeos_device_{}'
 ENTITY_ID_DEVICE_SENSOR = 'sensor.edgeos_device_{}_{}'
 ENTITY_ID_UNKNOWN_DEVICES = 'sensor.edgeos_unknown_devices'
 
+ENTITY_ID_SYSTEM_UPTIME = 'sensor.edgeos_system_uptime'
+
 ATTR_WEBSOCKET_LAST_UPDATE = 'WS Last Update'
 ATTR_API_LAST_UPDATE = 'API Last Update'
 ATTR_DEVICE_CLASS = 'device_class'
@@ -118,3 +123,53 @@ DEVICE_CLASS_CONNECTIVITY = 'connectivity'
 DEFAULT_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 EDGEOS_DATA_LOG = 'edgeos_data.log'
+
+INTERFACES_MAIN_MAP = {
+    LINK_UP: {ATTR_NAME: 'Connected', ATTR_UNIT_OF_MEASUREMENT: 'Connectivity'},
+    'speed': {ATTR_NAME: 'Link Speed (Mbps)'},
+    'duplex': {ATTR_NAME: 'Duplex'},
+    'mac': {ATTR_NAME: 'MAC'},
+}
+
+INTERFACES_STATS_MAP = {
+    'rx_packets': {ATTR_NAME: 'Packets (Received)'},
+    'tx_packets': {ATTR_NAME: 'Packets (Sent)'},
+    'rx_bytes': {ATTR_NAME: '{}Bytes (Received)', ATTR_UNIT_OF_MEASUREMENT: 'Bytes'},
+    'tx_bytes': {ATTR_NAME: '{}Bytes (Sent)', ATTR_UNIT_OF_MEASUREMENT: 'Bytes'},
+    'rx_errors': {ATTR_NAME: 'Errors (Received)'},
+    'tx_errors': {ATTR_NAME: 'Errors (Sent)'},
+    'rx_dropped': {ATTR_NAME: 'Dropped Packets (Received)'},
+    'tx_dropped': {ATTR_NAME: 'Dropped Packets (Sent)'},
+    'rx_bps': {ATTR_NAME: '{}Bps (Received)', ATTR_UNIT_OF_MEASUREMENT: 'Bps'},
+    'tx_bps': {ATTR_NAME: '{}Bps (Sent)', ATTR_UNIT_OF_MEASUREMENT: 'Bps'},
+    'multicast': {ATTR_NAME: 'Multicast'}
+}
+
+DEVICE_SERVICES_STATS_MAP = {
+    'rx_bytes': {ATTR_NAME: '{}Bytes (Received)', ATTR_UNIT_OF_MEASUREMENT: 'Bytes'},
+    'tx_bytes': {ATTR_NAME: '{}Bytes (Sent)', ATTR_UNIT_OF_MEASUREMENT: 'Bytes'},
+    'rx_rate': {ATTR_NAME: '{}Bps (Received)', ATTR_UNIT_OF_MEASUREMENT: 'Bps'},
+    'tx_rate': {ATTR_NAME: '{}Bps (Sent)', ATTR_UNIT_OF_MEASUREMENT: 'Bps'},
+}
+
+SCAN_INTERVAL = timedelta(seconds=60)
+EMPTY_LAST_VALID = datetime.fromtimestamp(100000)
+
+MAX_MSG_SIZE = 0
+MAX_PENDING_PAYLOADS = 3
+
+EMPTY_STRING = ''
+NEW_LINE = '\n'
+BEGINS_WITH_SIX_DIGITS = '^([0-9]{1,6})'
+
+SENSOR_TYPE_INTERFACE = 'Interface'
+SENSOR_TYPE_DEVICE = 'Device'
+
+ATTR_SECONDS = 'seconds'
+ATTR_SYSTEM_UPTIME = 'System Uptime'
+
+STRING_DASH = '-'
+STRING_UNDERSCORE = '_'
+STRING_COMMA = ','
+STRING_COLON = ':'
+
