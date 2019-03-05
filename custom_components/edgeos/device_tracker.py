@@ -13,14 +13,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER, ATTR_SOURCE_TYPE)
 from homeassistant.components.device_tracker import DeviceScanner
 from homeassistant.const import (CONF_HOSTS, CONF_HOST)
-from custom_components.edgeos import (DATA_EDGEOS, MAC)
 from homeassistant.helpers.typing import ConfigType
 
-from custom_components.edgeos import DOMAIN as EDGEOS_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from . import (DOMAIN, DATA_EDGEOS)
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = [EDGEOS_DOMAIN]
+DEPENDENCIES = [DOMAIN]
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
@@ -38,10 +37,10 @@ def get_scanner(hass, config: ConfigType):
 
         _LOGGER.info('Getting EdgeOS Scanner, Configuration: {}'.format(conf))
 
-        edgeos = hass.data[DATA_EDGEOS]
+        edgeos_data = hass.data[DATA_EDGEOS]
         hosts = conf.get(CONF_HOSTS, [])
 
-        scanner = EdgeOSScanner(edgeos, hosts)
+        scanner = EdgeOSScanner(edgeos_data, hosts)
 
         return scanner if scanner.is_initialized() else None
 
