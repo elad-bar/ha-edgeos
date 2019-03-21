@@ -140,7 +140,7 @@ class EdgeOSWebSocket:
         self._stopping = True
 
         if self.is_initialized:
-            self._session.close()
+            yield from self._session.close()
 
     def get_subscription_data(self):
         topics_to_subscribe = [{WS_TOPIC_NAME: topic} for topic in self._topics]

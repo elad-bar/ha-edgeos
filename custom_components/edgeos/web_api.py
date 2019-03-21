@@ -30,7 +30,7 @@ class EdgeOSWebAPI:
 
     def close(self):
         if self.is_initialized:
-            self._session.close()
+            yield from self._session.close()
 
     @property
     def is_initialized(self):
