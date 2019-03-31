@@ -25,6 +25,7 @@ class EdgeOSWebSocket:
         self._session_id = None
         self._topics = topics
         self._session = None
+        self._log_events = False
 
         self._stopping = False
         self._pending_payloads = []
@@ -40,6 +41,9 @@ class EdgeOSWebSocket:
         self._stopping = False
         self._session_id = session_id
         self._session = aiohttp.ClientSession(cookies=cookies)
+
+    def log_events(self, log_event_enabled):
+        self._log_events = log_event_enabled
 
     @property
     def is_initialized(self):
@@ -68,7 +72,7 @@ class EdgeOSWebSocket:
                 self._edgeos_callback(payload_json)
                 parsed = True
             else:
-                _LOGGER.debug(f'parse_message - Skipping message (Empty)')
+                _LOGGER.debug('parse_message - Skipping message (Empty)')
 
         except Exception as ex:
             _LOGGER.debug(f'parse_message - Cannot parse partial payload, Error: {ex}')
@@ -128,6 +132,9 @@ class EdgeOSWebSocket:
             _LOGGER.warning(f'Connection error, Description: {ws.exception()}')
 
         else:
+            if self._log_events:
+                _LOGGER.debug(f'New message received: {str(msg)}')
+
             self._last_update = datetime.now()
 
             self.parse_message(msg.data)

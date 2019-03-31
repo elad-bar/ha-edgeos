@@ -7,7 +7,6 @@ https://home-assistant.io/components/device_tracker.edgeos/
 import logging
 import sys
 
-from datetime import timedelta
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER, ATTR_SOURCE_TYPE)
@@ -16,14 +15,10 @@ from homeassistant.const import (CONF_HOSTS, CONF_HOST)
 from homeassistant.helpers.typing import ConfigType
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from . import (DOMAIN, DATA_EDGEOS)
+from .const import *
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = [DOMAIN]
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
-
-CONF_SUPPORTED_DEVICES = 'supported_devices'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string])
@@ -35,7 +30,7 @@ def get_scanner(hass, config: ConfigType):
     try:
         conf = config[DEVICE_TRACKER_DOMAIN]
 
-        _LOGGER.info('Getting EdgeOS Scanner, Configuration: {}'.format(conf))
+        _LOGGER.info(f'Getting EdgeOS Scanner, Configuration: {conf}')
 
         edgeos_data = hass.data[DATA_EDGEOS]
         hosts = conf.get(CONF_HOSTS, [])
@@ -48,7 +43,7 @@ def get_scanner(hass, config: ConfigType):
         exc_type, exc_obj, tb = sys.exc_info()
         line_number = tb.tb_lineno
 
-        _LOGGER.error('Failed to initialize EdgeOS Scanner, Error: {}, Line: {}'.format(str(ex), line_number))
+        _LOGGER.error(f'Failed to initialize EdgeOS Scanner, Error: {str(ex)}, Line: {line_number}')
 
         return None
 
@@ -65,15 +60,14 @@ class EdgeOSScanner(DeviceScanner):
             self._attached_devices = {}
             self._is_initialized = False
 
-            _LOGGER.info('Initializing EdgeOS Scanner, Looking for: {}'.format(str(self._hosts)))
+            _LOGGER.info(f'Initializing EdgeOS Scanner, Looking for: {str(self._hosts)}')
 
             self._is_initialized = True
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(
-                'Failed to initialize EdgeOS Scanner, Error: {}, Line: {}'.format(str(ex), line_number))
+            _LOGGER.error(f'Failed to initialize EdgeOS Scanner, Error: {str(ex)}, Line: {line_number}')
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -96,8 +90,7 @@ class EdgeOSScanner(DeviceScanner):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(
-                'Failed to scan_devices, Error: {}, Line: {}'.format(str(ex), line_number))
+            _LOGGER.error(f'Failed to scan_devices, Error: {str(ex)}, Line: {line_number}')
 
             return None
 
@@ -112,8 +105,7 @@ class EdgeOSScanner(DeviceScanner):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(
-                'Failed to get_device_name, Device: {}, Error: {}, Line: {}'.format(device, str(ex), line_number))
+            _LOGGER.error(f'Failed to get_device_name, Device: {device}, Error: {str(ex)}, Line: {line_number}')
 
             return None
 

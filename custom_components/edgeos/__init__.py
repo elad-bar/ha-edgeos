@@ -22,7 +22,6 @@ REQUIREMENTS = ['aiohttp']
 
 _LOGGER = logging.getLogger(__name__)
 
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
@@ -108,12 +107,20 @@ class EdgeOS:
 
             self._edgeos_ha.store_data(self._edgeos_data)
 
+        def edgeos_log_events(service):
+            _LOGGER.info(f'Log Events EdgeOS WebSocket ({service.data})')
+
+            enabled = service.data.get(ATTR_ENABLED, False)
+
+            self._ws.log_events(enabled)
+
         try:
             if self._edgeos_login_service.login():
                 self._edgeos_ha.initialize(edgeos_initialize,
                                            edgeos_stop,
                                            edgeos_refresh,
-                                           edgeos_save_debug_data)
+                                           edgeos_save_debug_data,
+                                           edgeos_log_events)
 
                 self._is_initialized = True
         except Exception as ex:

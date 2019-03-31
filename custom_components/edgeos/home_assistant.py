@@ -5,7 +5,9 @@ https://home-assistant.io/components/edgeos/
 """
 import sys
 import logging
+import voluptuous as vol
 
+from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (STATE_OFF, STATE_ON, ATTR_FRIENDLY_NAME, STATE_UNKNOWN, EVENT_TIME_CHANGED)
 
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
@@ -15,6 +17,10 @@ from homeassistant.util import slugify
 from .const import *
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_LOG_EVENTS_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENABLED): cv.boolean,
+})
 
 
 class EdgeOSHomeAssistant:
@@ -26,10 +32,11 @@ class EdgeOSHomeAssistant:
         self._unit = unit
         self._unit_size = ALLOWED_UNITS.get(self._unit, BYTE)
 
-    def initialize(self, edgeos_initialize, edgeos_stop, edgeos_refresh, edgeos_save_debug_data):
+    def initialize(self, edgeos_initialize, edgeos_stop, edgeos_refresh, edgeos_save_debug_data, edgeos_log_events):
         self._hass.services.register(DOMAIN, 'stop', edgeos_stop)
         self._hass.services.register(DOMAIN, 'restart', edgeos_initialize)
         self._hass.services.register(DOMAIN, 'save_debug_data', edgeos_save_debug_data)
+        self._hass.services.register(DOMAIN, 'log_events', edgeos_log_events, schema=SERVICE_LOG_EVENTS_SCHEMA)
 
         track_time_interval(self._hass, edgeos_refresh, self._scan_interval)
 

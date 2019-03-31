@@ -6,3 +6,8 @@ restart:
 
 save_debug_data:
   description: "Store the EdgeOS state to file, Path in CONFIG_PATH/edgeos_data.log"
+
+log_events:
+  description: "Enable / Disable log of all event messages from WebSocket (DEBUG)"
+  fields:
+    enabled: "True / False - whether to log as DEBUG all events"
