@@ -12,6 +12,7 @@ from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_SSL, CONF_HO
 
 from homeassistant.helpers import config_validation as cv
 
+from .const import VERSION
 from .const import *
 from .home_assistant import (EdgeOSHomeAssistant)
 from .web_api import (EdgeOSWebAPI)
