@@ -6,13 +6,13 @@
         "visit_repo": "https://github.com/elad-bar/ha-edgeos",
         "changelog": "https://github.com/elad-bar/ha-edgeos/releases/latest",
         "resources": [
-            "https://https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/const.py",
-            "https://https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/device_tracker.py",
-            "https://https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/home_assistant.py",
-            "https://https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/services.yaml",
-            "https://https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/web_api.py",
-            "https://https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/web_login.py",
-            "https://https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/web_socket.py"
+            "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/const.py",
+            "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/device_tracker.py",
+            "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/home_assistant.py",
+            "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/services.yaml",
+            "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/web_api.py",
+            "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/web_login.py",
+            "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/web_socket.py"
         ]
     }
 }
