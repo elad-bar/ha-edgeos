@@ -2,6 +2,8 @@
 from datetime import datetime, timedelta
 from homeassistant.const import (ATTR_NAME, ATTR_UNIT_OF_MEASUREMENT)
 
+VERSION = '1.0.0'
+
 DOMAIN = 'edgeos'
 DATA_EDGEOS = 'edgeos_data'
 SIGNAL_UPDATE_EDGEOS = "edgeos_update"
