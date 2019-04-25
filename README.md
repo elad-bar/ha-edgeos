@@ -49,5 +49,5 @@ custom_updater:
   track:
     - components
   component_urls:
-    - https://raw.githubusercontent.com/elad-bar/ha-custom-components/master/edgeos.json
+    - https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/edgeos.json
 </pre>
