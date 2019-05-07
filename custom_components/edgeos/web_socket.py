@@ -18,10 +18,11 @@ _LOGGER = logging.getLogger(__name__)
 
 class EdgeOSWebSocket:
 
-    def __init__(self, edgeos_url, topics, edgeos_callback):
+    def __init__(self, edgeos_url, topics, edgeos_callback, hass_loop):
         self._last_update = datetime.now()
         self._edgeos_url = edgeos_url
         self._edgeos_callback = edgeos_callback
+        self._hass_loop = hass_loop
         self._session_id = None
         self._topics = topics
         self._session = None
@@ -40,7 +41,7 @@ class EdgeOSWebSocket:
 
         self._stopping = False
         self._session_id = session_id
-        self._session = aiohttp.ClientSession(cookies=cookies)
+        self._session = aiohttp.ClientSession(cookies=cookies, loop=self._hass_loop)
 
     def log_events(self, log_event_enabled):
         self._log_events = log_event_enabled

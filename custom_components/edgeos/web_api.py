@@ -16,17 +16,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EdgeOSWebAPI:
-    def __init__(self, edgeos_url):
+    def __init__(self, edgeos_url, hass_loop):
         self._last_update = datetime.now()
         self._session = None
 
         self._last_valid = EMPTY_LAST_VALID
         self._edgeos_url = edgeos_url
+        self._hass_loop = hass_loop
 
     def initialize(self, cookies):
         self.close()
 
-        self._session = aiohttp.ClientSession(cookies=cookies)
+        self._session = aiohttp.ClientSession(cookies=cookies, loop=self._hass_loop)
 
     def close(self):
         if self.is_initialized:

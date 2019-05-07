@@ -76,11 +76,14 @@ class EdgeOS:
         self._ws_handlers = self.get_ws_handlers()
         self._topics = self._ws_handlers.keys()
 
-        self._api = EdgeOSWebAPI(self._edgeos_url)
+        self._hass_loop = hass.loop
+
+        self._api = EdgeOSWebAPI(self._edgeos_url, self._hass_loop)
 
         self._ws = EdgeOSWebSocket(self._edgeos_url,
                                    self._topics,
-                                   self.ws_handler)
+                                   self.ws_handler,
+                                   self._hass_loop)
 
         self._edgeos_login_service = EdgeOSWebLogin(host, is_ssl, username, password)
         self._edgeos_ha = EdgeOSHomeAssistant(hass, monitored_interfaces, monitored_devices, unit, scan_interval)

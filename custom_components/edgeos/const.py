@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 from homeassistant.const import (ATTR_NAME, ATTR_UNIT_OF_MEASUREMENT)
 
-VERSION = '1.0.2'
+VERSION = '1.0.3'
 
 DOMAIN = 'edgeos'
 DATA_EDGEOS = 'edgeos_data'
