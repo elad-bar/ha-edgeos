@@ -102,7 +102,7 @@ class EdgeOS:
 
         @asyncio.coroutine
         def edgeos_refresh(event_time):
-            _LOGGER.info(f'Refresh EdgeOS components ({event_time})')
+            _LOGGER.debug(f'Refresh EdgeOS components ({event_time})')
 
             yield from self.refresh_data()
 
