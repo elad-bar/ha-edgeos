@@ -13,7 +13,7 @@ When setting device_tracker domain it will add per host device tracker, "unsee" 
 * EdgeRouter User with 'Operator' level access or higher
 * Traffic Analysis set to 'Hosts only' or 'Enabled'
 
-## Example configuration
+## Example configuration.yaml
 ```
 edgeos:
     host: !secret edge_os_host #Hostname / IP
