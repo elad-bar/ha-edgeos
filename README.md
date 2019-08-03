@@ -1,5 +1,10 @@
-# EdgeOS
-## Description
+<h1>EdgeOS</h1>
+<h2>Requirements</h2>
+<ul>
+<li>EdgeRouter User with 'Operator' level access or higher</li>
+<li>Traffic Analysis set to 'Hosts only' or 'Enabled'</li>
+    </ul>
+<h2>Description</h2>
 Provides an integration between EdgeOS (Ubiquity) routers to Home Assistant,
 Creates the following components:
 * Binary Sensor - per monitored device whether it's connected, attributes: IP, MAC, Bytes / Bps (Sent / Received)
@@ -43,3 +48,4 @@ custom_updater:
   component_urls:
     - https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/edgeos.json
 ```
+
