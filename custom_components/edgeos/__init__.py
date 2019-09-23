@@ -64,6 +64,10 @@ class EdgeOS:
 
         self._initialization_counter = -1
         self._is_initialized = False
+        self._host = host
+        self._is_ssl = is_ssl
+        self._username = username
+        self._password = password
 
         protocol = PROTOCOL_UNSECURED
         if is_ssl:
@@ -85,7 +89,7 @@ class EdgeOS:
                                    self.ws_handler,
                                    self._hass_loop)
 
-        self._edgeos_login_service = EdgeOSWebLogin(host, is_ssl, username, password)
+        self._edgeos_login_service = EdgeOSWebLogin(self._host, self._is_ssl, self._username, self._password)
         self._edgeos_ha = EdgeOSHomeAssistant(hass, monitored_interfaces, monitored_devices, unit, scan_interval)
 
         @asyncio.coroutine
@@ -143,15 +147,26 @@ class EdgeOS:
         _LOGGER.info(f'initialize_edgeos_connection - Initialization #{counter} begun at {event_time}')
 
         try:
-            cookies = self._edgeos_login_service.cookies_data
-            session_id = self._edgeos_login_service.session_id
+            logged_in = True
+            
+            for i in range(2):
+                if logged_in:
+                    cookies = self._edgeos_login_service.cookies_data
+                    session_id = self._edgeos_login_service.session_id
 
-            self._api.initialize(cookies)
-            self._ws.initialize(cookies, session_id)
+                    self._api.initialize(cookies)
+                    self._ws.initialize(cookies, session_id)
 
-            yield from self.refresh_data()
+                    yield from self.refresh_data()
 
-            yield from self._ws.start_listen()
+                    yield from self._ws.start_listen()
+
+                    if not self._ws.is_listen and i == 0:
+                        self._edgeos_login_service = EdgeOSWebLogin(self._host, self._is_ssl, self._username, self._password)
+                        logged_in = self._edgeos_login_service.login()
+
+                else:
+                    _LOGGER.error("initialize_edgeos_connection - Failed, cannot log in")
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
