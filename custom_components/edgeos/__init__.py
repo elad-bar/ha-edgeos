@@ -166,7 +166,7 @@ class EdgeOS:
             self._api.initialize(cookies)
             yield from self.refresh_data()
 
-            self._ws.initialize(cookies, session_id)
+            yield from self._ws.initialize(cookies, session_id)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()

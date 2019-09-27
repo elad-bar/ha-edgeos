@@ -37,7 +37,7 @@ class EdgeOSWebSocket:
         url = urlparse(self._edgeos_url)
         self._ws_url = WEBSOCKET_URL_TEMPLATE.format(url.netloc)
 
-    def initialize(self, cookies, session_id):
+    async def initialize(self, cookies, session_id):
         _LOGGER.info("Start initailzing the connection")
 
         self.close()
