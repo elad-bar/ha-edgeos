@@ -46,6 +46,21 @@ class EdgeOSWebSocket:
         self._session_id = session_id
         self._session = aiohttp.ClientSession(cookies=cookies, loop=self._hass_loop)
 
+        while not self._stopping:
+            try:
+                async with self._session.ws_connect(self._ws_url,
+                                                    origin=self._edgeos_url,
+                                                    ssl=False,
+                                                    max_msg_size=MAX_MSG_SIZE,
+                                                    timeout=self._timeout) as ws:
+
+                    await self.listen(ws)
+
+            except Exception as ex:
+                _LOGGER.warning(f'initialize - failed to listen EdgeOS, Error: {str(ex)}')
+
+        _LOGGER.warning(f'initialize - finished execution')
+
     def log_events(self, log_event_enabled):
         self._log_events = log_event_enabled
 
@@ -56,12 +71,6 @@ class EdgeOSWebSocket:
     @property
     def last_update(self):
         result = self._last_update
-
-        return result
-
-    @property
-    def is_listen(self):
-        result = self._is_listen
 
         return result
 
@@ -93,36 +102,10 @@ class EdgeOSWebSocket:
             else:
                 self._pending_payloads.append(message)
 
-    async def start_listen(self):
-        _LOGGER.info('start_listen - Start')
-        
+    async def listen(self, ws):
+        _LOGGER.info(f"Connection connected")
+
         subscription_data = self.get_subscription_data()
-
-        retry = 0
-
-        while not self._stopping and retry < 3:
-            try:
-                retry = retry + 1
-                async with self._session.ws_connect(self._ws_url,
-                                                    origin=self._edgeos_url,
-                                                    ssl=False,
-                                                    max_msg_size=MAX_MSG_SIZE,
-                                                    timeout=self._timeout) as ws:
-
-                    await self.listen(ws, subscription_data)
-
-                    self._is_listen = True
-            except Exception as ex:
-                _LOGGER.warn(f'start_listen - failed to listen EdgeOS, Error: {ex}')
-
-        if retry >= 3:
-            _LOGGER.error(f'start_listen - failed to listen EdgeOS after {retry} retries')
-
-        self._is_listen = False
-            
-    async def listen(self, ws, subscription_data):
-        _LOGGER.info(f'Connection connected, Subscribing to: {subscription_data}')
-
         await ws.send_str(subscription_data)
 
         _LOGGER.info('Subscribed')

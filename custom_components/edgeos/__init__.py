@@ -99,10 +99,23 @@ class EdgeOS:
             yield from self.initialize_edgeos_connection(event_time)
 
         def edgeos_stop(event_time):
-            _LOGGER.info(f'Stop begun at {event_time}')
+            _LOGGER.warning(f'Stop begun at {event_time}')
 
-            self._api.close()
-            self._ws.close()
+            try:
+                self._api.close()
+            except Exception as ex:
+                exc_type, exc_obj, tb = sys.exc_info()
+                line_number = tb.tb_lineno
+
+                _LOGGER.error(f"Failed to close connection to API, Error: {ex}, Line: {line_number}")
+
+            try:
+                self._ws.close()
+            except Exception as ex:
+                exc_type, exc_obj, tb = sys.exc_info()
+                line_number = tb.tb_lineno
+
+                _LOGGER.error(f"Failed to close connection to WS, Error: {ex}, Line: {line_number}")
 
         @asyncio.coroutine
         def edgeos_refresh(event_time):
@@ -147,26 +160,14 @@ class EdgeOS:
         _LOGGER.info(f'initialize_edgeos_connection - Initialization #{counter} begun at {event_time}')
 
         try:
-            logged_in = True
-            
-            for i in range(2):
-                if logged_in:
-                    cookies = self._edgeos_login_service.cookies_data
-                    session_id = self._edgeos_login_service.session_id
+            cookies = self._edgeos_login_service.cookies_data
+            session_id = self._edgeos_login_service.session_id
 
-                    self._api.initialize(cookies)
-                    self._ws.initialize(cookies, session_id)
+            self._api.initialize(cookies)
+            yield from self.refresh_data()
 
-                    yield from self.refresh_data()
+            self._ws.initialize(cookies, session_id)
 
-                    yield from self._ws.start_listen()
-
-                    if not self._ws.is_listen and i == 0:
-                        self._edgeos_login_service = EdgeOSWebLogin(self._host, self._is_ssl, self._username, self._password)
-                        logged_in = self._edgeos_login_service.login()
-
-                else:
-                    _LOGGER.error("initialize_edgeos_connection - Failed, cannot log in")
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
