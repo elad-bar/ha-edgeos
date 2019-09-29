@@ -46,7 +46,7 @@ class EdgeOSWebSocket:
         self._session_id = session_id
         self._session = aiohttp.ClientSession(cookies=cookies, loop=self._hass_loop)
 
-        while not self._stopping and self._session is not None:
+        while not self._stopping:
             try:
                 async with self._session.ws_connect(self._ws_url,
                                                     origin=self._edgeos_url,
@@ -57,7 +57,15 @@ class EdgeOSWebSocket:
                     await self.listen(ws)
 
             except Exception as ex:
-                _LOGGER.warning(f'initialize - failed to listen EdgeOS, Error: {str(ex)}')
+                error_message = str(ex)
+
+                if error_message == "cannot schedule new futures after shutdown":
+                    _LOGGER.warning(f'initialize - shutdown')
+
+                    self.close()
+
+                else:
+                    _LOGGER.warning(f'initialize - failed to listen EdgeOS, Error: {error_message}')
 
         _LOGGER.warning(f'initialize - finished execution')
 
