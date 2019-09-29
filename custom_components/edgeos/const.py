@@ -179,3 +179,5 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 CONF_SUPPORTED_DEVICES = 'supported_devices'
 ATTR_ENABLED = 'enabled'
+
+ERROR_SHUTDOWN = "cannot schedule new futures after shutdown"
