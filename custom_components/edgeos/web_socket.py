@@ -46,7 +46,7 @@ class EdgeOSWebSocket:
         self._session_id = session_id
         self._session = aiohttp.ClientSession(cookies=cookies, loop=self._hass_loop)
 
-        while not self._stopping:
+        while not self._stopping and self._session is not None:
             try:
                 async with self._session.ws_connect(self._ws_url,
                                                     origin=self._edgeos_url,
@@ -152,6 +152,8 @@ class EdgeOSWebSocket:
 
         if self.is_initialized:
             yield from self._session.close()
+
+        self._session = None
 
     def get_subscription_data(self):
         topics_to_subscribe = [{WS_TOPIC_NAME: topic} for topic in self._topics]
