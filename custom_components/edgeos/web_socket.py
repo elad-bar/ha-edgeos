@@ -61,16 +61,17 @@ class EdgeOSWebSocket:
             except Exception as ex:
                 error_message = str(ex)
 
-                if error_message == ERROR_SHUTDOWN:
-                    _LOGGER.warning(f'initialize - shutdown')
-                    is_active = False
+                if error_message is not None:
+                    if error_message == ERROR_SHUTDOWN:
+                        _LOGGER.warning(f'initialize - shutdown')
+                        is_active = False
 
-                    self.close()
+                        self.close()
 
-                else:
-                    _LOGGER.warning(f'initialize - failed to listen EdgeOS, Error: {error_message}')
+                    else:
+                        _LOGGER.warning(f"initialize - failed to listen EdgeOS, Error: {error_message}")
 
-        _LOGGER.warning(f'initialize - finished execution')
+        _LOGGER.info("initialize - finished execution")
 
     def log_events(self, log_event_enabled):
         self._log_events = log_event_enabled
