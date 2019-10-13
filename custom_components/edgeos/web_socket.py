@@ -122,7 +122,7 @@ class EdgeOSWebSocket:
         _LOGGER.info(f'Stop listening')
 
     def handle_next_message(self, ws, msg):
-        _LOGGER.info(f"Starting to handle next message, state: {self.is_initialized}")
+        _LOGGER.debug(f"Starting to handle next message")
         result = False
 
         if msg.type == aiohttp.WSMsgType.CLOSED:
