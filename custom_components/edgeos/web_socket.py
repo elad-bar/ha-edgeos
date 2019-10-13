@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class EdgeOSWebSocket:
 
-    def __init__(self, edgeos_url, topics, edgeos_callback, hass_loop):
+    def __init__(self, edgeos_url, topics, edgeos_callback, is_aborted_callback, hass_loop):
         self._last_update = datetime.now()
         self._edgeos_url = edgeos_url
         self._edgeos_callback = edgeos_callback
@@ -27,6 +27,7 @@ class EdgeOSWebSocket:
         self._topics = topics
         self._session = None
         self._log_events = False
+        self._is_aborted = is_aborted_callback
 
         self._stopping = False
         self._pending_payloads = []
@@ -79,6 +80,9 @@ class EdgeOSWebSocket:
     def is_initialized(self):
         return self._session is not None and not self._session.closed
 
+    def is_aborted(self):
+        return self._is_aborted()
+
     @property
     def last_update(self):
         result = self._last_update
@@ -122,6 +126,9 @@ class EdgeOSWebSocket:
         _LOGGER.info('Subscribed')
 
         async for msg in ws:
+            if self.is_aborted:
+                break
+
             continue_to_next = self.handle_next_message(ws, msg)
 
             if not continue_to_next:
@@ -161,7 +168,7 @@ class EdgeOSWebSocket:
         return result
 
     def close(self):
-        _LOGGER.inf("Closing connection to WS")
+        _LOGGER.info("Closing connection to WS")
         self._stopping = True
 
         if self.is_initialized:
