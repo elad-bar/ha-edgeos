@@ -76,7 +76,6 @@ class EdgeOS:
         self._edgeos_url = API_URL_TEMPLATE.format(protocol, host)
 
         self._edgeos_data = {}
-        self._aborted = False
 
         self._ws_handlers = self.get_ws_handlers()
         self._topics = self._ws_handlers.keys()
@@ -88,7 +87,6 @@ class EdgeOS:
         self._ws = EdgeOSWebSocket(self._edgeos_url,
                                    self._topics,
                                    self.ws_handler,
-                                   self.is_aborted,
                                    self._hass_loop)
 
         self._edgeos_login_service = EdgeOSWebLogin(self._host, self._is_ssl, self._username, self._password)
@@ -102,8 +100,6 @@ class EdgeOS:
 
         def edgeos_stop(event_time):
             _LOGGER.warning(f'Stop begun at {event_time}')
-
-            self._aborted = True
 
             try:
                 self._api.close()
@@ -157,9 +153,6 @@ class EdgeOS:
     @property
     def is_initialized(self):
         return self._is_initialized
-
-    def is_aborted(self):
-        return self._aborted
 
     @asyncio.coroutine
     def initialize_edgeos_connection(self, event_time):

@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class EdgeOSWebSocket:
 
-    def __init__(self, edgeos_url, topics, edgeos_callback, is_aborted_callback, hass_loop):
+    def __init__(self, edgeos_url, topics, edgeos_callback, hass_loop):
         self._last_update = datetime.now()
         self._edgeos_url = edgeos_url
         self._edgeos_callback = edgeos_callback
@@ -27,9 +27,7 @@ class EdgeOSWebSocket:
         self._topics = topics
         self._session = None
         self._log_events = False
-        self._is_aborted = is_aborted_callback
 
-        self._stopping = False
         self._pending_payloads = []
 
         self._timeout = SCAN_INTERVAL.seconds
@@ -42,21 +40,21 @@ class EdgeOSWebSocket:
 
         self.close()
         
-        self._stopping = False
         self._session_id = session_id
         self._session = aiohttp.ClientSession(cookies=cookies, loop=self._hass_loop)
 
         is_active = True
 
-        while not self._stopping and is_active:
+        while is_active:
             try:
                 async with self._session.ws_connect(self._ws_url,
                                                     origin=self._edgeos_url,
                                                     ssl=False,
                                                     max_msg_size=MAX_MSG_SIZE,
                                                     timeout=self._timeout) as ws:
-
                     await self.listen(ws)
+
+                    is_active = False
 
             except Exception as ex:
                 error_message = str(ex)
@@ -79,10 +77,6 @@ class EdgeOSWebSocket:
     @property
     def is_initialized(self):
         return self._session is not None and not self._session.closed
-
-    @property
-    def is_aborted(self):
-        return self._is_aborted()
 
     @property
     def last_update(self):
@@ -127,28 +121,19 @@ class EdgeOSWebSocket:
         _LOGGER.info('Subscribed')
 
         async for msg in ws:
-            if self.is_aborted:
-                break
+            if self.is_initialized():
+                return
 
             continue_to_next = self.handle_next_message(ws, msg)
 
             if not continue_to_next:
-                break
+                return
 
-        _LOGGER.info(f'Closing connection')
-
-        await ws.close()
-
-        _LOGGER.info(f'Connection closed')
+        _LOGGER.info(f'Stopped listening')
 
     def handle_next_message(self, ws, msg):
-        _LOGGER.info(f"Starting to handle next message, "
-                      f"Stopping: {self._stopping}, "
-                      f"Message type: {msg.type}")
+        _LOGGER.debug("Starting to handle next message")
         result = False
-
-        if self._stopping:
-            _LOGGER.info("Connection closed (By Home Assistant)")
 
         if msg.type == aiohttp.WSMsgType.CLOSED:
             _LOGGER.info("Connection closed (By Message Close)")
@@ -170,7 +155,6 @@ class EdgeOSWebSocket:
 
     def close(self):
         _LOGGER.info("Closing connection to WS")
-        self._stopping = True
 
         if self.is_initialized:
             yield from self._session.close()
