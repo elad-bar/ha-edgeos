@@ -80,6 +80,7 @@ class EdgeOSWebSocket:
     def is_initialized(self):
         return self._session is not None and not self._session.closed
 
+    @property
     def is_aborted(self):
         return self._is_aborted()
 
