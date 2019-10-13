@@ -82,12 +82,15 @@ class EdgeOS:
 
         self._hass_loop = hass.loop
 
-        self._api = EdgeOSWebAPI(self._edgeos_url, self._hass_loop)
+        api = EdgeOSWebAPI(self._edgeos_url, self._hass_loop)
 
-        self._ws = EdgeOSWebSocket(self._edgeos_url,
+        ws = EdgeOSWebSocket(self._edgeos_url,
                                    self._topics,
                                    self.ws_handler,
                                    self._hass_loop)
+
+        self._ws = ws
+        self._api = api
 
         self._edgeos_login_service = EdgeOSWebLogin(self._host, self._is_ssl, self._username, self._password)
         self._edgeos_ha = EdgeOSHomeAssistant(hass, monitored_interfaces, monitored_devices, unit, scan_interval)
@@ -99,10 +102,10 @@ class EdgeOS:
             yield from self.initialize_edgeos_connection(event_time)
 
         def edgeos_stop(event_time):
-            _LOGGER.warning(f'Stop begun at {event_time}')
+            _LOGGER.warning(f'Stop begun at {str(event_time)}')
 
             try:
-                self._api.close()
+                api.close()
             except Exception as ex:
                 exc_type, exc_obj, tb = sys.exc_info()
                 line_number = tb.tb_lineno
@@ -110,7 +113,7 @@ class EdgeOS:
                 _LOGGER.error(f"Failed to close connection to API, Error: {ex}, Line: {line_number}")
 
             try:
-                self._ws.close()
+                ws.close()
             except Exception as ex:
                 exc_type, exc_obj, tb = sys.exc_info()
                 line_number = tb.tb_lineno
