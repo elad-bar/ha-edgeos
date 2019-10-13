@@ -121,7 +121,7 @@ class EdgeOSWebSocket:
         _LOGGER.info('Subscribed')
 
         async for msg in ws:
-            if self.is_initialized():
+            if not self.is_initialized:
                 return
 
             continue_to_next = self.handle_next_message(ws, msg)
