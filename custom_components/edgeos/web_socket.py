@@ -27,7 +27,6 @@ class EdgeOSWebSocket:
         self._topics = topics
         self._session = None
         self._log_events = False
-        self._is_listen = False
 
         self._stopping = False
         self._pending_payloads = []
@@ -135,6 +134,9 @@ class EdgeOSWebSocket:
         _LOGGER.info(f'Connection closed')
 
     def handle_next_message(self, ws, msg):
+        _LOGGER.info(f"Starting to handle next message, "
+                      f"Stopping: {self._stopping}, "
+                      f"Message type: {msg.type}")
         result = False
 
         if self._stopping:
@@ -159,7 +161,7 @@ class EdgeOSWebSocket:
         return result
 
     def close(self):
-        self._is_listen = False
+        _LOGGER.inf("Closing connection to WS")
         self._stopping = True
 
         if self.is_initialized:
