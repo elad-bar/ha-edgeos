@@ -82,47 +82,31 @@ class EdgeOS:
 
         self._hass_loop = hass.loop
 
-        api = EdgeOSWebAPI(self._edgeos_url, self._hass_loop)
+        self._api = EdgeOSWebAPI(self._edgeos_url, self._hass_loop)
 
-        ws = EdgeOSWebSocket(self._edgeos_url,
+        self._ws = EdgeOSWebSocket(self._edgeos_url,
                                    self._topics,
                                    self.ws_handler,
                                    self._hass_loop)
-
-        self._ws = ws
-        self._api = api
 
         self._edgeos_login_service = EdgeOSWebLogin(self._host, self._is_ssl, self._username, self._password)
         self._edgeos_ha = EdgeOSHomeAssistant(hass, monitored_interfaces, monitored_devices, unit, scan_interval)
 
         @asyncio.coroutine
         def edgeos_initialize(event_time):
-            self._initialization_counter = self._initialization_counter + 1
+            _LOGGER.info(f'Starting EdgeOS ({str(event_time)})')
 
-            yield from self.initialize_edgeos_connection(event_time)
+            yield from self.start()
 
+        @asyncio.coroutine
         def edgeos_stop(event_time):
-            _LOGGER.info(f'Stop begun at {str(event_time)}')
+            _LOGGER.info(f'Stopping EdgeOS ({str(event_time)})')
 
-            try:
-                api.close()
-            except Exception as ex:
-                exc_type, exc_obj, tb = sys.exc_info()
-                line_number = tb.tb_lineno
-
-                _LOGGER.error(f"Failed to close connection to API, Error: {ex}, Line: {line_number}")
-
-            try:
-                ws.close()
-            except Exception as ex:
-                exc_type, exc_obj, tb = sys.exc_info()
-                line_number = tb.tb_lineno
-
-                _LOGGER.error(f"Failed to close connection to WS, Error: {ex}, Line: {line_number}")
+            yield from self.terminate()
 
         @asyncio.coroutine
         def edgeos_refresh(event_time):
-            _LOGGER.debug(f'Refresh EdgeOS components ({event_time})')
+            _LOGGER.debug(f'Refreshing EdgeOS ({event_time})')
 
             yield from self.refresh_data()
 
@@ -158,24 +142,53 @@ class EdgeOS:
         return self._is_initialized
 
     @asyncio.coroutine
-    def initialize_edgeos_connection(self, event_time):
-        counter = self._initialization_counter
-        _LOGGER.info(f'initialize_edgeos_connection - Initialization #{counter} begun at {event_time}')
-
+    def terminate(self):
         try:
-            cookies = self._edgeos_login_service.cookies_data
-            session_id = self._edgeos_login_service.session_id
+            _LOGGER.info(f'Terminating API')
 
-            self._api.initialize(cookies)
-            yield from self.refresh_data()
+            self._api.close()
 
-            yield from self._ws.initialize(cookies, session_id)
-
+            _LOGGER.info(f'API terminated')
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f'initialize_edgeos_connection - Error: {ex}, Line: {line_number}')
+            _LOGGER.error(f"Failed to terminate connection to API, Error: {ex}, Line: {line_number}")
+
+        try:
+            _LOGGER.info(f'Terminating WS')
+
+            self._ws.close()
+
+            _LOGGER.info(f'WS terminated')
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(f"Failed to terminate connection to WS, Error: {ex}, Line: {line_number}")
+
+    @asyncio.coroutine
+    def start(self):
+        try:
+            cookies = self._edgeos_login_service.cookies_data
+            session_id = self._edgeos_login_service.session_id
+
+            _LOGGER.info(f'Initializing API')
+
+            self._api.initialize(cookies)
+
+            _LOGGER.info(f'Requesting initial data')
+            yield from self.refresh_data()
+
+            _LOGGER.info(f'Initializing WS using session: {session_id}')
+            yield from self._ws.initialize(cookies, session_id)
+
+            _LOGGER.info(f'Initialized')
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(f'Failed to start EdgeOS, Error: {ex}, Line: {line_number}')
 
     @asyncio.coroutine
     def refresh_data(self):

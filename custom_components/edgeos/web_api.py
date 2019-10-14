@@ -33,6 +33,8 @@ class EdgeOSWebAPI:
         if self.is_initialized:
             yield from self._session.close()
 
+        self._session = None
+
     @property
     def is_initialized(self):
         return self._session is not None and not self._session.closed
