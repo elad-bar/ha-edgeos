@@ -146,7 +146,7 @@ class EdgeOS:
         try:
             _LOGGER.info(f'Terminating API')
 
-            self._api.close()
+            yield from self._api.close()
 
             _LOGGER.info(f'API terminated')
         except Exception as ex:
@@ -158,7 +158,7 @@ class EdgeOS:
         try:
             _LOGGER.info(f'Terminating WS')
 
-            self._ws.close()
+            yield from self._ws.close()
 
             _LOGGER.info(f'WS terminated')
         except Exception as ex:
@@ -175,7 +175,7 @@ class EdgeOS:
 
             _LOGGER.info(f'Initializing API')
 
-            self._api.initialize(cookies)
+            yield from self._api.initialize(cookies)
 
             _LOGGER.info(f'Requesting initial data')
             yield from self.refresh_data()

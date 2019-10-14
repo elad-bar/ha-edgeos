@@ -24,14 +24,14 @@ class EdgeOSWebAPI:
         self._edgeos_url = edgeos_url
         self._hass_loop = hass_loop
 
-    def initialize(self, cookies):
-        self.close()
+    async def initialize(self, cookies):
+        await self.close()
 
         self._session = aiohttp.ClientSession(cookies=cookies, loop=self._hass_loop)
 
-    def close(self):
-        if self.is_initialized:
-            yield from self._session.close()
+    async def close(self):
+        if self._session is not None:
+            await self._session.close()
 
         self._session = None
 
