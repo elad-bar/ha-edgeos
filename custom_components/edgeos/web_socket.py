@@ -27,31 +27,34 @@ class EdgeOSWebSocket:
         self._topics = topics
         self._session = None
         self._log_events = False
-
+        self._ws = None
         self._pending_payloads = []
 
         self._timeout = SCAN_INTERVAL.seconds
 
         url = urlparse(self._edgeos_url)
+
         self._ws_url = WEBSOCKET_URL_TEMPLATE.format(url.netloc)
 
     async def initialize(self, cookies, session_id):
         _LOGGER.info("Initializing WS connection")
 
-        self.close()
-        
-        self._session_id = session_id
-        self._session = aiohttp.ClientSession(cookies=cookies, loop=self._hass_loop)
-
         try:
+            await self.close()
+
+            self._session_id = session_id
+            self._session = aiohttp.ClientSession(cookies=cookies, loop=self._hass_loop)
+
             async with self._session.ws_connect(self._ws_url,
                                                 origin=self._edgeos_url,
                                                 ssl=False,
                                                 max_msg_size=MAX_MSG_SIZE,
                                                 timeout=self._timeout) as ws:
-                await self.listen(ws)
+                self._ws = ws
 
-                _LOGGER.info("WS Connection terminated")
+                await self.listen()
+
+            _LOGGER.info("WS Connection terminated")
 
         except Exception as ex:
             _LOGGER.warning(f"Failed to listen EdgeOS, Error: {str(ex)}")
@@ -97,23 +100,23 @@ class EdgeOSWebSocket:
             else:
                 self._pending_payloads.append(message)
 
-    async def listen(self, ws):
+    async def listen(self):
         _LOGGER.info(f"Starting to listen connected")
 
         subscription_data = self.get_subscription_data()
-        await ws.send_str(subscription_data)
+        await self._ws.send_str(subscription_data)
 
         _LOGGER.info('Subscribed to WS payloads')
 
-        async for msg in ws:
-            continue_to_next = self.handle_next_message(ws, msg)
+        async for msg in self._ws:
+            continue_to_next = self.handle_next_message(msg)
 
             if not continue_to_next or not self.is_initialized:
                 return
 
         _LOGGER.info(f'Stop listening')
 
-    def handle_next_message(self, ws, msg):
+    def handle_next_message(self, msg):
         _LOGGER.debug(f"Starting to handle next message")
         result = False
 
@@ -121,7 +124,7 @@ class EdgeOSWebSocket:
             _LOGGER.info("Connection closed (By Message Close)")
 
         elif msg.type == aiohttp.WSMsgType.ERROR:
-            _LOGGER.warning(f'Connection error, Description: {ws.exception()}')
+            _LOGGER.warning(f'Connection error, Description: {self._ws.exception()}')
 
         else:
             if self._log_events:
@@ -138,13 +141,18 @@ class EdgeOSWebSocket:
 
         return result
 
-    def close(self):
+    async def close(self):
         _LOGGER.info("Closing connection to WS")
 
         self._session_id = None
 
-        if self.is_initialized:
-            yield from self._session.close()
+        if self._ws is not None:
+            await self._ws.close()
+
+        self._ws = None
+
+        if not self._session is None:
+            await self._session.close()
 
         self._session = None
 
