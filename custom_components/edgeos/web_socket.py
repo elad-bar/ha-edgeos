@@ -36,7 +36,7 @@ class EdgeOSWebSocket:
         self._ws_url = WEBSOCKET_URL_TEMPLATE.format(url.netloc)
 
     async def initialize(self, cookies, session_id):
-        _LOGGER.info("Start initailzing the connection")
+        _LOGGER.info("Initializing WS connection")
 
         self.close()
         
@@ -51,18 +51,10 @@ class EdgeOSWebSocket:
                                                 timeout=self._timeout) as ws:
                 await self.listen(ws)
 
-                _LOGGER.info("initialize - finished execution")
+                _LOGGER.info("WS Connection terminated")
 
         except Exception as ex:
-            error_message = str(ex)
-
-            if error_message is not None:
-                if error_message == ERROR_SHUTDOWN:
-                    _LOGGER.warning(f'initialize - shutdown')
-
-                    self.close()
-                else:
-                    _LOGGER.warning(f"initialize - failed to listen EdgeOS, Error: {error_message}")
+            _LOGGER.warning(f"Failed to listen EdgeOS, Error: {str(ex)}")
 
     def log_events(self, log_event_enabled):
         self._log_events = log_event_enabled
@@ -94,10 +86,10 @@ class EdgeOSWebSocket:
                 self._edgeos_callback(payload_json)
                 parsed = True
             else:
-                _LOGGER.debug('parse_message - Skipping message (Empty)')
+                _LOGGER.debug('Parse message skipped (Empty)')
 
         except Exception as ex:
-            _LOGGER.debug(f'parse_message - Cannot parse partial payload, Error: {ex}')
+            _LOGGER.debug(f'Parse message failed due to partial payload, Error: {ex}')
 
         finally:
             if parsed or len(self._pending_payloads) > MAX_PENDING_PAYLOADS:
@@ -106,17 +98,17 @@ class EdgeOSWebSocket:
                 self._pending_payloads.append(message)
 
     async def listen(self, ws):
-        _LOGGER.info(f"Connection connected")
+        _LOGGER.info(f"Starting to listen connected")
 
         subscription_data = self.get_subscription_data()
         await ws.send_str(subscription_data)
 
-        _LOGGER.info('Subscribed')
+        _LOGGER.info('Subscribed to WS payloads')
 
         async for msg in ws:
             continue_to_next = self.handle_next_message(ws, msg)
 
-            if not continue_to_next or self._session_id is None:
+            if not continue_to_next or not self.is_initialized:
                 return
 
         _LOGGER.info(f'Stop listening')
