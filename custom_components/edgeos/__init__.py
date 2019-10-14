@@ -102,7 +102,7 @@ class EdgeOS:
             yield from self.initialize_edgeos_connection(event_time)
 
         def edgeos_stop(event_time):
-            _LOGGER.warning(f'Stop begun at {str(event_time)}')
+            _LOGGER.info(f'Stop begun at {str(event_time)}')
 
             try:
                 api.close()

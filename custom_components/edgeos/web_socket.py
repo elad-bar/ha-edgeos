@@ -116,7 +116,7 @@ class EdgeOSWebSocket:
         async for msg in ws:
             continue_to_next = self.handle_next_message(ws, msg)
 
-            if not continue_to_next:
+            if not continue_to_next or self._session_id is None:
                 return
 
         _LOGGER.info(f'Stop listening')
@@ -144,12 +144,12 @@ class EdgeOSWebSocket:
 
                 result = True
 
-            result = True
-
         return result
 
     def close(self):
         _LOGGER.info("Closing connection to WS")
+
+        self._session_id = None
 
         if self.is_initialized:
             yield from self._session.close()
