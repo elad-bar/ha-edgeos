@@ -45,14 +45,21 @@ class EdgeOSWebSocket:
             self._session_id = session_id
             self._session = aiohttp.ClientSession(cookies=cookies, loop=self._hass_loop)
 
-            async with self._session.ws_connect(self._ws_url,
-                                                origin=self._edgeos_url,
-                                                ssl=False,
-                                                max_msg_size=MAX_MSG_SIZE,
-                                                timeout=self._timeout) as ws:
-                self._ws = ws
+            connection_attempt = 1
 
-                await self.listen()
+            while self.is_initialized:
+                _LOGGER.info(f"Connection attempt #{connection_attempt}")
+
+                async with self._session.ws_connect(self._ws_url,
+                                                    origin=self._edgeos_url,
+                                                    ssl=False,
+                                                    max_msg_size=MAX_MSG_SIZE,
+                                                    timeout=self._timeout) as ws:
+                    self._ws = ws
+
+                    await self.listen()
+
+                    connection_attempt = connection_attempt + 1
 
             _LOGGER.info("WS Connection terminated")
 

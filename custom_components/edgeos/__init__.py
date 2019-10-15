@@ -93,30 +93,30 @@ class EdgeOS:
         self._edgeos_ha = EdgeOSHomeAssistant(hass, monitored_interfaces, monitored_devices, unit, scan_interval)
 
         @asyncio.coroutine
-        def edgeos_initialize(event_time):
-            _LOGGER.info(f'Starting EdgeOS ({str(event_time)})')
+        def edgeos_initialize(*args, **kwargs):
+            _LOGGER.info(f'Starting EdgeOS')
 
             yield from self.start()
 
         @asyncio.coroutine
-        def edgeos_stop(event_time):
-            _LOGGER.info(f'Stopping EdgeOS ({str(event_time)})')
+        def edgeos_stop(*args, **kwargs):
+            _LOGGER.info(f'Stopping EdgeOS')
 
             yield from self.terminate()
 
         @asyncio.coroutine
         def edgeos_refresh(event_time):
-            _LOGGER.debug(f'Refreshing EdgeOS ({event_time})')
+            _LOGGER.debug(f'Refreshing EdgeOS ({str(event_time)})')
 
             yield from self.refresh_data()
 
-        def edgeos_save_debug_data(event_time):
-            _LOGGER.info(f'Save EdgeOS debug data ({event_time})')
+        def edgeos_save_debug_data(service):
+            _LOGGER.info(f'Save EdgeOS debug data')
 
             self._edgeos_ha.store_data(self._edgeos_data)
 
         def edgeos_log_events(service):
-            _LOGGER.info(f'Log Events EdgeOS WebSocket ({service.data})')
+            _LOGGER.info(f'Log Events EdgeOS WebSocket')
 
             enabled = service.data.get(ATTR_ENABLED, False)
 
@@ -216,6 +216,8 @@ class EdgeOS:
         try:
             if payload is not None:
                 for key in payload:
+                    _LOGGER.debug(f"Running parser of {key}")
+
                     data = payload.get(key)
                     handler = self._ws_handlers.get(key)
 
