@@ -8,6 +8,7 @@ import logging
 import json
 from urllib.parse import urlparse
 import aiohttp
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import *
 
@@ -18,11 +19,11 @@ _LOGGER = logging.getLogger(__name__)
 
 class EdgeOSWebSocket:
 
-    def __init__(self, edgeos_url, topics, edgeos_callback, hass_loop):
+    def __init__(self, hass, edgeos_url, topics, edgeos_callback):
         self._last_update = datetime.now()
         self._edgeos_url = edgeos_url
         self._edgeos_callback = edgeos_callback
-        self._hass_loop = hass_loop
+        self._hass = hass
         self._session_id = None
         self._topics = topics
         self._session = None
@@ -43,8 +44,7 @@ class EdgeOSWebSocket:
             await self.close()
 
             self._session_id = session_id
-            self._session = aiohttp.ClientSession(cookies=cookies, loop=self._hass_loop)
-
+            self._session = async_create_clientsession(hass=self._hass, cookies=cookies)
         except Exception as ex:
             _LOGGER.warning(f"Failed to create session of EdgeOS WS, Error: {str(ex)}")
 
@@ -167,11 +167,6 @@ class EdgeOSWebSocket:
             await self._ws.close()
 
         self._ws = None
-
-        if self._session is not None:
-            await self._session.close()
-
-        self._session = None
 
     def get_subscription_data(self):
         topics_to_subscribe = [{WS_TOPIC_NAME: topic} for topic in self._topics]
