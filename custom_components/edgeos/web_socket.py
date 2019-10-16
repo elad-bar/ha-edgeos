@@ -66,7 +66,13 @@ class EdgeOSWebSocket:
                     connection_attempt = connection_attempt + 1
 
                 except Exception as ex:
-                    _LOGGER.warning(f"Failed to listen EdgeOS, Error: {str(ex)}")
+                    error_message = str(ex)
+
+                    if error_message == ERROR_SHUTDOWN:
+                        _LOGGER.info(f"{str(error_message)}")
+
+                    else:
+                        _LOGGER.warning(f"Failed to listen EdgeOS, Error: {str(error_message)}")
 
             _LOGGER.info("WS Connection terminated")
 
