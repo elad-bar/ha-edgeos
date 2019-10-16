@@ -45,26 +45,30 @@ class EdgeOSWebSocket:
             self._session_id = session_id
             self._session = aiohttp.ClientSession(cookies=cookies, loop=self._hass_loop)
 
+        except Exception as ex:
+            _LOGGER.warning(f"Failed to create session of EdgeOS WS, Error: {str(ex)}")
+
             connection_attempt = 1
 
             while self.is_initialized:
-                _LOGGER.info(f"Connection attempt #{connection_attempt}")
+                try:
+                    _LOGGER.info(f"Connection attempt #{connection_attempt}")
 
-                async with self._session.ws_connect(self._ws_url,
-                                                    origin=self._edgeos_url,
-                                                    ssl=False,
-                                                    max_msg_size=MAX_MSG_SIZE,
-                                                    timeout=self._timeout) as ws:
-                    self._ws = ws
+                    async with self._session.ws_connect(self._ws_url,
+                                                        origin=self._edgeos_url,
+                                                        ssl=False,
+                                                        max_msg_size=MAX_MSG_SIZE,
+                                                        timeout=self._timeout) as ws:
+                        self._ws = ws
 
-                    await self.listen()
+                        await self.listen()
 
                     connection_attempt = connection_attempt + 1
 
-            _LOGGER.info("WS Connection terminated")
+                except Exception as ex:
+                    _LOGGER.warning(f"Failed to listen EdgeOS, Error: {str(ex)}")
 
-        except Exception as ex:
-            _LOGGER.warning(f"Failed to listen EdgeOS, Error: {str(ex)}")
+            _LOGGER.info("WS Connection terminated")
 
     def log_events(self, log_event_enabled):
         self._log_events = log_event_enabled
@@ -158,7 +162,7 @@ class EdgeOSWebSocket:
 
         self._ws = None
 
-        if not self._session is None:
+        if self._session is not None:
             await self._session.close()
 
         self._session = None
