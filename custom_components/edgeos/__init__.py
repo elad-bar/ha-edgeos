@@ -68,6 +68,7 @@ class EdgeOS:
         self._is_ssl = is_ssl
         self._username = username
         self._password = password
+        self._hass = hass
 
         protocol = PROTOCOL_UNSECURED
         if is_ssl:
@@ -80,14 +81,12 @@ class EdgeOS:
         self._ws_handlers = self.get_ws_handlers()
         self._topics = self._ws_handlers.keys()
 
-        self._hass_loop = hass.loop
+        self._api = EdgeOSWebAPI(hass, self._edgeos_url)
 
-        self._api = EdgeOSWebAPI(self._edgeos_url, self._hass_loop)
-
-        self._ws = EdgeOSWebSocket(self._edgeos_url,
+        self._ws = EdgeOSWebSocket(hass,
+                                   self._edgeos_url,
                                    self._topics,
-                                   self.ws_handler,
-                                   self._hass_loop)
+                                   self.ws_handler)
 
         self._edgeos_login_service = EdgeOSWebLogin(self._host, self._is_ssl, self._username, self._password)
         self._edgeos_ha = EdgeOSHomeAssistant(hass, monitored_interfaces, monitored_devices, unit, scan_interval)
@@ -143,18 +142,6 @@ class EdgeOS:
 
     @asyncio.coroutine
     def terminate(self):
-        try:
-            _LOGGER.debug(f'Terminating API')
-
-            yield from self._api.close()
-
-            _LOGGER.debug(f'API terminated')
-        except Exception as ex:
-            exc_type, exc_obj, tb = sys.exc_info()
-            line_number = tb.tb_lineno
-
-            _LOGGER.error(f"Failed to terminate connection to API, Error: {ex}, Line: {line_number}")
-
         try:
             _LOGGER.debug(f'Terminating WS')
 

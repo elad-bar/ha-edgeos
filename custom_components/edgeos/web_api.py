@@ -5,8 +5,8 @@ https://home-assistant.io/components/edgeos/
 """
 import sys
 import logging
-import aiohttp
 import asyncio
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import *
 
@@ -16,24 +16,16 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EdgeOSWebAPI:
-    def __init__(self, edgeos_url, hass_loop):
+    def __init__(self, hass, edgeos_url):
         self._last_update = datetime.now()
         self._session = None
 
         self._last_valid = EMPTY_LAST_VALID
         self._edgeos_url = edgeos_url
-        self._hass_loop = hass_loop
+        self._hass = hass
 
     async def initialize(self, cookies):
-        await self.close()
-
-        self._session = aiohttp.ClientSession(cookies=cookies, loop=self._hass_loop)
-
-    async def close(self):
-        if self._session is not None:
-            await self._session.close()
-
-        self._session = None
+        self._session = async_create_clientsession(hass=self._hass, cookies=cookies)
 
     @property
     def is_initialized(self):

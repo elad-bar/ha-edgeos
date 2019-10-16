@@ -32,15 +32,15 @@ class EdgeOSHomeAssistant:
         self._unit = unit
         self._unit_size = ALLOWED_UNITS.get(self._unit, BYTE)
 
-    def initialize(self, edgeos_initialize, edgeos_stop, edgeos_refresh, edgeos_save_debug_data, edgeos_log_events):
+    def initialize(self, edgeos_start, edgeos_stop, edgeos_refresh, edgeos_save_debug_data, edgeos_log_events):
         self._hass.services.register(DOMAIN, 'stop', edgeos_stop)
-        self._hass.services.register(DOMAIN, 'restart', edgeos_initialize)
+        self._hass.services.register(DOMAIN, 'restart', edgeos_start)
         self._hass.services.register(DOMAIN, 'save_debug_data', edgeos_save_debug_data)
         self._hass.services.register(DOMAIN, 'log_events', edgeos_log_events, schema=SERVICE_LOG_EVENTS_SCHEMA)
 
         track_time_interval(self._hass, edgeos_refresh, self._scan_interval)
 
-        self._hass.bus.listen_once(EVENT_HOMEASSISTANT_START, edgeos_initialize)
+        self._hass.bus.listen_once(EVENT_HOMEASSISTANT_START, edgeos_start)
         self._hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, edgeos_stop)
 
     def notify_error(self, ex, line_number):
