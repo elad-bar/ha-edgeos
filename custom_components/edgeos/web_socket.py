@@ -8,6 +8,7 @@ import logging
 import json
 from urllib.parse import urlparse
 import aiohttp
+import asyncio
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import *
@@ -38,7 +39,7 @@ class EdgeOSWebSocket:
         self._ws_url = WEBSOCKET_URL_TEMPLATE.format(url.netloc)
 
     async def initialize(self, cookies, session_id):
-        _LOGGER.info("Initializing WS connection")
+        _LOGGER.debug("Initializing WS connection")
 
         try:
             await self.close()
@@ -60,19 +61,19 @@ class EdgeOSWebSocket:
                                                     max_msg_size=MAX_MSG_SIZE,
                                                     timeout=self._timeout) as ws:
                     self._ws = ws
-
                     await self.listen()
 
                 connection_attempt = connection_attempt + 1
+                await asyncio.sleep(2)
 
             except Exception as ex:
                 error_message = str(ex)
 
                 if error_message == ERROR_SHUTDOWN:
-                    _LOGGER.info(f"{str(error_message)}")
+                    _LOGGER.info(f"{error_message}")
 
-                else:
-                    _LOGGER.warning(f"Failed to listen EdgeOS, Error: {str(error_message)}")
+                elif error_message != "":
+                    _LOGGER.warning(f"Failed to listen EdgeOS, Error: {error_message}")
 
         _LOGGER.info("WS Connection terminated")
 
@@ -182,6 +183,6 @@ class EdgeOSWebSocket:
         subscription_content_length = len(subscription_content)
         subscription_data = f'{subscription_content_length}\n{subscription_content}'
 
-        _LOGGER.info(f'get_subscription_data - Subscription data: {subscription_data}')
+        _LOGGER.debug(f'get_subscription_data - Subscription data: {subscription_content}')
 
         return subscription_data
