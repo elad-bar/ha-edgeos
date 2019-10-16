@@ -144,11 +144,11 @@ class EdgeOS:
     @asyncio.coroutine
     def terminate(self):
         try:
-            _LOGGER.info(f'Terminating API')
+            _LOGGER.debug(f'Terminating API')
 
             yield from self._api.close()
 
-            _LOGGER.info(f'API terminated')
+            _LOGGER.debug(f'API terminated')
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -156,11 +156,11 @@ class EdgeOS:
             _LOGGER.error(f"Failed to terminate connection to API, Error: {ex}, Line: {line_number}")
 
         try:
-            _LOGGER.info(f'Terminating WS')
+            _LOGGER.debug(f'Terminating WS')
 
             yield from self._ws.close()
 
-            _LOGGER.info(f'WS terminated')
+            _LOGGER.debug(f'WS terminated')
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -173,17 +173,15 @@ class EdgeOS:
             cookies = self._edgeos_login_service.cookies_data
             session_id = self._edgeos_login_service.session_id
 
-            _LOGGER.info(f'Initializing API')
+            _LOGGER.debug(f'Initializing API')
 
             yield from self._api.initialize(cookies)
 
-            _LOGGER.info(f'Requesting initial data')
+            _LOGGER.debug(f'Requesting initial data')
             yield from self.refresh_data()
 
-            _LOGGER.info(f'Initializing WS using session: {session_id}')
+            _LOGGER.debug(f'Initializing WS using session: {session_id}')
             yield from self._ws.initialize(cookies, session_id)
-
-            _LOGGER.info(f'Initialized')
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno

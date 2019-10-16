@@ -48,33 +48,33 @@ class EdgeOSWebSocket:
         except Exception as ex:
             _LOGGER.warning(f"Failed to create session of EdgeOS WS, Error: {str(ex)}")
 
-            connection_attempt = 1
+        connection_attempt = 1
 
-            while self.is_initialized:
-                try:
-                    _LOGGER.info(f"Connection attempt #{connection_attempt}")
+        while self.is_initialized:
+            try:
+                _LOGGER.info(f"Connection attempt #{connection_attempt}")
 
-                    async with self._session.ws_connect(self._ws_url,
-                                                        origin=self._edgeos_url,
-                                                        ssl=False,
-                                                        max_msg_size=MAX_MSG_SIZE,
-                                                        timeout=self._timeout) as ws:
-                        self._ws = ws
+                async with self._session.ws_connect(self._ws_url,
+                                                    origin=self._edgeos_url,
+                                                    ssl=False,
+                                                    max_msg_size=MAX_MSG_SIZE,
+                                                    timeout=self._timeout) as ws:
+                    self._ws = ws
 
-                        await self.listen()
+                    await self.listen()
 
-                    connection_attempt = connection_attempt + 1
+                connection_attempt = connection_attempt + 1
 
-                except Exception as ex:
-                    error_message = str(ex)
+            except Exception as ex:
+                error_message = str(ex)
 
-                    if error_message == ERROR_SHUTDOWN:
-                        _LOGGER.info(f"{str(error_message)}")
+                if error_message == ERROR_SHUTDOWN:
+                    _LOGGER.info(f"{str(error_message)}")
 
-                    else:
-                        _LOGGER.warning(f"Failed to listen EdgeOS, Error: {str(error_message)}")
+                else:
+                    _LOGGER.warning(f"Failed to listen EdgeOS, Error: {str(error_message)}")
 
-            _LOGGER.info("WS Connection terminated")
+        _LOGGER.info("WS Connection terminated")
 
     def log_events(self, log_event_enabled):
         self._log_events = log_event_enabled
