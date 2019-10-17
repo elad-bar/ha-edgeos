@@ -43,7 +43,7 @@ class EdgeOSWebSocket:
         _LOGGER.debug("Initializing WS connection")
 
         try:
-            await self.close()
+            self._shutting_down = False
 
             self._session_id = session_id
             self._session = async_create_clientsession(hass=self._hass, cookies=cookies)
