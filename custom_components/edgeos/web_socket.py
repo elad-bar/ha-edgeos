@@ -140,7 +140,9 @@ class EdgeOSWebSocket:
         _LOGGER.debug(f"Starting to handle next message")
         result = False
 
-        if msg.type == aiohttp.WSMsgType.CLOSED:
+        if msg.type in (aiohttp.WSMsgType.CLOSE,
+                        aiohttp.WSMsgType.CLOSED,
+                        aiohttp.WSMsgType.CLOSING):
             _LOGGER.info("Connection closed (By Message Close)")
 
         elif msg.type == aiohttp.WSMsgType.ERROR:
