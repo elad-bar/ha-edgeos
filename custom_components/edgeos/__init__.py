@@ -6,7 +6,6 @@ https://home-assistant.io/components/edgeos/
 import sys
 import logging
 import voluptuous as vol
-import asyncio
 
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_SSL, CONF_HOST)
 
@@ -91,23 +90,20 @@ class EdgeOS:
         self._edgeos_login_service = EdgeOSWebLogin(self._host, self._is_ssl, self._username, self._password)
         self._edgeos_ha = EdgeOSHomeAssistant(hass, monitored_interfaces, monitored_devices, unit, scan_interval)
 
-        @asyncio.coroutine
-        def edgeos_initialize(*args, **kwargs):
+        async def edgeos_initialize(*args, **kwargs):
             _LOGGER.info(f'Starting EdgeOS')
 
-            yield from self.start()
+            await self.start()
 
-        @asyncio.coroutine
-        def edgeos_stop(*args, **kwargs):
+        async def edgeos_stop(*args, **kwargs):
             _LOGGER.info(f'Stopping EdgeOS')
 
-            yield from self.terminate()
+            await self.terminate()
 
-        @asyncio.coroutine
-        def edgeos_refresh(event_time):
+        async def edgeos_refresh(event_time):
             _LOGGER.debug(f'Refreshing EdgeOS ({str(event_time)})')
 
-            yield from self.refresh_data()
+            await self.refresh_data()
 
         def edgeos_save_debug_data(service):
             _LOGGER.info(f'Save EdgeOS debug data')
@@ -140,12 +136,11 @@ class EdgeOS:
     def is_initialized(self):
         return self._is_initialized
 
-    @asyncio.coroutine
-    def terminate(self):
+    async def terminate(self):
         try:
             _LOGGER.debug(f'Terminating WS')
 
-            yield from self._ws.close()
+            await self._ws.close()
 
             _LOGGER.debug(f'WS terminated')
         except Exception as ex:
@@ -154,32 +149,30 @@ class EdgeOS:
 
             _LOGGER.error(f"Failed to terminate connection to WS, Error: {ex}, Line: {line_number}")
 
-    @asyncio.coroutine
-    def start(self):
+    async def start(self):
         try:
             cookies = self._edgeos_login_service.cookies_data
             session_id = self._edgeos_login_service.session_id
 
             _LOGGER.debug(f'Initializing API')
 
-            yield from self._api.initialize(cookies)
+            await self._api.initialize(cookies)
 
             _LOGGER.debug(f'Requesting initial data')
-            yield from self.refresh_data()
+            await self.refresh_data()
 
             _LOGGER.debug(f'Initializing WS using session: {session_id}')
-            yield from self._ws.initialize(cookies, session_id)
+            await self._ws.initialize(cookies, session_id)
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
             _LOGGER.error(f'Failed to start EdgeOS, Error: {ex}, Line: {line_number}')
 
-    @asyncio.coroutine
-    def refresh_data(self):
+    async def refresh_data(self):
         try:
-            yield from self._api.heartbeat()
-            yield from self.load_devices_data()
+            await self._api.heartbeat()
+            await self.load_devices_data()
 
             devices = self.get_devices()
             interfaces = self.get_interfaces()
@@ -226,8 +219,7 @@ class EdgeOS:
 
         return ws_handlers
 
-    @asyncio.coroutine
-    def load_devices_data(self):
+    async def load_devices_data(self):
         try:
             _LOGGER.debug('Getting devices by API')
 
@@ -237,7 +229,7 @@ class EdgeOS:
             if previous_result is None:
                 previous_result = {}
 
-            devices_data = yield from self._api.get_devices_data()
+            devices_data = await self._api.get_devices_data()
 
             if devices_data is not None:
                 service_data = devices_data.get(SERVICE, {})

@@ -5,7 +5,6 @@ https://home-assistant.io/components/edgeos/
 """
 import sys
 import logging
-import asyncio
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import *
@@ -47,8 +46,7 @@ class EdgeOSWebAPI:
 
         return result
 
-    @asyncio.coroutine
-    def heartbeat(self, max_age=HEARTBEAT_MAX_AGE):
+    async def heartbeat(self, max_age=HEARTBEAT_MAX_AGE):
         try:
             if self.is_initialized:
                 ts = datetime.now()
@@ -59,7 +57,7 @@ class EdgeOSWebAPI:
                     heartbeat_req_url = self.get_edgeos_api_endpoint(EDGEOS_API_HEARTBREAT)
                     heartbeat_req_full_url = API_URL_HEARTBEAT_TEMPLATE.format(heartbeat_req_url, current_ts)
 
-                    response = yield from self.async_get(heartbeat_req_full_url)
+                    response = await self.async_get(heartbeat_req_full_url)
 
                     _LOGGER.debug(f'Heartbeat response: {response}')
 
@@ -72,15 +70,14 @@ class EdgeOSWebAPI:
 
             _LOGGER.error(f'Failed to perform heartbeat, Error: {ex}, Line: {line_number}')
 
-    @asyncio.coroutine
-    def get_devices_data(self):
+    async def get_devices_data(self):
         result = None
 
         try:
             if self.is_initialized:
                 get_req_url = self.get_edgeos_api_endpoint(EDGEOS_API_GET)
 
-                result_json = yield from self.async_get(get_req_url)
+                result_json = await self.async_get(get_req_url)
 
                 if RESPONSE_SUCCESS_KEY in result_json:
                     success_key = str(result_json.get(RESPONSE_SUCCESS_KEY, '')).lower()
@@ -103,8 +100,7 @@ class EdgeOSWebAPI:
 
         return result
 
-    @asyncio.coroutine
-    def get_general_data(self, item):
+    async def get_general_data(self, item):
         result = None
 
         try:
@@ -113,7 +109,7 @@ class EdgeOSWebAPI:
                 data_req_url = self.get_edgeos_api_endpoint(EDGEOS_API_DATA)
                 data_req_full_url = API_URL_DATA_TEMPLATE.format(data_req_url, clean_item)
 
-                data = yield from self.async_get(data_req_full_url)
+                data = await self.async_get(data_req_full_url)
 
                 if str(data.get(RESPONSE_SUCCESS_KEY, EMPTY_STRING)) == RESPONSE_FAILURE_CODE:
                     error = data.get(RESPONSE_ERROR_KEY, EMPTY_STRING)

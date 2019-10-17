@@ -31,6 +31,7 @@ class EdgeOSWebSocket:
         self._log_events = False
         self._ws = None
         self._pending_payloads = []
+        self._shutting_down = False
 
         self._timeout = SCAN_INTERVAL.seconds
 
@@ -51,8 +52,9 @@ class EdgeOSWebSocket:
 
         connection_attempt = 1
 
-        while self.is_initialized:
+        while self.is_initialized and not self._shutting_down:
             try:
+                await asyncio.sleep(10)
                 _LOGGER.info(f"Connection attempt #{connection_attempt}")
 
                 async with self._session.ws_connect(self._ws_url,
@@ -64,13 +66,13 @@ class EdgeOSWebSocket:
                     await self.listen()
 
                 connection_attempt = connection_attempt + 1
-                await asyncio.sleep(2)
 
             except Exception as ex:
                 error_message = str(ex)
 
                 if error_message == ERROR_SHUTDOWN:
-                    _LOGGER.info(f"{error_message}")
+                    _LOGGER.warning(f"{error_message}")
+                    break
 
                 elif error_message != "":
                     _LOGGER.warning(f"Failed to listen EdgeOS, Error: {error_message}")
@@ -162,6 +164,7 @@ class EdgeOSWebSocket:
     async def close(self):
         _LOGGER.info("Closing connection to WS")
 
+        self._shutting_down = True
         self._session_id = None
 
         if self._ws is not None:
