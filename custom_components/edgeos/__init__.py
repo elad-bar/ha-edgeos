@@ -6,6 +6,7 @@ https://home-assistant.io/components/edgeos/
 import sys
 import logging
 import voluptuous as vol
+from datetime import datetime
 
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_SSL, CONF_HOST)
 
@@ -388,8 +389,14 @@ class EdgeOS:
                         for item in DEVICE_SERVICES_STATS_MAP:
                             host_data_traffic[item] = int(0)
 
-                        host_data[CONNECTED] = TRUE_STR
                         device_data = data.get(host_data_ip, {})
+                        last_activity = host_data[LAST_ACTIVITY]
+
+                        if last_activity is not None:
+                            diff = (datetime.now() - last_activity).total_seconds()
+
+                            if diff >= 60 * 5:
+                                last_activity = None
 
                         for service in device_data:
                             service_data = device_data.get(service, {})
@@ -403,10 +410,26 @@ class EdgeOS:
                                 if item in service_data and service_data[item] != '':
                                     service_data_item_value = int(service_data[item])
 
+                                if item in ['rx_rate', 'tx_rate'] and \
+                                        service_data_item_value > 0 and \
+                                        last_activity is None:
+                                    last_activity = datetime.now()
+
                                 host_data_traffic[item] = current_value + service_data_item_value
 
                         for traffic_data_item in host_data_traffic:
                             host_data[traffic_data_item] = host_data_traffic.get(traffic_data_item)
+
+                        is_connected = TRUE_STR
+
+                        if last_activity is not None:
+                            diff = (datetime.now() - last_activity).total_seconds()
+
+                            if diff >= 60 * 5:
+                                is_connected = FALSE_STR
+
+                        host_data[LAST_ACTIVITY] = last_activity
+                        host_data[CONNECTED] = is_connected
 
                         del data[host_data_ip]
                     else:
