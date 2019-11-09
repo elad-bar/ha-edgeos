@@ -79,6 +79,7 @@ MAC_ADDRESS = 'mac-address'
 IP = 'ip'
 MAC = 'mac'
 CONNECTED = 'connected'
+LAST_ACTIVITY = 'last-activity'
 
 DEFAULT_USERNAME = 'ubnt'
 
