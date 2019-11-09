@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 from homeassistant.const import (ATTR_NAME, ATTR_UNIT_OF_MEASUREMENT)
 
-VERSION = '1.0.6'
+VERSION = '1.0.7'
 
 DOMAIN = 'edgeos'
 DATA_EDGEOS = 'edgeos_data'
@@ -27,6 +27,8 @@ EDGEOS_API_HEARTBREAT = 'heartbeat'
 
 COOKIE_PHPSESSID = 'PHPSESSID'
 COOKIE_AS_STR_TEMPLATE = '{}={}'
+
+DISCONNECTED_INTERVAL = 60 * 2
 
 TRUE_STR = 'true'
 FALSE_STR = 'false'
