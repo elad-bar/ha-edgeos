@@ -6,7 +6,7 @@ https://home-assistant.io/components/edgeos/
 import sys
 import logging
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-
+import aiohttp
 from .const import *
 
 REQUIREMENTS = ['aiohttp']
@@ -22,6 +22,7 @@ class EdgeOSWebAPI:
         self._last_valid = EMPTY_LAST_VALID
         self._edgeos_url = edgeos_url
         self._hass = hass
+        self._is_connected = False
 
         self._disconnection_handler = disconnection_handler
 
@@ -29,24 +30,47 @@ class EdgeOSWebAPI:
         if self._session is not None:
             await self._session.close()
 
-        self._session = async_create_clientsession(hass=self._hass, cookies=cookies)
+        if self._hass is None:
+            self._session = aiohttp.client.ClientSession(cookies=cookies)
+        else:
+            self._session = async_create_clientsession(hass=self._hass, cookies=cookies)
 
     @property
     def is_initialized(self):
         return self._session is not None and not self._session.closed
 
+    @property
+    def is_connected(self):
+        return self._is_connected
+
     async def async_get(self, url):
-        async with self._session.get(url, ssl=False) as response:
-            if response.status == 403:
-                result = None
-            else:
-                response.raise_for_status()
+        result = None
 
-                result = await response.json()
+        try:
+            async with self._session.get(url, ssl=False) as response:
+                _LOGGER.debug(f'Status of {url}: {response.status}')
 
-                self._last_update = datetime.now()
+                self._is_connected = response.status < 400
 
-            return result
+                if response.status == 403:
+                    await self._disconnection_handler()
+
+                else:
+                    response.raise_for_status()
+
+                    result = await response.json()
+
+                    self._last_update = datetime.now()
+
+        except Exception as ex:
+            self._is_connected = False
+
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(f'Failed to connect {url}, Error: {ex}, Line: {line_number}')
+
+        return result
 
     @property
     def last_update(self):
@@ -87,7 +111,7 @@ class EdgeOSWebAPI:
 
                 result_json = await self.async_get(get_req_url)
 
-                if RESPONSE_SUCCESS_KEY in result_json:
+                if result_json is not None and RESPONSE_SUCCESS_KEY in result_json:
                     success_key = str(result_json.get(RESPONSE_SUCCESS_KEY, '')).lower()
 
                     if success_key == TRUE_STR:
