@@ -143,6 +143,8 @@ class EdgeOS:
         return self._is_initialized
 
     async def edgeos_disconnection_handler(self):
+        _LOGGER.debug(f'Disconnection detected, reconnecting...')
+
         await self.terminate()
 
         if self._edgeos_login_service.login():
@@ -193,6 +195,9 @@ class EdgeOS:
 
             api_last_update = self._api.last_update
             web_socket_last_update = self._ws.last_update
+
+            if system_state is not None:
+                system_state[IS_ALIVE] = self._api.is_connected
 
             self._edgeos_ha.update(interfaces, devices, unknown_devices, system_state,
                                    api_last_update, web_socket_last_update)
@@ -245,35 +250,39 @@ class EdgeOS:
 
             if devices_data is not None:
                 service_data = devices_data.get(SERVICE, {})
-                dhcp_server_data = service_data.get(DHCP_SERVER, {})
-                shared_network_name_data = dhcp_server_data.get(SHARED_NETWORK_NAME, {})
 
-                for shared_network_name_key in shared_network_name_data:
-                    dhcp_network_allocation = shared_network_name_data.get(shared_network_name_key, {})
-                    subnet = dhcp_network_allocation.get(SUBNET, {})
+                if isinstance(service_data, dict):
+                    dhcp_server_data = service_data.get(DHCP_SERVER, {})
+                    shared_network_name_data = dhcp_server_data.get(SHARED_NETWORK_NAME, {})
 
-                    for subnet_mask_key in subnet:
-                        subnet_mask = subnet.get(subnet_mask_key, {})
-                        static_mapping = subnet_mask.get(STATIC_MAPPING, {})
+                    for shared_network_name_key in shared_network_name_data:
+                        dhcp_network_allocation = shared_network_name_data.get(shared_network_name_key, {})
+                        subnet = dhcp_network_allocation.get(SUBNET, {})
 
-                        for host_name in static_mapping:
-                            host_data = static_mapping.get(host_name, {})
-                            host_ip = host_data.get(IP_ADDRESS)
-                            host_mac = host_data.get(MAC_ADDRESS)
+                        for subnet_mask_key in subnet:
+                            subnet_mask = subnet.get(subnet_mask_key, {})
+                            static_mapping = subnet_mask.get(STATIC_MAPPING, {})
 
-                            data = {
-                                IP: host_ip,
-                                MAC: host_mac
-                            }
+                            for host_name in static_mapping:
+                                host_data = static_mapping.get(host_name, {})
+                                host_ip = host_data.get(IP_ADDRESS)
+                                host_mac = host_data.get(MAC_ADDRESS)
 
-                            previous_host_data = previous_result.get(host_name, {})
+                                data = {
+                                    IP: host_ip,
+                                    MAC: host_mac
+                                }
 
-                            for previous_key in previous_host_data:
-                                data[previous_key] = previous_host_data.get(previous_key)
+                                previous_host_data = previous_result.get(host_name, {})
 
-                            result[host_name] = data
+                                for previous_key in previous_host_data:
+                                    data[previous_key] = previous_host_data.get(previous_key)
 
-                self.set_devices(result)
+                                result[host_name] = data
+
+                    self.set_devices(result)
+                else:
+                    _LOGGER.warning(f"Invalid Service Data: {service_data}")
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno

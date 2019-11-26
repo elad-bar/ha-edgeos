@@ -55,6 +55,7 @@ class EdgeOSHomeAssistant:
         self.create_interface_sensors(interfaces)
         self.create_device_sensors(devices)
         self.create_unknown_devices_sensor(unknown_devices)
+        self.create_uptime_sensor(system_state, api_last_update, web_socket_last_update)
         self.create_system_sensor(system_state, api_last_update, web_socket_last_update)
 
     def create_device_sensors(self, devices):
@@ -151,7 +152,7 @@ class EdgeOSHomeAssistant:
 
             self.log_exception(ex, error_message)
 
-    def create_system_sensor(self, system_state, api_last_update, web_socket_last_update):
+    def create_uptime_sensor(self, system_state, api_last_update, web_socket_last_update):
         try:
             if system_state is not None:
                 attributes = {
@@ -169,6 +170,34 @@ class EdgeOSHomeAssistant:
                 state = system_state.get(UPTIME, 0)
 
                 self._hass.states.async_set(entity_id, state, attributes)
+        except Exception as ex:
+            error_message = 'Failed to create system sensor'
+
+            self.log_exception(ex, error_message)
+
+    def create_system_sensor(self, system_state, api_last_update, web_socket_last_update):
+        try:
+            state = STATE_OFF
+            attributes = {}
+
+            if system_state is not None:
+                attributes = {
+                    ATTR_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
+                    ATTR_FRIENDLY_NAME: f'{DEFAULT_NAME} {ATTR_SYSTEM_STATUS}',
+                    ATTR_API_LAST_UPDATE: api_last_update,
+                    ATTR_WEBSOCKET_LAST_UPDATE: web_socket_last_update
+                }
+
+                for key in system_state:
+                    if key != IS_ALIVE:
+                        attributes[key] = system_state[key]
+
+                is_alive = system_state.get(IS_ALIVE, False)
+
+                if is_alive:
+                    state = STATE_ON
+
+            self._hass.states.async_set(ENTITY_ID_SYSTEM_ALIVE, state, attributes)
         except Exception as ex:
             error_message = 'Failed to create system sensor'
 

@@ -46,7 +46,11 @@ class EdgeOSWebSocket:
             self._shutting_down = False
 
             self._session_id = session_id
-            self._session = async_create_clientsession(hass=self._hass, cookies=cookies)
+            if self._hass is None:
+                self._session = aiohttp.client.ClientSession(cookies=cookies)
+            else:
+                self._session = async_create_clientsession(hass=self._hass, cookies=cookies)
+
         except Exception as ex:
             _LOGGER.warning(f"Failed to create session of EdgeOS WS, Error: {str(ex)}")
 

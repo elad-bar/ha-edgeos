@@ -4,8 +4,9 @@ Provides an integration between EdgeOS (Ubiquity) routers to Home Assistant,
 Creates the following components:
 * Binary Sensor - per monitored device whether it's connected, attributes: IP, MAC, Bytes / Bps (Sent / Received)
 * Binary Sensor - per interface - whether its connected, attributes: MAC, Duplex, Link Speed (Mbps), Addresses, Packets / Bytes / Errors / Dropped Packets / Bps (Sent / Received)
-* Sensor - System up-time, attributes: CPU, Memory, API Last Update, WS Last Update
+* Sensor - System up-time, attributes: Is Alive, CPU, Memory, API Last Update, WS Last Update
 * Sensor - Number of Unknown Devices (Not part of DHCP Static Address), attributes - IP of devices
+* Binary Sensor - System Status, attributes: up-time, CPU, Memory, API Last Update, WS Last Update
 
 When setting device_tracker domain it will add per host device tracker, "unsee" command takes place after 1 hour due to EdgeOS late update
 

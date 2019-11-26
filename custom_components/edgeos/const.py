@@ -60,6 +60,7 @@ DISCOVER_KEY = 'discover'
 UNKNOWN_DEVICES_KEY = 'unknown-devices'
 
 UPTIME = 'uptime'
+IS_ALIVE = 'is_alive'
 
 SYSTEM_STATS_ITEMS = ['cpu', 'mem', UPTIME]
 DISCOVER_DEVICE_ITEMS = ['hostname', 'product', 'uptime', 'fwversion', 'system_status']
@@ -119,6 +120,7 @@ ENTITY_ID_DEVICE_SENSOR = 'sensor.edgeos_device_{}_{}'
 ENTITY_ID_UNKNOWN_DEVICES = 'sensor.edgeos_unknown_devices'
 
 ENTITY_ID_SYSTEM_UPTIME = 'sensor.edgeos_system_uptime'
+ENTITY_ID_SYSTEM_ALIVE = 'binary_sensor.edgeos_system'
 
 ATTR_WEBSOCKET_LAST_UPDATE = 'WS Last Update'
 ATTR_API_LAST_UPDATE = 'API Last Update'
@@ -172,6 +174,7 @@ SENSOR_TYPE_DEVICE = 'Device'
 
 ATTR_SECONDS = 'seconds'
 ATTR_SYSTEM_UPTIME = 'System Uptime'
+ATTR_SYSTEM_STATUS = 'System Status'
 
 STRING_DASH = '-'
 STRING_UNDERSCORE = '_'
