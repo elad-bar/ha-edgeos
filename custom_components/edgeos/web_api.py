@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EdgeOSWebAPI:
-    def __init__(self, hass, edgeos_url):
+    def __init__(self, hass, edgeos_url, disconnection_handler):
         self._last_update = datetime.now()
         self._session = None
 
@@ -23,7 +23,12 @@ class EdgeOSWebAPI:
         self._edgeos_url = edgeos_url
         self._hass = hass
 
+        self._disconnection_handler = disconnection_handler
+
     async def initialize(self, cookies):
+        if self._session is not None:
+            await self._session.close()
+
         self._session = async_create_clientsession(hass=self._hass, cookies=cookies)
 
     @property
@@ -32,11 +37,14 @@ class EdgeOSWebAPI:
 
     async def async_get(self, url):
         async with self._session.get(url, ssl=False) as response:
-            response.raise_for_status()
+            if response.status == 403:
+                result = None
+            else:
+                response.raise_for_status()
 
-            result = await response.json()
+                result = await response.json()
 
-            self._last_update = datetime.now()
+                self._last_update = datetime.now()
 
             return result
 

@@ -15,6 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from .const import VERSION
 from .const import *
 from .home_assistant import (EdgeOSHomeAssistant)
+from .mocked_home_assistant import (EdgeOSMockedHomeAssistant)
 from .web_api import (EdgeOSWebAPI)
 from .web_login import (EdgeOSWebLogin)
 from .web_socket import (EdgeOSWebSocket)
@@ -60,7 +61,7 @@ def setup(hass, config):
 
 class EdgeOS:
     def __init__(self, hass, host, username, password, is_ssl, monitored_interfaces,
-                 monitored_devices, unit, scan_interval):
+                 monitored_devices, unit, scan_interval, is_mocked=False):
 
         self._initialization_counter = -1
         self._is_initialized = False
@@ -81,7 +82,7 @@ class EdgeOS:
         self._ws_handlers = self.get_ws_handlers()
         self._topics = self._ws_handlers.keys()
 
-        self._api = EdgeOSWebAPI(hass, self._edgeos_url)
+        self._api = EdgeOSWebAPI(hass, self._edgeos_url, self.edgeos_disconnection_handler)
 
         self._ws = EdgeOSWebSocket(hass,
                                    self._edgeos_url,
@@ -89,7 +90,11 @@ class EdgeOS:
                                    self.ws_handler)
 
         self._edgeos_login_service = EdgeOSWebLogin(self._host, self._is_ssl, self._username, self._password)
-        self._edgeos_ha = EdgeOSHomeAssistant(hass, monitored_interfaces, monitored_devices, unit, scan_interval)
+
+        if is_mocked:
+            self._edgeos_ha = EdgeOSMockedHomeAssistant(hass, monitored_interfaces, monitored_devices, unit, scan_interval)
+        else:
+            self._edgeos_ha = EdgeOSHomeAssistant(hass, monitored_interfaces, monitored_devices, unit, scan_interval)
 
         async def edgeos_initialize(*args, **kwargs):
             _LOGGER.info(f'Starting EdgeOS')
@@ -136,6 +141,12 @@ class EdgeOS:
     @property
     def is_initialized(self):
         return self._is_initialized
+
+    async def edgeos_disconnection_handler(self):
+        await self.terminate()
+
+        if self._edgeos_login_service.login():
+            await self.start()
 
     async def terminate(self):
         try:
