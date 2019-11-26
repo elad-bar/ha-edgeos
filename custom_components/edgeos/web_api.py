@@ -27,10 +27,10 @@ class EdgeOSWebAPI:
         self._disconnection_handler = disconnection_handler
 
     async def initialize(self, cookies):
-        if self._session is not None:
-            await self._session.close()
-
         if self._hass is None:
+            if self._session is not None:
+                await self._session.close()
+
             self._session = aiohttp.client.ClientSession(cookies=cookies)
         else:
             self._session = async_create_clientsession(hass=self._hass, cookies=cookies)
