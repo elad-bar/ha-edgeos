@@ -8,11 +8,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
-from homeassistant.const import (STATE_OFF, STATE_ON, ATTR_FRIENDLY_NAME, STATE_UNKNOWN, EVENT_TIME_CHANGED)
+from homeassistant.const import (STATE_OFF, STATE_ON, ATTR_FRIENDLY_NAME, EVENT_TIME_CHANGED)
 
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.util import slugify
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 
 from .const import *
 
@@ -32,71 +34,71 @@ class EdgeOSHomeAssistant:
         self._unit = unit
         self._unit_size = ALLOWED_UNITS.get(self._unit, BYTE)
 
-    def initialize(self, edgeos_start, edgeos_stop, edgeos_refresh, edgeos_save_debug_data, edgeos_log_events):
-        self._hass.services.register(DOMAIN, 'stop', edgeos_stop)
-        self._hass.services.register(DOMAIN, 'restart', edgeos_start)
-        self._hass.services.register(DOMAIN, 'save_debug_data', edgeos_save_debug_data)
-        self._hass.services.register(DOMAIN, 'log_events', edgeos_log_events, schema=SERVICE_LOG_EVENTS_SCHEMA)
+    def initialize(self, on_start, on_stop, on_refresh, on_save_debug_data, on_log_events):
+        self._hass.services.register(DOMAIN, 'stop', on_stop)
+        self._hass.services.register(DOMAIN, 'restart', on_start)
+        self._hass.services.register(DOMAIN, 'save_debug_data', on_save_debug_data)
+        self._hass.services.register(DOMAIN, 'log_events', on_log_events, schema=SERVICE_LOG_EVENTS_SCHEMA)
 
-        track_time_interval(self._hass, edgeos_refresh, self._scan_interval)
+        track_time_interval(self._hass, on_refresh, self._scan_interval)
 
-        self._hass.bus.listen_once(EVENT_HOMEASSISTANT_START, edgeos_start)
-        self._hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, edgeos_stop)
+        self._hass.bus.listen_once(EVENT_HOMEASSISTANT_START, on_start)
+        self._hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, on_stop)
 
     def notify_error(self, ex, line_number):
         _LOGGER.error(f'Error while initializing EdgeOS, exception: {ex}, Line: {line_number}')
 
         self._hass.components.persistent_notification.create(
-            f'Error: {ex}<br /> You will need to restart hass after fixing.',
+            f'Error: {ex}<br /> You will need to restart HA after fixing.',
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
 
     def update(self, interfaces, devices, unknown_devices, system_state, api_last_update, web_socket_last_update):
-        self.create_interface_sensors(interfaces)
-        self.create_device_sensors(devices)
+        self.create_interface_binary_sensors(interfaces)
+        self.create_device_binary_sensors(devices)
         self.create_unknown_devices_sensor(unknown_devices)
         self.create_uptime_sensor(system_state, api_last_update, web_socket_last_update)
-        self.create_system_sensor(system_state, api_last_update, web_socket_last_update)
+        self.create_system_status_binary_sensor(system_state, api_last_update, web_socket_last_update)
 
-    def create_device_sensors(self, devices):
+    def create_device_binary_sensors(self, devices):
         try:
             for hostname in devices:
                 host_data = devices.get(hostname, {})
 
-                self.create_device_sensor(hostname, host_data)
+                self.create_device_binary_sensor(hostname, host_data)
 
         except Exception as ex:
             self.log_exception(ex, 'Failed to updated devices')
 
-    def create_interface_sensors(self, interfaces):
+    def create_interface_binary_sensors(self, interfaces):
         try:
             for interface in interfaces:
                 interface_data = interfaces.get(interface)
 
-                self.create_interface_sensor(interface, interface_data)
+                self.create_interface_binary_sensor(interface, interface_data)
 
         except Exception as ex:
-            error_message = f'Failed to update {INTERFACES_KEY}'
+            self.log_exception(ex, f'Failed to update {INTERFACES_KEY}')
 
-            self.log_exception(ex, error_message)
+    def create_interface_binary_sensor(self, key, data):
+        self.create_binary_sensor(key, data, self._monitored_interfaces, SENSOR_TYPE_INTERFACE,
+                                  LINK_UP, self.get_interface_attributes)
 
-    def create_interface_sensor(self, key, data):
-        self.create_sensor(key, data, self._monitored_interfaces, ENTITY_ID_INTERFACE_BINARY_SENSOR,
-                           SENSOR_TYPE_INTERFACE, LINK_UP, self.get_interface_attributes)
+    def create_device_binary_sensor(self, key, data):
+        self.create_binary_sensor(key, data, self._monitored_devices, SENSOR_TYPE_DEVICE,
+                                  CONNECTED, self.get_device_attributes)
 
-    def create_device_sensor(self, key, data):
-        self.create_sensor(key, data, self._monitored_devices, ENTITY_ID_DEVICE_BINARY_SENSOR, SENSOR_TYPE_DEVICE,
-                           CONNECTED, self.get_device_attributes)
-
-    def create_sensor(self, key, data, allowed_items, entity_id_template, sensor_type, main_attribute, get_attributes):
+    def create_binary_sensor(self, key, data, allowed_items, sensor_type, main_attribute, get_attributes):
         try:
             if key in allowed_items:
-                entity_id = entity_id_template.format(slugify(key))
+                entity_name = f'{DEFAULT_NAME} {sensor_type} {key}'
+                entity_id = f"{BINARY_SENSOR_DOMAIN}.{slugify(entity_name)}"
+
                 main_entity_details = data.get(main_attribute, FALSE_STR)
 
-                device_attributes = {
+                attributes = {
                     ATTR_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
-                    ATTR_FRIENDLY_NAME: f'{DEFAULT_NAME} {sensor_type} {key}'
+                    ATTR_FRIENDLY_NAME: entity_name
                 }
 
                 for data_item_key in data:
@@ -108,11 +110,11 @@ class EdgeOSHomeAssistant:
                         unit_of_measurement = attr.get(ATTR_UNIT_OF_MEASUREMENT)
 
                         if unit_of_measurement is None:
-                            device_attributes[name] = value
+                            attributes[name] = value
                         else:
                             name = name.format(self._unit)
 
-                            device_attributes[name] = (int(value) * BITS_IN_BYTE) / self._unit_size
+                            attributes[name] = (int(value) * BITS_IN_BYTE) / self._unit_size
 
                 if str(main_entity_details).lower() == TRUE_STR:
                     state = STATE_ON
@@ -121,43 +123,48 @@ class EdgeOSHomeAssistant:
 
                 current_entity = self._hass.states.get(entity_id)
 
-                device_attributes[EVENT_TIME_CHANGED] = datetime.now().strftime(DEFAULT_DATE_FORMAT)
+                attributes[ATTR_LAST_CHANGED] = datetime.now().strftime(DEFAULT_DATE_FORMAT)
 
                 if current_entity is not None and current_entity.state == state:
                     entity_attributes = current_entity.attributes
-                    device_attributes[EVENT_TIME_CHANGED] = entity_attributes.get(EVENT_TIME_CHANGED)
+                    attributes[ATTR_LAST_CHANGED] = entity_attributes.get(ATTR_LAST_CHANGED)
 
-                self._hass.states.async_set(entity_id, state, device_attributes)
+                _LOGGER.debug(f"Creating {entity_name}[{entity_id}] with state {state}, attributes: {attributes}")
+
+                self._hass.states.async_set(entity_id, state, attributes)
 
         except Exception as ex:
-            error_message = f'Failed to create {key} sensor {sensor_type} with the following data: {data}'
-
-            self.log_exception(ex, error_message)
+            self.log_exception(ex, f'Failed to create {key} sensor {sensor_type} with the following data: {data}')
 
     def create_unknown_devices_sensor(self, unknown_devices):
         try:
-            devices_count = len(unknown_devices)
+            entity_name = f"{DEFAULT_NAME} Unknown Devices"
+            entity_id = f'{SENSOR_DOMAIN}.{slugify(entity_name)}'
 
-            entity_id = ENTITY_ID_UNKNOWN_DEVICES
-            state = devices_count
+            state = len(unknown_devices)
 
-            attributes = {}
+            attributes = {
+                ATTR_FRIENDLY_NAME: entity_name
+            }
 
-            if devices_count > 0:
-                attributes[STATE_UNKNOWN] = unknown_devices
+            _LOGGER.debug(f"Creating {entity_name}[{entity_id}] with state {state}, attributes: {attributes}")
 
             self._hass.states.async_set(entity_id, state, attributes)
         except Exception as ex:
-            error_message = f'Failed to create unknown device sensor, Data: {unknown_devices}'
-
-            self.log_exception(ex, error_message)
+            self.log_exception(ex, f'Failed to create unknown device sensor, Data: {unknown_devices}')
 
     def create_uptime_sensor(self, system_state, api_last_update, web_socket_last_update):
         try:
+            entity_name = f'{DEFAULT_NAME} {ATTR_SYSTEM_UPTIME}'
+            entity_id = f'{SENSOR_DOMAIN}.{slugify(entity_name)}'
+
+            state = system_state.get(UPTIME, 0)
+            attributes = {}
+
             if system_state is not None:
                 attributes = {
                     ATTR_UNIT_OF_MEASUREMENT: ATTR_SECONDS,
-                    ATTR_FRIENDLY_NAME: f'{DEFAULT_NAME} {ATTR_SYSTEM_UPTIME}',
+                    ATTR_FRIENDLY_NAME: entity_name,
                     ATTR_API_LAST_UPDATE: api_last_update,
                     ATTR_WEBSOCKET_LAST_UPDATE: web_socket_last_update
                 }
@@ -166,24 +173,24 @@ class EdgeOSHomeAssistant:
                     if key != UPTIME:
                         attributes[key] = system_state[key]
 
-                entity_id = ENTITY_ID_SYSTEM_UPTIME
-                state = system_state.get(UPTIME, 0)
+            _LOGGER.debug(f"Creating {entity_name}[{entity_id}] with state {state}, attributes: {attributes}")
 
-                self._hass.states.async_set(entity_id, state, attributes)
+            self._hass.states.async_set(entity_id, state, attributes)
         except Exception as ex:
-            error_message = 'Failed to create system sensor'
+            self.log_exception(ex, 'Failed to create system sensor')
 
-            self.log_exception(ex, error_message)
-
-    def create_system_sensor(self, system_state, api_last_update, web_socket_last_update):
+    def create_system_status_binary_sensor(self, system_state, api_last_update, web_socket_last_update):
         try:
+            entity_name = f'{DEFAULT_NAME} {ATTR_SYSTEM_STATUS}'
+            entity_id = f'{BINARY_SENSOR_DOMAIN}.{slugify(entity_name)}'
+
             state = STATE_OFF
             attributes = {}
 
             if system_state is not None:
                 attributes = {
                     ATTR_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
-                    ATTR_FRIENDLY_NAME: f'{DEFAULT_NAME} {ATTR_SYSTEM_STATUS}',
+                    ATTR_FRIENDLY_NAME: entity_name,
                     ATTR_API_LAST_UPDATE: api_last_update,
                     ATTR_WEBSOCKET_LAST_UPDATE: web_socket_last_update
                 }
@@ -197,11 +204,11 @@ class EdgeOSHomeAssistant:
                 if is_alive:
                     state = STATE_ON
 
-            self._hass.states.async_set(ENTITY_ID_SYSTEM_ALIVE, state, attributes)
-        except Exception as ex:
-            error_message = 'Failed to create system sensor'
+            _LOGGER.debug(f"Creating {entity_name}[{entity_id}] with state {state}, attributes: {attributes}")
 
-            self.log_exception(ex, error_message)
+            self._hass.states.async_set(entity_id, state, attributes)
+        except Exception as ex:
+            self.log_exception(ex, 'Failed to create system status binary sensor')
 
     @staticmethod
     def get_device_attributes(key):
