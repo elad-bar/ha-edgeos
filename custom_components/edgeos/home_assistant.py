@@ -142,9 +142,12 @@ class EdgeOSHomeAssistant:
             entity_id = f'{SENSOR_DOMAIN}.{slugify(entity_name)}'
 
             state = len(unknown_devices)
+            if state < 1:
+                unknown_devices = None
 
             attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
+                ATTR_FRIENDLY_NAME: entity_name,
+                ATTR_UNKNOWN_DEVICES:  unknown_devices
             }
 
             _LOGGER.debug(f"Creating {entity_name}[{entity_id}] with state {state}, attributes: {attributes}")
@@ -165,8 +168,8 @@ class EdgeOSHomeAssistant:
                 attributes = {
                     ATTR_UNIT_OF_MEASUREMENT: ATTR_SECONDS,
                     ATTR_FRIENDLY_NAME: entity_name,
-                    ATTR_API_LAST_UPDATE: api_last_update,
-                    ATTR_WEB_SOCKET_LAST_UPDATE: web_socket_last_update
+                    ATTR_API_LAST_UPDATE: api_last_update.strftime(DEFAULT_DATE_FORMAT),
+                    ATTR_WEB_SOCKET_LAST_UPDATE: web_socket_last_update.strftime(DEFAULT_DATE_FORMAT)
                 }
 
                 for key in system_state:
@@ -191,8 +194,8 @@ class EdgeOSHomeAssistant:
                 attributes = {
                     ATTR_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
                     ATTR_FRIENDLY_NAME: entity_name,
-                    ATTR_API_LAST_UPDATE: api_last_update,
-                    ATTR_WEB_SOCKET_LAST_UPDATE: web_socket_last_update
+                    ATTR_API_LAST_UPDATE: api_last_update.strftime(DEFAULT_DATE_FORMAT),
+                    ATTR_WEB_SOCKET_LAST_UPDATE: web_socket_last_update.strftime(DEFAULT_DATE_FORMAT)
                 }
 
                 for key in system_state:
