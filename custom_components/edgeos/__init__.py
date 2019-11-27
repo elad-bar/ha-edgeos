@@ -240,18 +240,18 @@ class EdgeOS:
         try:
             _LOGGER.debug('Getting devices by API')
 
-            result = {}
-
-            previous_result = self.get_devices()
-            if previous_result is None:
-                previous_result = {}
-
             devices_data = await self._api.get_devices_data()
 
             if devices_data is not None:
                 service_data = devices_data.get(SERVICE, {})
 
                 if isinstance(service_data, dict):
+                    result = {}
+
+                    previous_result = self.get_devices()
+                    if previous_result is None:
+                        previous_result = {}
+
                     dhcp_server_data = service_data.get(DHCP_SERVER, {})
                     shared_network_name_data = dhcp_server_data.get(SHARED_NETWORK_NAME, {})
 
