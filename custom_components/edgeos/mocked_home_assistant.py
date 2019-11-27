@@ -34,6 +34,7 @@ class EdgeOSMockedHomeAssistant:
         _LOGGER.error(f'Error while initializing EdgeOS, exception: {ex}, Line: {line_number}')
 
     def update(self, interfaces, devices, unknown_devices, system_state, api_last_update, web_socket_last_update):
+        _LOGGER.debug(f"Unit size: {self._unit_size}")
         _LOGGER.info(f"Interfaces: {interfaces}")
         _LOGGER.info(f"Devices: {devices}")
         _LOGGER.info(f"Unknown devices: {unknown_devices}")
