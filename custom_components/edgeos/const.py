@@ -116,9 +116,10 @@ ATTR_LAST_CHANGED = "Last Changed"
 ATTR_WEB_SOCKET_LAST_UPDATE = 'WS Last Update'
 ATTR_API_LAST_UPDATE = 'API Last Update'
 ATTR_DEVICE_CLASS = 'device_class'
+ATTR_UNKNOWN_DEVICES = "Unknown Devices"
 DEVICE_CLASS_CONNECTIVITY = 'connectivity'
 
-DEFAULT_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+DEFAULT_DATE_FORMAT = '%x %X'
 
 EDGEOS_DATA_LOG = 'edgeos_data.log'
 
