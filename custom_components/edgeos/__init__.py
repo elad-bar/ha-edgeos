@@ -6,7 +6,6 @@ https://home-assistant.io/components/edgeos/
 import sys
 import logging
 import voluptuous as vol
-from datetime import datetime
 
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_SSL, CONF_HOST)
 
@@ -92,17 +91,19 @@ class EdgeOS:
         self._edgeos_login_service = EdgeOSWebLogin(self._host, self._is_ssl, self._username, self._password)
 
         if is_mocked:
-            self._edgeos_ha = EdgeOSMockedHomeAssistant(hass, monitored_interfaces, monitored_devices, unit, scan_interval)
+            self._edgeos_ha = EdgeOSMockedHomeAssistant(hass, monitored_interfaces, monitored_devices,
+                                                        unit, scan_interval)
         else:
-            self._edgeos_ha = EdgeOSHomeAssistant(hass, monitored_interfaces, monitored_devices, unit, scan_interval)
+            self._edgeos_ha = EdgeOSHomeAssistant(hass, monitored_interfaces, monitored_devices,
+                                                  unit, scan_interval)
 
         async def edgeos_initialize(*args, **kwargs):
-            _LOGGER.info(f'Starting EdgeOS')
+            _LOGGER.info(f'Starting EdgeOS, args: {args}, kwargs: {kwargs}')
 
             await self.start()
 
         async def edgeos_stop(*args, **kwargs):
-            _LOGGER.info(f'Stopping EdgeOS')
+            _LOGGER.info(f'Stopping EdgeOS, args: {args}, kwargs: {kwargs}')
 
             await self.terminate()
 
@@ -112,7 +113,7 @@ class EdgeOS:
             await self.refresh_data()
 
         def edgeos_save_debug_data(service):
-            _LOGGER.info(f'Save EdgeOS debug data')
+            _LOGGER.info(f'Save EdgeOS debug data: {service}')
 
             self._edgeos_ha.store_data(self._edgeos_data)
 

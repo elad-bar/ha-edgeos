@@ -8,7 +8,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
-from homeassistant.const import (STATE_OFF, STATE_ON, ATTR_FRIENDLY_NAME, EVENT_TIME_CHANGED)
+from homeassistant.const import (STATE_OFF, STATE_ON, ATTR_FRIENDLY_NAME)
 
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.event import track_time_interval
@@ -166,7 +166,7 @@ class EdgeOSHomeAssistant:
                     ATTR_UNIT_OF_MEASUREMENT: ATTR_SECONDS,
                     ATTR_FRIENDLY_NAME: entity_name,
                     ATTR_API_LAST_UPDATE: api_last_update,
-                    ATTR_WEBSOCKET_LAST_UPDATE: web_socket_last_update
+                    ATTR_WEB_SOCKET_LAST_UPDATE: web_socket_last_update
                 }
 
                 for key in system_state:
@@ -192,7 +192,7 @@ class EdgeOSHomeAssistant:
                     ATTR_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
                     ATTR_FRIENDLY_NAME: entity_name,
                     ATTR_API_LAST_UPDATE: api_last_update,
-                    ATTR_WEBSOCKET_LAST_UPDATE: web_socket_last_update
+                    ATTR_WEB_SOCKET_LAST_UPDATE: web_socket_last_update
                 }
 
                 for key in system_state:

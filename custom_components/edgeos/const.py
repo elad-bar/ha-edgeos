@@ -113,7 +113,7 @@ ARG_ORIGIN = 'origin'
 ENTITY_ID_UNKNOWN_DEVICES = 'sensor.edgeos_unknown_devices'
 
 ATTR_LAST_CHANGED = "Last Changed"
-ATTR_WEBSOCKET_LAST_UPDATE = 'WS Last Update'
+ATTR_WEB_SOCKET_LAST_UPDATE = 'WS Last Update'
 ATTR_API_LAST_UPDATE = 'API Last Update'
 ATTR_DEVICE_CLASS = 'device_class'
 DEVICE_CLASS_CONNECTIVITY = 'connectivity'
