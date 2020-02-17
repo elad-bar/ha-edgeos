@@ -21,7 +21,7 @@ class Test:
 
     async def refresh(self):
         while True:
-            await self._instance.refresh_data()
+            await self._instance.refresh()
 
             time.sleep(20)
 

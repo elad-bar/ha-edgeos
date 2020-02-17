@@ -5,151 +5,84 @@ https://home-assistant.io/components/edgeos/
 """
 import sys
 import logging
-import voluptuous as vol
 
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_SSL, CONF_HOST)
-
-from homeassistant.helpers import config_validation as cv
-
-from .const import VERSION
 from .const import *
-from .home_assistant import (EdgeOSHomeAssistant)
-from .mocked_home_assistant import (EdgeOSMockedHomeAssistant)
-from .web_api import (EdgeOSWebAPI)
-from .web_login import (EdgeOSWebLogin)
-from .web_socket import (EdgeOSWebSocket)
-
-REQUIREMENTS = ['aiohttp']
+from .web_api import EdgeOSWebAPI
+from .web_login import EdgeOSWebLogin
+from .web_socket import EdgeOSWebSocket
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_CERT_FILE, default=''): cv.string,
-        vol.Optional(CONF_MONITORED_INTERFACES, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_MONITORED_DEVICES, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_UNIT, default=ATTR_BYTE): vol.In(ALLOWED_UNITS)
-    }),
-}, extra=vol.ALLOW_EXTRA)
 
-
-def setup(hass, config):
-    """Set up an Home Automation Manager component."""
-    conf = config.get(DOMAIN, {})
-
-    is_ssl = conf.get(CONF_SSL, False)
-    host = conf.get(CONF_HOST)
-    username = conf.get(CONF_USERNAME, DEFAULT_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    monitored_interfaces = conf.get(CONF_MONITORED_INTERFACES, [])
-    monitored_devices = conf.get(CONF_MONITORED_DEVICES, [])
-    unit = conf.get(CONF_UNIT, ATTR_BYTE)
-    scan_interval = SCAN_INTERVAL
-
-    data = EdgeOS(hass, host, username, password, is_ssl, monitored_interfaces,
-                  monitored_devices, unit, scan_interval)
-
-    hass.data[DATA_EDGEOS] = data
-
-    return data.is_initialized
-
-
-class EdgeOS:
-    def __init__(self, hass, host, username, password, is_ssl, monitored_interfaces,
-                 monitored_devices, unit, scan_interval, is_mocked=False):
-
-        self._initialization_counter = -1
-        self._is_initialized = False
-        self._host = host
-        self._is_ssl = is_ssl
-        self._username = username
-        self._password = password
+class EdgeOSData(object):
+    def __init__(self, hass, entry_data, update_home_assistant):
         self._hass = hass
+        self._update_home_assistant = update_home_assistant
 
-        protocol = PROTOCOL_UNSECURED
-        if is_ssl:
-            protocol = PROTOCOL_SECURED
+        self._is_initialized = False
 
-        self._edgeos_url = API_URL_TEMPLATE.format(protocol, host)
+        self._host = entry_data.get(CONF_HOST)
+        self._username = entry_data.get(CONF_USERNAME, DEFAULT_USERNAME)
+        self._password = entry_data.get(CONF_PASSWORD)
+        self._unit = entry_data.get(CONF_UNIT, ATTR_BYTE)
+        self._edgeos_url = API_URL_TEMPLATE.format(self._host)
 
+        self._is_updating = False
         self._edgeos_data = {}
 
         self._ws_handlers = self.get_ws_handlers()
         self._topics = self._ws_handlers.keys()
 
-        self._api = EdgeOSWebAPI(hass, self._edgeos_url, self.edgeos_disconnection_handler)
+        self._api = EdgeOSWebAPI(self._hass, self._edgeos_url, self.edgeos_disconnection_handler)
 
-        self._ws = EdgeOSWebSocket(hass,
+        self._ws = EdgeOSWebSocket(self._hass,
                                    self._edgeos_url,
                                    self._topics,
                                    self.ws_handler)
 
-        self._edgeos_login_service = EdgeOSWebLogin(self._host, self._is_ssl, self._username, self._password)
+        self._edgeos_login_service = EdgeOSWebLogin(self._host, self._username, self._password)
 
-        if is_mocked:
-            self._edgeos_ha = EdgeOSMockedHomeAssistant(hass, monitored_interfaces, monitored_devices,
-                                                        unit, scan_interval)
-        else:
-            self._edgeos_ha = EdgeOSHomeAssistant(hass, monitored_interfaces, monitored_devices,
-                                                  unit, scan_interval)
+    @property
+    def data(self):
+        return self._edgeos_data
 
-        async def edgeos_initialize(*args, **kwargs):
-            _LOGGER.info(f'Starting EdgeOS, args: {args}, kwargs: {kwargs}')
-
-            await self.start()
-
-        async def edgeos_stop(*args, **kwargs):
-            _LOGGER.info(f'Stopping EdgeOS, args: {args}, kwargs: {kwargs}')
-
-            await self.terminate()
-
-        async def edgeos_refresh(event_time):
-            _LOGGER.debug(f'Refreshing EdgeOS ({str(event_time)})')
-
-            await self.refresh()
-
-        def edgeos_save_debug_data(service):
-            _LOGGER.info(f'Save EdgeOS debug data: {service}')
-
-            self._edgeos_ha.store_data(self._edgeos_data)
-
-        def edgeos_log_events(service):
-            _LOGGER.info(f'Log Events EdgeOS WebSocket')
-
-            enabled = service.data.get(ATTR_ENABLED, False)
-
-            self._ws.log_events(enabled)
-
+    async def initialize(self, call_after_refresh=None):
         try:
             if self._edgeos_login_service.login():
-                self._edgeos_ha.initialize(edgeos_initialize,
-                                           edgeos_stop,
-                                           edgeos_refresh,
-                                           edgeos_save_debug_data,
-                                           edgeos_log_events)
+                cookies = self._edgeos_login_service.cookies_data
+                session_id = self._edgeos_login_service.session_id
 
-                self._is_initialized = True
+                _LOGGER.debug(f'Initializing API')
+
+                await self._api.initialize(cookies)
+
+                _LOGGER.debug(f'Requesting initial data')
+                await self.refresh()
+
+                if call_after_refresh is not None:
+                    await call_after_refresh()
+
+                _LOGGER.debug(f'Initializing WS using session: {session_id}')
+                await self._ws.initialize(cookies, session_id)
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            self._edgeos_ha.notify_error(ex, line_number)
+            _LOGGER.error(f"Failed to initialize EdgeOS Manager, Error: {str(ex)}, Line: {line_number}")
 
     @property
     def is_initialized(self):
         return self._is_initialized
+
+    def log_events(self, log_event_enabled):
+        self._ws.log_events(log_event_enabled)
 
     async def edgeos_disconnection_handler(self):
         _LOGGER.debug(f'Disconnection detected, reconnecting...')
 
         await self.terminate()
 
-        if self._edgeos_login_service.login():
-            await self.start()
+        await self.initialize()
 
     async def terminate(self):
         try:
@@ -164,34 +97,19 @@ class EdgeOS:
 
             _LOGGER.error(f"Failed to terminate connection to WS, Error: {ex}, Line: {line_number}")
 
-    async def start(self):
-        try:
-            cookies = self._edgeos_login_service.cookies_data
-            session_id = self._edgeos_login_service.session_id
-
-            _LOGGER.debug(f'Initializing API')
-
-            await self._api.initialize(cookies)
-
-            _LOGGER.debug(f'Requesting initial data')
-            await self.refresh()
-
-            _LOGGER.debug(f'Initializing WS using session: {session_id}')
-            await self._ws.initialize(cookies, session_id)
-        except Exception as ex:
-            exc_type, exc_obj, tb = sys.exc_info()
-            line_number = tb.tb_lineno
-
-            _LOGGER.error(f'Failed to start EdgeOS, Error: {ex}, Line: {line_number}')
-
     async def refresh(self):
         await self._api.heartbeat()
         await self.load_devices_data()
 
         self.update()
 
-    def update(self):
+    def update(self, force=False):
         try:
+            if not force and self._is_updating:
+                return
+
+            self._is_updating = True
+
             devices = self.get_devices()
             interfaces = self.get_interfaces()
             system_state = self.get_system_state()
@@ -203,13 +121,19 @@ class EdgeOS:
             if system_state is not None:
                 system_state[IS_ALIVE] = self._api.is_connected
 
-            self._edgeos_ha.update(interfaces, devices, unknown_devices, system_state,
-                                   api_last_update, web_socket_last_update)
+            self._update_home_assistant(interfaces,
+                                        devices,
+                                        unknown_devices,
+                                        system_state,
+                                        api_last_update,
+                                        web_socket_last_update)
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
             _LOGGER.error(f'Failed to refresh data, Error: {ex}, Line: {line_number}')
+
+        self._is_updating = False
 
     def ws_handler(self, payload=None):
         try:
@@ -428,8 +352,10 @@ class EdgeOS:
                                 current_value = 0
                                 service_data_item_value = 0
 
-                                if item in host_data_traffic and host_data_traffic[item] != '':
-                                    current_value = int(host_data_traffic[item])
+                                current_value_tmp = host_data_traffic.get(item, "0")
+
+                                if current_value_tmp != "":
+                                    current_value = int(current_value_tmp)
 
                                 if item in service_data and service_data[item] != '':
                                     service_data_item_value = int(service_data[item])
