@@ -118,7 +118,7 @@ Attributes
 ### Setting up the integration
 
 ###### Setup integration
-![EdgeOS Setup](https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/docs/images/EdgeOS-Setup.png)
+![EdgeOS Setup](https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/docs/images/EdgeOS-Setup.PNG)
 
 ###### Edit options - First time
 ![EdgeOS Setup](https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/docs/images/EdgeOS-First-time-options.PNG)
