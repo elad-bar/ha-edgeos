@@ -33,8 +33,6 @@ class EdgeOSWebSocket:
         self._pending_payloads = []
         self._shutting_down = False
 
-        self._timeout = SCAN_INTERVAL.seconds
-
         url = urlparse(self._edgeos_url)
 
         self._ws_url = WEBSOCKET_URL_TEMPLATE.format(url.netloc)
@@ -65,7 +63,7 @@ class EdgeOSWebSocket:
                                                     origin=self._edgeos_url,
                                                     ssl=False,
                                                     max_msg_size=MAX_MSG_SIZE,
-                                                    timeout=self._timeout) as ws:
+                                                    timeout=SCAN_INTERVAL_WS_TIMEOUT) as ws:
                     self._ws = ws
                     await self.listen()
 

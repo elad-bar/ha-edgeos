@@ -3,8 +3,8 @@ import logging
 import requests
 from time import sleep
 import urllib3
-
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.exceptions import HomeAssistantError
+from requests import HTTPError
 
 from .const import *
 
@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EdgeOSWebLogin(requests.Session):
-    def __init__(self, host, is_ssl, username, password):
+    def __init__(self, host, username, password):
         requests.Session.__init__(self)
 
         self._credentials = {
@@ -20,13 +20,7 @@ class EdgeOSWebLogin(requests.Session):
             CONF_PASSWORD: password
         }
 
-        self._is_ssl = is_ssl
-
-        protocol = PROTOCOL_UNSECURED
-        if self._is_ssl:
-            protocol = PROTOCOL_SECURED
-
-        self._edgeos_url = API_URL_TEMPLATE.format(protocol, host)
+        self._edgeos_url = API_URL_TEMPLATE.format(host)
 
         ''' This function turns off InsecureRequestWarnings '''
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -44,12 +38,12 @@ class EdgeOSWebLogin(requests.Session):
     def cookies_data(self):
         return self.cookies
 
-    def login(self):
+    def login(self, throw_exception=False):
+        status_code = None
         try:
-            if self._is_ssl:
-                login_response = self.post(self._edgeos_url, data=self._credentials, verify=False)
-            else:
-                login_response = self.post(self._edgeos_url, data=self._credentials)
+            login_response = self.post(self._edgeos_url, data=self._credentials, verify=False)
+
+            status_code = login_response.status_code
 
             login_response.raise_for_status()
 
@@ -57,10 +51,31 @@ class EdgeOSWebLogin(requests.Session):
             sleep(2)
 
             return True
+        except HTTPError as ex_http:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(f'Failed to login, HTTP Error: {ex_http}, Line: {line_number}')
+
+            if throw_exception:
+                raise LoginException(status_code)
+
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
             _LOGGER.error(f'Failed to login, Error: {ex}, Line: {line_number}')
 
+            if throw_exception:
+                raise LoginException(404)
+
         return False
+
+
+class LoginException(HomeAssistantError):
+    def __init__(self, status_code):
+        self._status_code = status_code
+
+    @property
+    def status_code(self):
+        return self._status_code
