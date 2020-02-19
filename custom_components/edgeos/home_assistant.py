@@ -46,6 +46,7 @@ class EdgeOSHomeAssistant:
 
         self._last_update = None
 
+        self._is_ready = False
         self._data = EdgeOSData(self._hass, entry.data, self.update)
 
         for domain in [DOMAIN_SENSOR, DOMAIN_BINARY_SENSOR, DOMAIN_DEVICE_TRACKER]:
@@ -99,6 +100,7 @@ class EdgeOSHomeAssistant:
 
     async def async_update_entry(self, entry, clear_all):
         _LOGGER.info(f"async_update_entry: {self._config_entry.options}")
+        self._is_ready = False
 
         self._config_entry = entry
         self._last_update = datetime.now()
@@ -134,8 +136,8 @@ class EdgeOSHomeAssistant:
             self._data.update(True)
 
             await self.discover_all()
-
-        # await self._data.refresh()
+        else:
+            await self._data.refresh()
 
     async def async_init_entry(self):
         _LOGGER.debug(f"async_init_entry called")
@@ -200,7 +202,12 @@ class EdgeOSHomeAssistant:
 
     def update(self, interfaces, devices, unknown_devices, system_state, api_last_update, web_socket_last_update):
         try:
+            previous_keys = {}
             for domain in [DOMAIN_SENSOR, DOMAIN_BINARY_SENSOR, DOMAIN_DEVICE_TRACKER]:
+                previous_keys[domain] = []
+                if domain in self._entities:
+                    previous_keys[domain] = ','.join(self._entities[domain].keys())
+
                 self._entities[domain] = {}
 
             self.create_interface_binary_sensors(interfaces)
@@ -209,6 +216,19 @@ class EdgeOSHomeAssistant:
             self.create_unknown_devices_sensor(unknown_devices)
             self.create_uptime_sensor(system_state, api_last_update, web_socket_last_update)
             self.create_system_status_binary_sensor(system_state, api_last_update, web_socket_last_update)
+
+            for domain in [DOMAIN_SENSOR, DOMAIN_BINARY_SENSOR, DOMAIN_DEVICE_TRACKER]:
+                current_keys = ','.join(self._entities[domain].keys())
+                previous_domain_keys = previous_keys[domain]
+
+                if current_keys != previous_domain_keys:
+                    if domain not in self._load_domain:
+                        self._load_domain.append(domain)
+
+                    if len(previous_domain_keys) > 0 and domain not in self._unload_domain:
+                        self._unload_domain.append(domain)
+
+            self._is_ready = True
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -216,6 +236,9 @@ class EdgeOSHomeAssistant:
             _LOGGER.error(f'Failed to update, Error: {ex}, Line: {line_number}')
 
     async def discover_all(self):
+        if not self._is_ready:
+            return
+
         for domain in [DOMAIN_SENSOR, DOMAIN_BINARY_SENSOR, DOMAIN_DEVICE_TRACKER]:
             await self.discover(domain)
 
@@ -427,6 +450,7 @@ class EdgeOSHomeAssistant:
     def create_device_tracker(self, host, data):
         try:
             allowed_items = self._allowed_track_devices
+
             if host in allowed_items:
                 entity_name = f'{DEFAULT_NAME} {host}'
 
