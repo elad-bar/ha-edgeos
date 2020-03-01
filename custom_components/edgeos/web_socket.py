@@ -56,7 +56,9 @@ class EdgeOSWebSocket:
 
         while self.is_initialized and not self._shutting_down:
             try:
-                await asyncio.sleep(10)
+                if connection_attempt > 1:
+                    await asyncio.sleep(10)
+
                 _LOGGER.info(f"Connection attempt #{connection_attempt}")
 
                 async with self._session.ws_connect(self._ws_url,

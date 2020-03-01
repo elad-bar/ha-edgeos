@@ -12,9 +12,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers import device_registry as dr
 
-from .home_assistant import _get_ha_data
 from .const import *
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,31 +20,32 @@ _LOGGER = logging.getLogger(__name__)
 CURRENT_DOMAIN = DOMAIN_BINARY_SENSOR
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
-    """Set up the EdgeOS Binary Sensor."""
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up EdgeOS based off an entry."""
     _LOGGER.debug(f"Starting async_setup_entry {CURRENT_DOMAIN}")
 
     try:
-        entry_data = config_entry.data
-        edgeos_name = entry_data.get(CONF_NAME)
+        entry_data = entry.data
+        name = entry_data.get(CONF_NAME)
         entities = []
 
-        data = _get_ha_data(hass, edgeos_name)
+        ha = _get_ha(hass, name)
+        entity_manager = ha.entity_manager
 
-        if data is not None:
-            entities_data = data.get_entities(CURRENT_DOMAIN)
+        if entity_manager is not None:
+            entities_data = entity_manager.get_entities(CURRENT_DOMAIN)
             for entity_name in entities_data:
-                entity_data = entities_data.get(entity_name)
+                entity = entities_data[entity_name]
 
-                entity = EdgeOSBinarySensor(hass, edgeos_name, entity_data)
+                entity = EdgeOSBinarySensor(hass, ha, entity)
 
                 _LOGGER.debug(f"Setup {CURRENT_DOMAIN}: {entity.name} | {entity.unique_id}")
 
                 entities.append(entity)
 
-        data.set_domain_entities_state(CURRENT_DOMAIN, True)
+                entity_manager.set_entry_loaded_state(CURRENT_DOMAIN, True)
 
-        async_add_devices(entities, True)
+        async_add_entities(entities, True)
     except Exception as ex:
         exc_type, exc_obj, tb = sys.exc_info()
         line_number = tb.tb_lineno
@@ -58,10 +57,13 @@ async def async_unload_entry(hass, config_entry):
     _LOGGER.info(f"async_unload_entry {CURRENT_DOMAIN}: {config_entry}")
 
     entry_data = config_entry.data
-    edgeos_name = entry_data.get(CONF_NAME)
+    name = entry_data.get(CONF_NAME)
 
-    data = _get_ha_data(hass, edgeos_name)
-    data.set_domain_entities_state(CURRENT_DOMAIN, False)
+    ha = _get_ha(hass, name)
+    entity_manager = ha.entity_manager
+
+    if entity_manager is not None:
+        entity_manager.set_entry_loaded_state(CURRENT_DOMAIN, False)
 
     return True
 
@@ -69,12 +71,14 @@ async def async_unload_entry(hass, config_entry):
 class EdgeOSBinarySensor(Entity):
     """Representation a binary sensor that is updated by EdgeOS."""
 
-    def __init__(self, hass, edgeos_name, entity):
+    def __init__(self, hass, ha, entity):
         """Initialize the EdgeOS Binary Sensor."""
         self._hass = hass
-        self._edgeos_name = edgeos_name
         self._entity = entity
         self._remove_dispatcher = None
+        self._ha = ha
+        self._entity_manager = ha.entity_manager
+        self._device_manager = ha.device_manager
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -83,14 +87,9 @@ class EdgeOSBinarySensor(Entity):
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {
-                (DOMAIN, self.unique_id)
-            },
-            "name": self.name,
-            "manufacturer": MANUFACTURER,
-            "model": DEFAULT_NAME
-        }
+        device_name = self._entity.get(ENTITY_DEVICE_NAME)
+
+        return self._device_manager.get(device_name)
 
     @property
     def should_poll(self):
@@ -135,18 +134,24 @@ class EdgeOSBinarySensor(Entity):
         self.hass.async_add_job(self.async_update_data)
 
     async def async_update_data(self):
-        _LOGGER.debug(f"{CURRENT_DOMAIN} update_data: {self.name} | {self.unique_id}")
-
-        data = _get_ha_data(self._hass, self._edgeos_name)
-        self._entity = data.get_entity(CURRENT_DOMAIN, self.name)
-
-        if self._entity is None:
-            self._entity = {}
-            await self.async_remove()
-
-            dev_id = self.device_info.get("id")
-            device_reg = await dr.async_get_registry(self._hass)
-
-            device_reg.async_remove_device(dev_id)
+        if self._entity_manager is None:
+            _LOGGER.debug(f"Cannot update {CURRENT_DOMAIN} - Entity Manager is None | {self.name}")
         else:
-            self.async_schedule_update_ha_state(True)
+            self._entity = self._entity_manager.get_entity(CURRENT_DOMAIN, self.name)
+
+            if self._entity is None:
+                _LOGGER.debug(f"Cannot update {CURRENT_DOMAIN} - Entity was not found | {self.name}")
+
+                self._entity = {}
+                await self.async_remove()
+            else:
+                _LOGGER.debug(f"Update {CURRENT_DOMAIN} -> {self.name}")
+
+                self.async_schedule_update_ha_state(True)
+
+
+def _get_ha(hass, host):
+    ha_data = hass.data.get(DATA_EDGEOS, {})
+    ha = ha_data.get(host)
+
+    return ha

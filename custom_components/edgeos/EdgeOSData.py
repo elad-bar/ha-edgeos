@@ -29,6 +29,7 @@ class EdgeOSData(object):
 
         self._is_updating = False
         self._edgeos_data = {}
+        self._system_data = {}
 
         self._ws_handlers = self.get_ws_handlers()
         self._topics = self._ws_handlers.keys()
@@ -43,8 +44,12 @@ class EdgeOSData(object):
         self._edgeos_login_service = EdgeOSWebLogin(self._host, self._username, self._password)
 
     @property
-    def data(self):
+    def edgeos_data(self):
         return self._edgeos_data
+
+    @property
+    def system_data(self):
+        return self._system_data
 
     async def initialize(self, call_after_refresh=None):
         try:
@@ -121,12 +126,16 @@ class EdgeOSData(object):
             if system_state is not None:
                 system_state[IS_ALIVE] = self._api.is_connected
 
-            self._update_home_assistant(interfaces,
-                                        devices,
-                                        unknown_devices,
-                                        system_state,
-                                        api_last_update,
-                                        web_socket_last_update)
+            self._system_data = {
+                INTERFACES_KEY: interfaces,
+                STATIC_DEVICES_KEY: devices,
+                UNKNOWN_DEVICES_KEY: unknown_devices,
+                SYSTEM_STATS_KEY: system_state,
+                ATTR_API_LAST_UPDATE: api_last_update,
+                ATTR_WEB_SOCKET_LAST_UPDATE: web_socket_last_update
+            }
+
+            self._update_home_assistant()
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -326,7 +335,7 @@ class EdgeOSData(object):
             result = self.get_devices()
 
             for hostname in result:
-                host_data = result.get(hostname, {})
+                host_data = result[hostname]
 
                 if IP in host_data:
                     host_data_ip = host_data.get(IP)

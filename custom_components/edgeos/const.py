@@ -199,6 +199,7 @@ ENTITY_ICON = 'icon'
 ENTITY_STATE = 'state'
 ENTITY_ATTRIBUTES = 'attributes'
 ENTITY_NAME = 'name'
+ENTITY_DEVICE_NAME = "device-name"
 
 ICONS = {
     SENSOR_TYPE_INTERFACE: "mdi:network-router",
@@ -218,3 +219,6 @@ HTTP_ERRORS = {
     404: "not_found",
     403: "invalid_credentials"
 }
+
+DOMAIN_LOAD = "load"
+DOMAIN_UNLOAD = "unload"
