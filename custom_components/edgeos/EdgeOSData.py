@@ -332,28 +332,21 @@ class EdgeOSData(object):
                 _LOGGER.debug(f'{EXPORT_KEY} is empty')
                 return
 
-            result = self.get_devices()
+            devices = self.get_devices()
 
-            for hostname in result:
-                host_data = result[hostname]
+            for device_key in devices:
+                device = devices[device_key]
 
-                if IP in host_data:
-                    host_data_ip = host_data.get(IP)
+                if IP in device:
+                    host_data_ip = device.get(IP)
 
                     if host_data_ip in data:
-
                         host_data_traffic = {}
                         for item in DEVICE_SERVICES_STATS_MAP:
                             host_data_traffic[item] = int(0)
 
                         device_data = data.get(host_data_ip, {})
-                        last_activity = host_data.get(LAST_ACTIVITY)
-
-                        if last_activity is not None:
-                            diff = (datetime.now() - last_activity).total_seconds()
-
-                            if diff >= DISCONNECTED_INTERVAL:
-                                last_activity = None
+                        last_activity = device.get(LAST_ACTIVITY, datetime.fromtimestamp(0))
 
                         for service in device_data:
                             service_data = device_data.get(service, {})
@@ -375,29 +368,36 @@ class EdgeOSData(object):
                                 host_data_traffic[item] = current_value + service_data_item_value
 
                         for traffic_data_item in host_data_traffic:
-                            host_data[traffic_data_item] = host_data_traffic.get(traffic_data_item)
+                            device[traffic_data_item] = host_data_traffic.get(traffic_data_item)
 
                         is_connected = FALSE_STR
 
-                        if last_activity is not None:
-                            host_data[LAST_ACTIVITY] = last_activity
+                        time_since_last_action = (datetime.now() - last_activity).total_seconds()
 
-                            diff = (datetime.now() - last_activity).total_seconds()
+                        if time_since_last_action < DISCONNECTED_INTERVAL:
+                            is_connected = TRUE_STR
+                        else:
+                            if device.get(CONNECTED, False) != is_connected:
+                                msg = [
+                                    f"Device {host_data_ip} disconnected",
+                                    f"due to inactivity since {last_activity}",
+                                    f"({time_since_last_action} seconds"
+                                ]
 
-                            if diff < DISCONNECTED_INTERVAL:
-                                is_connected = TRUE_STR
+                                _LOGGER.info(" ".join(msg))
 
-                        host_data[CONNECTED] = is_connected
+                        device[CONNECTED] = is_connected
+                        device[LAST_ACTIVITY] = last_activity
 
                         del data[host_data_ip]
                     else:
-                        host_data[CONNECTED] = FALSE_STR
+                        device[CONNECTED] = FALSE_STR
 
             unknown_devices = []
             for host_ip in data:
                 unknown_devices.append(host_ip)
 
-            self.set_devices(result)
+            self.set_devices(devices)
             self.set_unknown_devices(unknown_devices)
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -451,7 +451,10 @@ class EdgeOSData(object):
         self.update()
 
     def get_devices(self):
-        result = self._edgeos_data.get(STATIC_DEVICES_KEY, {})
+        if STATIC_DEVICES_KEY not in self._edgeos_data:
+            self.set_devices({})
+
+        result = self._edgeos_data[STATIC_DEVICES_KEY]
 
         return result
 
