@@ -10,4 +10,9 @@ save_debug_data:
 log_events:
   description: "Enable / Disable log of all event messages from WebSocket (DEBUG)"
   fields:
-    enabled: "True / False - whether to log as DEBUG all events"
+    enabled:
+      description: "True / False - whether to log as DEBUG all events"
+      example: "true"
+      values:
+        - true
+        - false
