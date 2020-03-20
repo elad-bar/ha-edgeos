@@ -72,7 +72,10 @@ class EdgeOSHomeAssistant:
         return self._unit_size
 
     async def initialize(self):
-        async_call_later(self._hass, 5, self.async_finalize)
+        def finalize(event_time):
+            self._hass.async_create_task(self.async_finalize(event_time))
+
+        async_call_later(self._hass, 5, finalize)
 
     async def async_finalize(self, event_time):
         _LOGGER.debug(f"async_finalize called at {event_time}")
@@ -92,12 +95,18 @@ class EdgeOSHomeAssistant:
 
         self._hass.async_create_task(self.async_update_entry(self._config_entry, False))
 
+        def update_api(now):
+            self._hass.async_create_task(self.async_update_api(now))
+
         self._remove_async_track_time_api = async_track_time_interval(self._hass,
-                                                                      self.async_update_api,
+                                                                      update_api,
                                                                       SCAN_INTERVAL_API)
 
+        def update_entities(now):
+            self._hass.async_create_task(self.async_update_entities(now))
+
         self._remove_async_track_time_entities = async_track_time_interval(self._hass,
-                                                                           self.async_update_entities,
+                                                                           update_entities,
                                                                            SCAN_INTERVAL_ENTITIES)
 
         self._is_initialized = True
