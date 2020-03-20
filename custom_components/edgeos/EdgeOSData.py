@@ -105,6 +105,7 @@ class EdgeOSData(object):
     async def refresh(self):
         await self._api.heartbeat()
         await self.load_devices_data()
+        await self.load_unknown_devices()
 
         self.update()
 
@@ -172,6 +173,42 @@ class EdgeOSData(object):
         }
 
         return ws_handlers
+
+    async def load_unknown_devices(self):
+        try:
+            _LOGGER.debug('Getting unknown devices by API')
+
+            unknown_devices_data = await self._api.get_general_data(DHCP_LEASES_KEY)
+
+            if unknown_devices_data is not None:
+                result = []
+
+                dhcp_server_leases_data = unknown_devices_data.get('dhcp-server-leases', {})
+
+                for interface_key in dhcp_server_leases_data:
+                    interface_info = dhcp_server_leases_data[interface_key]
+
+                    for ip in interface_info:
+                        device_info = interface_info[ip]
+
+                        device = {
+                            "ip": ip,
+                            "expiration": device_info.get("expiration"),
+                            "pool": device_info.get("pool"),
+                            "mac": device_info.get("mac"),
+                            "client-hostname": device_info.get("client-hostname")
+                        }
+
+                        result.append(device)
+
+                self.set_unknown_devices(result)
+            else:
+                _LOGGER.warning(f"Invalid data: {unknown_devices_data}")
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(f'Failed to load devices data, Error: {ex}, Line: {line_number}')
 
     async def load_devices_data(self):
         try:
@@ -341,7 +378,7 @@ class EdgeOSData(object):
                     host_data_ip = device.get(IP)
 
                     if host_data_ip in data:
-                        host_data_traffic = {}
+                        host_data_traffic: dict = {}
                         for item in DEVICE_SERVICES_STATS_MAP:
                             host_data_traffic[item] = int(0)
 
@@ -393,12 +430,7 @@ class EdgeOSData(object):
                     else:
                         device[CONNECTED] = FALSE_STR
 
-            unknown_devices = []
-            for host_ip in data:
-                unknown_devices.append(host_ip)
-
             self.set_devices(devices)
-            self.set_unknown_devices(unknown_devices)
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno

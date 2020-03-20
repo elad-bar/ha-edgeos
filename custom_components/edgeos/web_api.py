@@ -151,7 +151,7 @@ class EdgeOSWebAPI:
                 else:
                     result = data.get(RESPONSE_OUTPUT)
             else:
-                _LOGGER.warning(f'Get general data not ran due to closed session')
+                _LOGGER.warning(f'Get data of {item} not ran due to closed session')
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
