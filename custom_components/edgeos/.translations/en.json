@@ -26,7 +26,7 @@
   "options": {
       "step": {
           "edge_os_additional_settings": {
-              "title": "Options for EdgeOS ({name}).",
+              "title": "Options for EdgeOS.",
               "description": "Set up your monitored devices / interfaces and tracked devices, use comma separated values, to clear existing value, use the checkbox.",
               "data": {
                   "monitored_interfaces": "Monitored interfaces",
