@@ -143,13 +143,14 @@ class EdgeOSWebAPI:
 
                 data = await self.async_get(data_req_full_url)
 
-                if str(data.get(RESPONSE_SUCCESS_KEY, EMPTY_STRING)) == RESPONSE_FAILURE_CODE:
-                    error = data.get(RESPONSE_ERROR_KEY, EMPTY_STRING)
+                if data is not None and RESPONSE_SUCCESS_KEY in data:
+                    if str(data.get(RESPONSE_SUCCESS_KEY)) == RESPONSE_FAILURE_CODE:
+                        error = data.get(RESPONSE_ERROR_KEY, EMPTY_STRING)
 
-                    _LOGGER.error(f'Failed to load {item}, Reason: {error}')
-                    result = None
-                else:
-                    result = data.get(RESPONSE_OUTPUT)
+                        _LOGGER.error(f'Failed to load {item}, Reason: {error}')
+                        result = None
+                    else:
+                        result = data.get(RESPONSE_OUTPUT)
             else:
                 _LOGGER.warning(f'Get data of {item} not ran due to closed session')
 
