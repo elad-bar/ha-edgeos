@@ -399,7 +399,7 @@ class EdgeOSData(object):
                                 if item in service_data and service_data[item] != '':
                                     service_data_item_value = int(service_data[item])
 
-                                if item in ['tx_rate'] and current_value > 0:
+                                if item in ['tx_rate', 'rx_rate'] and current_value > 0:
                                     last_activity = datetime.now()
 
                                 host_data_traffic[item] = current_value + service_data_item_value
