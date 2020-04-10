@@ -210,53 +210,68 @@ class EdgeOSData(object):
 
             _LOGGER.error(f'Failed to load devices data, Error: {ex}, Line: {line_number}')
 
+    def load_devices(self, device_data):
+        if device_data is None:
+            device_data = {}
+
+        service_data = device_data.get(SERVICE, {})
+        dhcp_server_data = service_data.get(DHCP_SERVER, {})
+        shared_network_data = dhcp_server_data.get(SHARED_NETWORK_NAME, {})
+
+        for shared_network_key in shared_network_data:
+            shared_network_item = shared_network_data[shared_network_key]
+            subnet_data = shared_network_item.get(SUBNET, {})
+            for subnet_key in subnet_data:
+                subnet_item = subnet_data[subnet_key]
+
+                static_mapping_data = subnet_item.get(STATIC_MAPPING, {})
+                for hostname in static_mapping_data:
+                    device = self.get_device(hostname)
+
+                    static_mapping_item = static_mapping_data[hostname]
+                    ip = static_mapping_item.get(IP_ADDRESS)
+                    mac = static_mapping_item.get(MAC_ADDRESS)
+
+                    name = hostname
+                    if ip is not None:
+                        name = f"{hostname} ({ip})"
+
+                    device[IP] = ip
+                    device[MAC] = mac
+                    device[ATTR_NAME] = name
+
+                    self.set_device(hostname, device)
+
+    def load_interfaces(self, device_data):
+        interfaces_data = device_data.get(INTERFACES_KEY, {})
+        ethernet_data = interfaces_data.get("ethernet", {})
+
+        for ethernet_key in ethernet_data:
+            ethernet_item = ethernet_data[ethernet_key]
+            description = ethernet_item.get("description")
+
+            name = ethernet_key
+
+            if description is not None:
+                name = f"{ethernet_key} ({description})"
+
+            interface = {
+                ATTR_NAME: name
+            }
+
+            self.set_interface(ethernet_key, interface)
+
     async def load_devices_data(self):
         try:
             _LOGGER.debug('Getting devices by API')
 
             devices_data = await self._api.get_devices_data()
 
-            if devices_data is not None:
-                service_data = devices_data.get(SERVICE, {})
+            self.load_devices(devices_data)
+            self.load_interfaces(devices_data)
 
-                if isinstance(service_data, dict):
-                    result = {}
+            self.update()
 
-                    previous_result = self.get_devices()
-                    if previous_result is None:
-                        previous_result = {}
-
-                    dhcp_server_data = service_data.get(DHCP_SERVER, {})
-                    shared_network_name_data = dhcp_server_data.get(SHARED_NETWORK_NAME, {})
-
-                    for shared_network_name_key in shared_network_name_data:
-                        dhcp_network_allocation = shared_network_name_data.get(shared_network_name_key, {})
-                        subnet = dhcp_network_allocation.get(SUBNET, {})
-
-                        for subnet_mask_key in subnet:
-                            subnet_mask = subnet.get(subnet_mask_key, {})
-                            static_mapping = subnet_mask.get(STATIC_MAPPING, {})
-
-                            for host_name in static_mapping:
-                                host_data = static_mapping.get(host_name, {})
-                                host_ip = host_data.get(IP_ADDRESS)
-                                host_mac = host_data.get(MAC_ADDRESS)
-
-                                data = {
-                                    IP: host_ip,
-                                    MAC: host_mac
-                                }
-
-                                previous_host_data = previous_result.get(host_name, {})
-
-                                for previous_key in previous_host_data:
-                                    data[previous_key] = previous_host_data.get(previous_key)
-
-                                result[host_name] = data
-
-                    self.set_devices(result)
-                else:
-                    _LOGGER.warning(f"Invalid Service Data: {service_data}")
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -271,44 +286,35 @@ class EdgeOSData(object):
                 _LOGGER.debug(f'{INTERFACES_KEY} is empty')
                 return
 
-            result = self.get_interfaces()
+            for name in data:
+                interface_data = data.get(name, {})
+                current_data = self.get_interface(name)
 
-            for interface in data:
-                interface_data = None
+                if current_data is not None:
+                    interface = {}
 
-                if interface in data:
-                    interface_data = data.get(interface)
+                    for item in interface_data:
+                        data = interface_data.get(item)
 
-                interface_data_item = self.get_interface_data(interface_data)
+                        if ADDRESS_LIST == item:
+                            interface[item] = data
 
-                result[interface] = interface_data_item
+                        elif INTERFACES_STATS == item:
+                            for stats_item in INTERFACES_STATS_MAP:
+                                interface[stats_item] = data.get(stats_item)
 
-            self.set_interfaces(result)
+                        else:
+                            if item in INTERFACES_MAIN_MAP:
+                                interface[item] = data
+
+                    self.set_interface(name, interface)
+
+            self.update()
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
             _LOGGER.error(f'Failed to load {INTERFACES_KEY}, Error: {ex}, Line: {line_number}')
-
-    @staticmethod
-    def get_interface_data(interface_data):
-        result = {}
-
-        for item in interface_data:
-            data = interface_data.get(item)
-
-            if ADDRESS_LIST == item:
-                result[item] = data
-
-            elif INTERFACES_STATS == item:
-                for stats_item in INTERFACES_STATS_MAP:
-                    result[stats_item] = data.get(stats_item)
-
-            else:
-                if item in INTERFACES_MAIN_MAP:
-                    result[item] = data
-
-        return result
 
     def handle_system_stats(self, data):
         try:
@@ -361,6 +367,30 @@ class EdgeOSData(object):
 
             _LOGGER.error(f'Failed to load {DISCOVER_KEY}, Original Message: {data}, Error: {ex}, Line: {line_number}')
 
+    @staticmethod
+    def check_last_activity(device):
+        device_ip = device.get(IP)
+        device_connected = device.get(CONNECTED, False)
+        device_last_activity = device.get(LAST_ACTIVITY, datetime.fromtimestamp(0))
+
+        is_connected = FALSE_STR
+
+        time_since_last_action = (datetime.now() - device_last_activity).total_seconds()
+
+        if time_since_last_action < DISCONNECTED_INTERVAL:
+            is_connected = TRUE_STR
+        else:
+            if device_connected != is_connected:
+                msg = [
+                    f"Device {device_ip} disconnected",
+                    f"due to inactivity since {device_last_activity}",
+                    f"({time_since_last_action} seconds"
+                ]
+
+                _LOGGER.info(" ".join(msg))
+
+        device[CONNECTED] = is_connected
+
     def handle_export(self, data):
         try:
             _LOGGER.debug(f'Handle {EXPORT_KEY} data')
@@ -369,68 +399,56 @@ class EdgeOSData(object):
                 _LOGGER.debug(f'{EXPORT_KEY} is empty')
                 return
 
-            devices = self.get_devices()
+            all_devices = self.get_devices().keys()
+            updated_devices = []
 
-            for device_key in devices:
-                device = devices[device_key]
+            for device_key in all_devices:
+                device = self.get_device(device_key)
+                device_ip = device.get(IP)
+                device_data = data.get(device_ip)
 
-                if IP in device:
-                    host_data_ip = device.get(IP)
+                if device_data is None:
+                    self.check_last_activity(device)
+                    updated_devices.append({
+                        CONF_HOST: device_key,
+                        "device": device
+                    })
 
-                    if host_data_ip in data:
-                        host_data_traffic: dict = {}
-                        for item in DEVICE_SERVICES_STATS_MAP:
-                            host_data_traffic[item] = int(0)
+                    continue
 
-                        device_data = data.get(host_data_ip, {})
-                        last_activity = device.get(LAST_ACTIVITY, datetime.fromtimestamp(0))
+                traffic = {}
+                for item in DEVICE_SERVICES_STATS_MAP:
+                    traffic[item] = int(0)
 
-                        for service in device_data:
-                            service_data = device_data.get(service, {})
-                            for item in service_data:
-                                current_value = 0
-                                service_data_item_value = 0
+                for service in device_data:
+                    service_data = device_data.get(service, {})
+                    for item in service_data:
+                        current_value = traffic.get(item, 0)
+                        service_data_item_value = 0
 
-                                current_value_tmp = host_data_traffic.get(item, "0")
+                        if item in service_data and service_data[item] != '':
+                            service_data_item_value = int(service_data[item])
 
-                                if current_value_tmp != "":
-                                    current_value = int(current_value_tmp)
+                        if 'x_rate' in item and current_value > 0:
+                            device[LAST_ACTIVITY] = datetime.now()
 
-                                if item in service_data and service_data[item] != '':
-                                    service_data_item_value = int(service_data[item])
+                        traffic_value = current_value + service_data_item_value
 
-                                if item in ['tx_rate'] and current_value > 0:
-                                    last_activity = datetime.now()
+                        traffic[item] = traffic_value
+                        device[item] = traffic_value
 
-                                host_data_traffic[item] = current_value + service_data_item_value
+                self.check_last_activity(device)
+                updated_devices.append({
+                    CONF_HOST: device_key,
+                    "device": device
+                })
 
-                        for traffic_data_item in host_data_traffic:
-                            device[traffic_data_item] = host_data_traffic.get(traffic_data_item)
+            for updated_device in updated_devices:
+                hostname = updated_device.get(CONF_HOST)
+                device = updated_device.get("device")
 
-                        is_connected = FALSE_STR
+                self.set_device(hostname, device)
 
-                        time_since_last_action = (datetime.now() - last_activity).total_seconds()
-
-                        if time_since_last_action < DISCONNECTED_INTERVAL:
-                            is_connected = TRUE_STR
-                        else:
-                            if device.get(CONNECTED, False) != is_connected:
-                                msg = [
-                                    f"Device {host_data_ip} disconnected",
-                                    f"due to inactivity since {last_activity}",
-                                    f"({time_since_last_action} seconds"
-                                ]
-
-                                _LOGGER.info(" ".join(msg))
-
-                        device[CONNECTED] = is_connected
-                        device[LAST_ACTIVITY] = last_activity
-
-                        del data[host_data_ip]
-                    else:
-                        device[CONNECTED] = FALSE_STR
-
-            self.set_devices(devices)
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -467,28 +485,49 @@ class EdgeOSData(object):
 
         return result
 
-    def set_interfaces(self, interfaces):
-        self._edgeos_data[INTERFACES_KEY] = interfaces
+    def set_interface(self, name, interface):
+        all_interfaces = self.get_interfaces()
 
-        self.update()
+        if name not in all_interfaces:
+            all_interfaces[name] = {}
+
+        current_interface = all_interfaces[name]
+
+        for key in interface:
+            current_interface[key] = interface[key]
 
     def get_interfaces(self):
+        if INTERFACES_KEY not in self._edgeos_data:
+            self._edgeos_data[INTERFACES_KEY] = {}
+
         result = self._edgeos_data.get(INTERFACES_KEY, {})
 
         return result
 
-    def set_devices(self, devices):
-        self._edgeos_data[STATIC_DEVICES_KEY] = devices
+    def get_interface(self, name):
+        interfaces = self.get_interfaces()
+        interface = interfaces.get(name, {})
 
-        self.update()
+        return interface
 
     def get_devices(self):
         if STATIC_DEVICES_KEY not in self._edgeos_data:
-            self.set_devices({})
+            self._edgeos_data[STATIC_DEVICES_KEY] = {}
 
         result = self._edgeos_data[STATIC_DEVICES_KEY]
 
         return result
+
+    def set_device(self, hostname, device):
+        all_devices = self.get_devices()
+
+        if hostname not in all_devices:
+            all_devices[hostname] = {}
+
+        current_device = all_devices[hostname]
+
+        for key in device:
+            current_device[key] = device[key]
 
     def get_device(self, hostname):
         devices = self.get_devices()

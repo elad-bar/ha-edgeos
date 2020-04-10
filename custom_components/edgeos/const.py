@@ -222,3 +222,5 @@ HTTP_ERRORS = {
 
 DOMAIN_LOAD = "load"
 DOMAIN_UNLOAD = "unload"
+
+OPTION_EMPTY = " NONE "
