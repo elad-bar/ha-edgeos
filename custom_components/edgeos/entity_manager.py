@@ -30,6 +30,8 @@ class EntityManager:
         self._allowed_devices = []
         self._allowed_track_devices = []
 
+        self._options = None
+
         self._data_manager: EdgeOSData = self._ha.data_manager
 
         for domain in SIGNALS:
@@ -42,17 +44,28 @@ class EntityManager:
     def system_data(self):
         return self._data_manager.system_data
 
+    def get_option(self, option_key):
+        result = []
+        data = self._options.get(option_key)
+
+        if data is not None:
+            if isinstance(data, list):
+                result = data
+            else:
+                clean_data = data.replace(" ", "")
+                result = clean_data.split(",")
+
+        return result
+
     def update_options(self, options):
         if options is None:
             options = {}
 
-        monitored_interfaces = options.get(CONF_MONITORED_INTERFACES, "").replace(" ", "")
-        monitored_devices = options.get(CONF_MONITORED_DEVICES, "").replace(" ", "")
-        track_devices = options.get(CONF_TRACK_DEVICES, "").replace(" ", "")
+        self._options = options
 
-        self._allowed_interfaces = monitored_interfaces.split(",")
-        self._allowed_devices = monitored_devices.split(",")
-        self._allowed_track_devices = track_devices.split(",")
+        self._allowed_interfaces = self.get_option(CONF_MONITORED_INTERFACES)
+        self._allowed_devices = self.get_option(CONF_MONITORED_DEVICES)
+        self._allowed_track_devices = self.get_option(CONF_TRACK_DEVICES)
 
     def set_entry_loaded_state(self, domain, has_entities):
         self._entry_loaded_state[domain] = has_entities

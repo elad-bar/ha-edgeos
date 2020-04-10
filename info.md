@@ -4,6 +4,9 @@ Provides an integration between EdgeOS (Ubiquiti) routers to Home Assistant.
 
 ### How to set it up:
 
+#### Installation
+Please install in HACS, look for "Integration with EdgeOS (Ubiquiti)"
+
 #### Requirements
 * EdgeRouter User with 'Operator' level access or higher
 * Traffic Analysis set to 'Hosts only' or 'Enabled'
@@ -17,28 +20,24 @@ Provides an integration between EdgeOS (Ubiquiti) routers to Home Assistant.
   * Host (or IP)
   * Username (It's better to create a unique user to identify issues related to the integration)
   * Password 
-  * Unit (Bytes, Kilebytes, Megabytes) 
+  * Unit (Bytes, Kilobytes, Megabytes) 
 * Upon submitting the form of creating an integration login to the EdgeOS device will take place and will cause failure in case:
   * Cannot reach device (404)
   * Invalid credentials (403)
   * General authentication error (when failed to get valid response from device)
+  * Could not retrieve device data from EdgeOS Router
+  * Export configuration is disabled, please enable
+  * Deep Packet Investigation configuration is disabled, please enable
 
 #### Monitoring interfaces, devices and track devices
 *Configuration -> Integrations -> {Integration} -> Options* <br />
 
-Form will open at the first time with 3 fields (Comma Separated Values):
+Form will open at the first time with 3 multiple selection drop-downs:
 * Monitored devices
 * Monitored interfaces
-* Track devices
+* Track 
 
-
-Once details are saved and accessing that form again, 
-an additional checkbox will appear below each of the fields that has values, why? <br />
-Deleting the data from a specific field will not delete it, to delete that data completely in specific field you can:
-* Use the checkbox
-* Use space instead of the text (it will be trimmed and deleted eventually)
-
-\* This is a workaround until I will find a nicer solution
+First option in each drop-down is NONE, as long as this option is checked, it will not allow checking other items
   
 ### By default, following entities will be generated 
 ###### Binary Sensor
@@ -118,10 +117,7 @@ Attributes
 ### Setting up the integration
 
 ###### Setup integration
-![EdgeOS Setup](https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/docs/images/EdgeOS-Setup.png)
+![EdgeOS Setup](https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/docs/images/EdgeOS-Setup.PNG)
 
-###### Edit options - First time
-![EdgeOS Setup](https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/docs/images/EdgeOS-First-time-options.PNG)
-
-###### Edit options - With saved fields
-![EdgeOS Setup](https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/docs/images/EdgeOS-2nd-time-options.PNG)
+###### Edit options
+![EdgeOS Setup](https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/docs/images/EdgeOS-Options.PNG)
