@@ -287,27 +287,25 @@ class EdgeOSData(object):
                 return
 
             for name in data:
-                interface_data = data.get(name, {})
-                current_data = self.get_interface(name)
+                interface_data = data.get(name)
 
-                if current_data is not None:
-                    interface = {}
+                interface = {}
 
-                    for item in interface_data:
-                        data = interface_data.get(item)
+                for item in interface_data:
+                    item_data = interface_data.get(item)
 
-                        if ADDRESS_LIST == item:
-                            interface[item] = data
+                    if ADDRESS_LIST == item:
+                        interface[item] = item_data
 
-                        elif INTERFACES_STATS == item:
-                            for stats_item in INTERFACES_STATS_MAP:
-                                interface[stats_item] = data.get(stats_item)
+                    elif INTERFACES_STATS == item:
+                        for stats_item in INTERFACES_STATS_MAP:
+                            interface[stats_item] = item_data.get(stats_item)
 
-                        else:
-                            if item in INTERFACES_MAIN_MAP:
-                                interface[item] = data
+                    else:
+                        if item in INTERFACES_MAIN_MAP:
+                            interface[item] = item_data
 
-                    self.set_interface(name, interface)
+                self.set_interface(name, interface)
 
             self.update()
         except Exception as ex:
