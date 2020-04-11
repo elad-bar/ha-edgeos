@@ -367,9 +367,10 @@ class EdgeOSData(object):
 
     @staticmethod
     def check_last_activity(device):
+        date_minimum = datetime.fromtimestamp(0)
         device_ip = device.get(IP)
         device_connected = device.get(CONNECTED, False)
-        device_last_activity = device.get(LAST_ACTIVITY, datetime.fromtimestamp(0))
+        device_last_activity = device.get(LAST_ACTIVITY, date_minimum)
 
         is_connected = FALSE_STR
 
@@ -378,7 +379,7 @@ class EdgeOSData(object):
         if time_since_last_action < DISCONNECTED_INTERVAL:
             is_connected = TRUE_STR
         else:
-            if device_connected != is_connected:
+            if device_connected != is_connected and device_last_activity != date_minimum:
                 msg = [
                     f"Device {device_ip} disconnected",
                     f"due to inactivity since {device_last_activity}",

@@ -8,6 +8,7 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import async_get_registry, EntityRegistry
 
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -36,13 +37,14 @@ class EdgeOSHomeAssistant:
         self._is_first_time_online = True
         self._is_initialized = False
         self._is_ready = False
-        self._data_manager = None
-        self._entity_manager = None
-        self._device_manager = None
+
+        self._entity_registry = None
+
+        self._data_manager = EdgeOSData(self._hass, self._config_entry.data, self.update)
+        self._device_manager = DeviceManager(self._hass, self)
+        self._entity_manager = EntityManager(self._hass, self)
 
         self._services = {
-            "stop": self.service_stop,
-            "restart": self.service_restart,
             "save_debug_data": self.service_save_debug_data,
             "log_events": self.service_log_events
         }
@@ -64,6 +66,10 @@ class EdgeOSHomeAssistant:
         return self._device_manager
 
     @property
+    def entity_registry(self) -> EntityRegistry:
+        return self._entity_registry
+
+    @property
     def unit(self):
         return self._unit
 
@@ -71,14 +77,23 @@ class EdgeOSHomeAssistant:
     def unit_size(self):
         return self._unit_size
 
-    async def initialize(self):
-        def finalize(event_time):
-            self._hass.async_create_task(self.async_finalize(event_time))
+    async def async_init(self):
+        def internal_async_init(now):
+            self._hass.async_create_task(self._async_init(now))
 
-        async_call_later(self._hass, 5, finalize)
+        self._entity_registry = await async_get_registry(self._hass)
 
-    async def async_finalize(self, event_time):
-        _LOGGER.debug(f"async_finalize called at {event_time}")
+        async_call_later(self._hass, 2, internal_async_init)
+
+    async def _async_init(self, now):
+        _LOGGER.debug(f"Initializing EdgeOS @{now}")
+
+        self._entity_manager.update_options(self._config_entry.options)
+
+        load = self._hass.config_entries.async_forward_entry_setup
+
+        for domain in SIGNALS:
+            self._hass.async_create_task(load(self._config_entry, domain))
 
         # Register Service
         for service_name in self._services:
@@ -87,23 +102,19 @@ class EdgeOSHomeAssistant:
 
             self._hass.services.async_register(DOMAIN, service_name, service_callback, schema=service_schema)
 
-        self._data_manager = EdgeOSData(self._hass, self._config_entry.data, self.update)
-        self._device_manager = DeviceManager(self._hass, self)
-        self._entity_manager = EntityManager(self._hass, self)
+        def update_api(internal_now):
+            self._hass.async_create_task(self.async_update_api(internal_now))
+
+        def update_entities(internal_now):
+            self._hass.async_create_task(self.async_update_entities(internal_now))
 
         self._hass.async_create_task(self._data_manager.initialize())
 
-        self._hass.async_create_task(self.async_update_entry(self._config_entry, False))
-
-        def update_api(now):
-            self._hass.async_create_task(self.async_update_api(now))
+        self._hass.async_create_task(self.async_update_api(datetime.now()))
 
         self._remove_async_track_time_api = async_track_time_interval(self._hass,
                                                                       update_api,
                                                                       SCAN_INTERVAL_API)
-
-        def update_entities(now):
-            self._hass.async_create_task(self.async_update_entities(now))
 
         self._remove_async_track_time_entities = async_track_time_interval(self._hass,
                                                                            update_entities,
@@ -114,7 +125,7 @@ class EdgeOSHomeAssistant:
     async def async_remove(self):
         _LOGGER.debug(f"async_remove called")
 
-        self.service_stop(None)
+        await self._data_manager.terminate()
 
         # Unregister Service
         for service_name in self._services:
@@ -131,7 +142,9 @@ class EdgeOSHomeAssistant:
         for domain in SIGNALS:
             self._hass.async_create_task(unload(self._config_entry, domain))
 
-    async def async_update_entry(self, entry, clear_all):
+        await self._device_manager.async_remove_entry(self._config_entry.entry_id)
+
+    async def async_update_entry(self, entry):
         _LOGGER.info(f"async_update_entry: {self._config_entry.options}")
         self._is_ready = False
 
@@ -139,14 +152,9 @@ class EdgeOSHomeAssistant:
 
         self._entity_manager.update_options(entry.options)
 
-        if clear_all:
-            await self._device_manager.async_remove_entry(self._config_entry.entry_id)
+        self._data_manager.update(True)
 
-            self._data_manager.update(True)
-
-            await self.discover_all()
-        else:
-            await self.async_update_api(None)
+        await self.discover_all()
 
     async def async_update_api(self, event_time):
         if not self._is_initialized:
@@ -167,7 +175,7 @@ class EdgeOSHomeAssistant:
         if self._is_first_time_online:
             self._is_first_time_online = False
 
-            await self.async_update_entry(self._config_entry, False)
+            await self.async_update_api(datetime.now())
 
         await self.discover_all()
 
@@ -189,56 +197,17 @@ class EdgeOSHomeAssistant:
         if not self._is_ready or not self._is_initialized:
             return
 
+        _LOGGER.debug(f"discover_all started")
+
         self.device_manager.update()
 
         default_device_info = self.device_manager.get(DEFAULT_NAME)
 
         if CONF_NAME in default_device_info:
             for domain in SIGNALS:
-                await self.discover(domain)
+                signal = SIGNALS.get(domain)
 
-            self.entity_manager.clear_domain_states()
-
-    async def discover(self, domain):
-        signal = SIGNALS.get(domain)
-
-        if signal is None:
-            _LOGGER.error(f"Cannot discover domain {domain}")
-            return
-
-        unload = self._hass.config_entries.async_forward_entry_unload
-        setup = self._hass.config_entries.async_forward_entry_setup
-
-        entry = self._config_entry
-
-        can_unload = self.entity_manager.get_domain_state(domain, DOMAIN_UNLOAD)
-        can_load = self.entity_manager.get_domain_state(domain, DOMAIN_LOAD)
-        can_notify = not can_load and not can_unload
-
-        if can_unload:
-            _LOGGER.info(f"Unloading domain {domain}")
-
-            self._hass.async_create_task(unload(entry, domain))
-            self.entity_manager.set_domain_state(domain, DOMAIN_LOAD, False)
-
-        if can_load:
-            _LOGGER.info(f"Loading domain {domain}")
-
-            self._hass.async_create_task(setup(entry, domain))
-            self.entity_manager.set_domain_state(domain, DOMAIN_UNLOAD, False)
-
-        if can_notify:
-            async_dispatcher_send(self._hass, signal)
-
-    def service_stop(self, service):
-        _LOGGER.debug(f'Stop: {service}')
-
-        self._hass.async_create_task(self._data_manager.terminate())
-
-    def service_restart(self, service):
-        _LOGGER.debug(f'Start: {service}')
-
-        self._hass.async_create_task(self.async_update_entry(self._config_entry, False))
+                async_dispatcher_send(self._hass, signal)
 
     def service_save_debug_data(self, service):
         _LOGGER.debug(f'Save Debug Data: {service}')

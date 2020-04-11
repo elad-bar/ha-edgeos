@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     ha = EdgeOSHomeAssistant(hass, entry)
-    await ha.initialize()
+    await ha.async_init()
 
     hass.data[DATA_EDGEOS][name] = ha
 
@@ -71,4 +71,4 @@ async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry):
     if name in data:
         edgeos: EdgeOSHomeAssistant = data[name]
 
-        await edgeos.async_update_entry(entry, True)
+        await edgeos.async_update_entry(entry)
