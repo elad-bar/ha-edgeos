@@ -4,6 +4,7 @@ import logging
 from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SOURCE_TYPE_ROUTER
 
 from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .EdgeOSData import EdgeOSData
 from .const import *
@@ -23,8 +24,6 @@ class EntityManager:
         self._ha = ha
 
         self._entities = {}
-        self._entry_loaded_state = {}
-        self._domain_states: dict = {}
 
         self._allowed_interfaces = []
         self._allowed_devices = []
@@ -33,16 +32,24 @@ class EntityManager:
         self._options = None
 
         self._data_manager: EdgeOSData = self._ha.data_manager
+        self._domain_component_manager: dict = {}
 
         for domain in SIGNALS:
             self.clear_entities(domain)
-            self.set_domain_state(domain, DOMAIN_LOAD, False)
-            self.set_domain_state(domain, DOMAIN_UNLOAD, False)
-            self.set_entry_loaded_state(domain, False)
 
     @property
     def system_data(self):
         return self._data_manager.system_data
+
+    @property
+    def entity_registry(self) -> EntityRegistry:
+        return self._ha.entity_registry
+
+    def set_domain_component(self, domain, async_add_entities, component):
+        self._domain_component_manager[domain] = {
+            "async_add_entities": async_add_entities,
+            "component": component
+        }
 
     def get_option(self, option_key):
         result = []
@@ -67,12 +74,6 @@ class EntityManager:
         self._allowed_devices = self.get_option(CONF_MONITORED_DEVICES)
         self._allowed_track_devices = self.get_option(CONF_TRACK_DEVICES)
 
-    def set_entry_loaded_state(self, domain, has_entities):
-        self._entry_loaded_state[domain] = has_entities
-
-    def get_entry_loaded_state(self, domain):
-        return self._entry_loaded_state.get(domain, False)
-
     def clear_entities(self, domain):
         self._entities[domain] = {}
 
@@ -87,26 +88,39 @@ class EntityManager:
 
         return entity
 
-    def set_entity(self, domain, name, data):
-        entities = self._entities.get(domain)
+    def get_entity_status(self, domain, name):
+        entity = self.get_entity(domain, name)
+        status = entity.get(ENTITY_STATUS)
 
-        if entities is None:
+        return status
+
+    def set_entity_status(self, domain, name, status):
+        if domain in self._entities and name in self._entities[domain]:
+            self._entities[domain][name][ENTITY_STATUS] = status
+
+    def delete_entity(self, domain, name):
+        if domain in self._entities and name in self._entities[domain]:
+            del self._entities[domain][name]
+
+    def set_entity(self, domain, name, data):
+        if domain not in self._entities:
             self._entities[domain] = {}
 
-            entities = self._entities.get(domain)
+        status = self.get_entity_status(domain, name)
 
-        entities[name] = data
+        self._entities[domain][name] = data
 
-    def update(self):
+        if status == ENTITY_STATUS_EMPTY:
+            status = ENTITY_STATUS_CREATED
+        else:
+            status = ENTITY_STATUS_MODIFIED
+
+        self.set_entity_status(domain, name, status)
+
+    def create_components(self):
         system_state = self.system_data.get(SYSTEM_STATS_KEY)
         api_last_update = self.system_data.get(ATTR_API_LAST_UPDATE)
         web_socket_last_update = self.system_data.get(ATTR_WEB_SOCKET_LAST_UPDATE)
-
-        previous_keys = {}
-        for domain in SIGNALS:
-            previous_keys[domain] = ','.join(self.get_entities(domain).keys())
-
-            self.clear_entities(domain)
 
         self.create_interface_binary_sensors()
         self.create_device_binary_sensors()
@@ -115,42 +129,46 @@ class EntityManager:
         self.create_uptime_sensor(system_state, api_last_update, web_socket_last_update)
         self.create_system_status_binary_sensor(system_state, api_last_update, web_socket_last_update)
 
-        for domain in SIGNALS:
-            domain_keys = self.get_entities(domain).keys()
-            previous_domain_keys = previous_keys[domain]
-            entry_loaded_state = self.get_entry_loaded_state(domain)
+    def update(self):
+        try:
+            for domain in SIGNALS:
+                for entity_key in self.get_entities(domain):
+                    self.set_entity_status(domain, entity_key, ENTITY_STATUS_IGNORE)
 
-            if len(domain_keys) > 0:
-                current_keys = ','.join(domain_keys)
+            self.create_components()
 
-                if current_keys != previous_domain_keys:
-                    self.set_domain_state(domain, DOMAIN_LOAD, True)
+            for domain in SIGNALS:
+                entities_to_add = []
+                domain_component_manager = self._domain_component_manager[domain]
+                domain_component = domain_component_manager["component"]
+                async_add_entities = domain_component_manager["async_add_entities"]
 
-                    if len(previous_domain_keys) > 0:
-                        self.set_domain_state(domain, DOMAIN_UNLOAD, entry_loaded_state)
-            else:
-                if len(previous_domain_keys) > 0:
-                    self.set_domain_state(domain, DOMAIN_UNLOAD, entry_loaded_state)
+                entities = self.get_entities(domain)
 
-    def get_domain_state(self, domain, key):
-        if domain not in self._domain_states:
-            self._domain_states[domain] = {}
+                for entity_key in entities:
+                    entity = entities[entity_key]
+                    status = self.get_entity_status(domain, entity_key)
 
-        return self._domain_states[domain].get(key, False)
+                    if status == ENTITY_STATUS_IGNORE:
+                        self.set_entity_status(domain, entity_key, ENTITY_STATUS_CANCELLED)
+                    elif status == ENTITY_STATUS_CREATED:
+                        name = entity.get(ENTITY_NAME)
+                        unique_id = f"{DEFAULT_NAME}-{domain}-{name}"
 
-    def set_domain_state(self, domain, key, state):
-        if domain not in self._domain_states:
-            self._domain_states[domain] = {}
+                        entity_id = self.entity_registry.async_get_entity_id(domain, DOMAIN, unique_id)
 
-        self._domain_states[domain][key] = state
+                        entity_component = domain_component(self._hass, self._ha, entity)
 
-    def clear_domain_states(self):
-        for domain in SIGNALS:
-            self.set_domain_state(domain, DOMAIN_LOAD, False)
-            self.set_domain_state(domain, DOMAIN_UNLOAD, False)
+                        if not entity_id:
+                            entity_component.entity_id = entity_id
 
-    def get_domain_states(self):
-        return self._domain_states
+                        entities_to_add.append(entity_component)
+
+                if len(entities_to_add) > 0:
+                    async_add_entities(entities_to_add, True)
+
+        except Exception as ex:
+            self.log_exception(ex, 'Failed to update')
 
     def create_device_trackers(self):
         try:
