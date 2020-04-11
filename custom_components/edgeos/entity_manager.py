@@ -143,20 +143,23 @@ class EntityManager:
                 domain_component = domain_component_manager["component"]
                 async_add_entities = domain_component_manager["async_add_entities"]
 
-                entities = self.get_entities(domain)
+                entities = dict(self.get_entities(domain))
 
                 for entity_key in entities:
                     entity = entities[entity_key]
                     status = self.get_entity_status(domain, entity_key)
+                    name = entity.get(ENTITY_NAME)
+                    unique_id = f"{DEFAULT_NAME}-{domain}-{name}"
+
+                    entity_id = self.entity_registry.async_get_entity_id(domain, DOMAIN, unique_id)
 
                     if status == ENTITY_STATUS_IGNORE:
                         self.set_entity_status(domain, entity_key, ENTITY_STATUS_CANCELLED)
+
+                        self.entity_registry.async_remove(entity_id)
+
+                        self.delete_entity(domain, entity_key)
                     elif status == ENTITY_STATUS_CREATED:
-                        name = entity.get(ENTITY_NAME)
-                        unique_id = f"{DEFAULT_NAME}-{domain}-{name}"
-
-                        entity_id = self.entity_registry.async_get_entity_id(domain, DOMAIN, unique_id)
-
                         entity_component = domain_component(self._hass, self._ha, entity)
 
                         if not entity_id:

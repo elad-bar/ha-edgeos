@@ -111,7 +111,7 @@ class EdgeOSEntity(RestoreEntity):
 
                 self._entity = {}
                 await self.async_remove()
-            elif self._entity[ENTITY_STATUS] == ENTITY_STATUS_CANCELLED:
+            elif self._entity.get(ENTITY_STATUS, ENTITY_STATUS_EMPTY) == ENTITY_STATUS_CANCELLED:
                 _LOGGER.debug(f"Update {self._current_domain} - Entity was removed | {self.name}")
 
                 self._entity_manager.delete_entity(self._current_domain, self.name)
