@@ -1,9 +1,11 @@
+import sys
 import logging
 
 from typing import Optional
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.entity_registry import async_get_registry, EntityRegistry
 
@@ -12,7 +14,25 @@ from .const import *
 _LOGGER = logging.getLogger(__name__)
 
 
-class EdgeOSEntity(RestoreEntity):
+async def _async_setup_entry(hass, entry, async_add_entities, domain, component):
+    """Set up EdgeOS based off an entry."""
+    _LOGGER.debug(f"Starting async_setup_entry {domain}")
+
+    try:
+        entry_data = entry.data
+        name = entry_data.get(CONF_NAME)
+
+        ha = _get_ha(hass, name)
+        entity_manager = ha.entity_manager
+        entity_manager.set_domain_component(domain, async_add_entities, component)
+    except Exception as ex:
+        exc_type, exc_obj, tb = sys.exc_info()
+        line_number = tb.tb_lineno
+
+        _LOGGER.error(f"Failed to load {domain}, error: {ex}, line: {line_number}")
+
+
+class EdgeOSEntity(Entity):
     """Representation a binary sensor that is updated by EdgeOS."""
 
     def __init__(self, hass, ha, entity, current_domain):
@@ -58,41 +78,11 @@ class EdgeOSEntity(RestoreEntity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-
-        if not state:
-            return
-
-        self._current_domain = state.domain
-
-        entity_registry = await async_get_registry(self._hass)
-
-        entity_from_reg = entity_registry.async_get(state.entity_id)
-
-        self._entity = {
-            ENTITY_ICON: entity_from_reg.original_icon,
-            ENTITY_NAME: entity_from_reg.original_name,
-            ENTITY_ATTRIBUTES: state.attributes,
-            ENTITY_STATE: state.state
-        }
-
-        config_entry_id = entity_from_reg.config_entry_id
-
-        entry = self._hass.config_entries.async_get_entry(config_entry_id)
-        name = entry.data.get(CONF_NAME)
-
-        ha = _get_ha(self._hass, name)
-
-        self._ha = ha
-        self._entity_manager = ha.entity_manager
-        self._device_manager = ha.device_manager
-
         _LOGGER.info(f"async_added_to_hass: {self.unique_id}")
 
-        self._remove_dispatcher = async_dispatcher_connect(self._hass,
-                                                           SIGNALS[self._current_domain],
-                                                           self._schedule_immediate_update)
+        async_dispatcher_connect(self._hass,
+                                 SIGNALS[self._current_domain],
+                                 self._schedule_immediate_update)
 
         self._entity_manager.set_entity_status(self._current_domain, self.name, ENTITY_STATUS_READY)
 
@@ -108,26 +98,20 @@ class EdgeOSEntity(RestoreEntity):
 
             if self._entity is None:
                 _LOGGER.debug(f"Cannot update {self._current_domain} - Entity was not found | {self.name}")
-
-                self._entity = {}
-                await self.async_remove()
             elif self._entity.get(ENTITY_STATUS, ENTITY_STATUS_EMPTY) == ENTITY_STATUS_CANCELLED:
                 _LOGGER.debug(f"Update {self._current_domain} - Entity was removed | {self.name}")
 
                 self._entity_manager.delete_entity(self._current_domain, self.name)
-
-                self._entity = {}
-                await self.async_remove()
             else:
                 _LOGGER.debug(f"Update {self._current_domain} -> {self.name}")
 
                 self._entity_manager.set_entity_status(self._current_domain, self.name, ENTITY_STATUS_READY)
 
+                self.async_schedule_update_ha_state(True)
+
     @callback
     def _schedule_immediate_update(self):
         self.hass.async_add_job(self.async_update_data)
-
-        self.async_schedule_update_ha_state(True)
 
 
 def _get_ha(hass, name):
