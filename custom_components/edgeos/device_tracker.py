@@ -5,12 +5,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.edgeos/
 """
 import logging
-import sys
 
 from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 
-from .base_entity import EdgeOSEntity, _get_ha
+from .base_entity import EdgeOSEntity, _async_setup_entry
 from .const import *
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,33 +20,11 @@ CURRENT_DOMAIN = DOMAIN_DEVICE_TRACKER
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up EdgeOS based off an entry."""
-    _LOGGER.debug(f"Starting async_setup_entry {CURRENT_DOMAIN}")
-
-    try:
-        entry_data = entry.data
-        name = entry_data.get(CONF_NAME)
-
-        ha = _get_ha(hass, name)
-        entity_manager = ha.entity_manager
-        entity_manager.set_domain_component(CURRENT_DOMAIN, async_add_entities, EdgeOSScanner)
-    except Exception as ex:
-        exc_type, exc_obj, tb = sys.exc_info()
-        line_number = tb.tb_lineno
-
-        _LOGGER.error(f"Failed to load {CURRENT_DOMAIN}, error: {ex}, line: {line_number}")
+    await _async_setup_entry(hass, entry, async_add_entities, CURRENT_DOMAIN, EdgeOSScanner)
 
 
 async def async_unload_entry(hass, config_entry):
     _LOGGER.info(f"async_unload_entry {CURRENT_DOMAIN}: {config_entry}")
-
-    entry_data = config_entry.data
-    name = entry_data.get(CONF_NAME)
-
-    ha = _get_ha(hass, name)
-    entity_manager = ha.entity_manager
-
-    if entity_manager is not None:
-        entity_manager.set_entry_loaded_state(CURRENT_DOMAIN, False)
 
     return True
 
