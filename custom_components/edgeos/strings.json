@@ -20,9 +20,9 @@
     "error": {
       "invalid_credentials": "Invalid credentials to EdgeOS Router",
       "auth_general_error": "General failure, please try again",
-      "not_found": "EdgeOS Url not found",
-      "invalid_export_configuration": "Export configuration is disabled, please enable",
-      "invalid_dpi_configuration": "Deep Packet Investigation configuration is disabled, please enable",
+      "not_found": "EdgeOS URL not found",
+      "invalid_export_configuration": "Export (traffic-analysis) configuration is disabled, please enable",
+      "invalid_dpi_configuration": "Deep Packet Inspection (traffic-analysis) configuration is disabled, please enable",
       "empty_device_data": "Could not retrieve device data from EdgeOS Router"
     }
   },

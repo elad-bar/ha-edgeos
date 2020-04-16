@@ -63,13 +63,13 @@ class EdgeOSConfigValidation:
                     error_prefix = f"Invalid EdgeOS ({name}) configuration -"
 
                     if dpi != "enable":
-                        _LOGGER.warning(f"{error_prefix} Deep packet investigation (DPI) is disabled")
+                        _LOGGER.warning(f"{error_prefix} Deep Packet Inspection (DPI) is disabled")
                         errors = {
                             "base": "invalid_dpi_configuration"
                         }
 
                     if export != "enable":
-                        _LOGGER.warning(f"{error_prefix} Export is disabled")
+                        _LOGGER.warning(f"{error_prefix} Traffic Analysis Export is disabled")
                         errors = {
                             "base": "invalid_export_configuration"
                         }
