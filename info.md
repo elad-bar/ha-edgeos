@@ -9,11 +9,11 @@ Please install in HACS, look for "Integration with EdgeOS (Ubiquiti)"
 
 #### Requirements
 * EdgeRouter User with 'Operator' level access or higher
-* Traffic Analysis set to 'Hosts only' or 'Enabled'
+* Traffic Analysis set to 'Enabled' (both `dpi` and `export` enabled under `system/traffic-analysis`)
 
 #### Basic configuration
 * Configuration should be done via Configuration -> Integrations.
-* In case you are already using that integration with YAML Configuration - please removed it
+* In case you are already using that integration with YAML Configuration - please remove it
 * Integration supports **multiple** devices 
 * In the setup form, the following details are mandatory:
   * Name - Unique
@@ -26,8 +26,8 @@ Please install in HACS, look for "Integration with EdgeOS (Ubiquiti)"
   * Invalid credentials (403)
   * General authentication error (when failed to get valid response from device)
   * Could not retrieve device data from EdgeOS Router
-  * Export configuration is disabled, please enable
-  * Deep Packet Investigation configuration is disabled, please enable
+  * Export (traffic-analysis) configuration is disabled, please enable
+  * Deep Packet Inspection (traffic-analysis) configuration is disabled, please enable
 
 #### Monitoring interfaces, devices and track devices
 *Configuration -> Integrations -> {Integration} -> Options* <br />
