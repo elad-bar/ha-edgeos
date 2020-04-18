@@ -1,9 +1,6 @@
 import asyncio
 import logging
-import time
-from custom_components.edgeos import EdgeOS
-
-from custom_components.edgeos.helpers.const import SCAN_INTERVAL
+from custom_components.edgeos.clients.web_login import EdgeOSWebLogin
 
 logging.basicConfig(filename="log.txt", filemode="a", level="DEBUG")
 
@@ -16,20 +13,13 @@ class Test:
         self._instance = None
 
     async def load(self):
-        self._instance = EdgeOS(None, "", "", "", True, ["eth0"], ["device"], "M",
-                                SCAN_INTERVAL, True)
-
-    async def refresh(self):
-        while True:
-            await self._instance.refresh()
-
-            time.sleep(20)
+        self._instance = EdgeOSWebLogin("ubnt.baru.sh", "smartbar", "Windows!0")
+        print(self._instance.login_resp())
 
 
 if __name__ == "__main__":
     t = Test()
     loop.run_until_complete(t.load())
-    loop.run_until_complete(t.refresh())
 
 
 

@@ -149,7 +149,7 @@ class EntityManager:
 
                         step = f"Mark as created - {domain} -> {entity_key}"
 
-                        entity_component = domain_component(self.hass, self.config_data.host, entity)
+                        entity_component = domain_component(self.hass, self.config_data.name, entity)
 
                         if entity_id is not None:
                             entity_component.entity_id = entity_id

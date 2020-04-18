@@ -20,14 +20,14 @@ DEPENDENCIES = [DOMAIN]
 CURRENT_DOMAIN = DOMAIN_DEVICE_TRACKER
 
 
-def get_device_tracker(hass: HomeAssistant, host: str, entity: EntityData):
+def get_device_tracker(hass: HomeAssistant, integration_name: str, entity: EntityData):
     device_tracker = EdgeOSScanner()
-    device_tracker.initialize(hass, host, entity, CURRENT_DOMAIN)
+    device_tracker.initialize(hass, integration_name, entity, CURRENT_DOMAIN)
 
     return device_tracker
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
     """Set up EdgeOS based off an entry."""
     await async_setup_base_entry(hass, entry, async_add_entities, CURRENT_DOMAIN, get_device_tracker)
 

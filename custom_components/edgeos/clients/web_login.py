@@ -21,25 +21,42 @@ class EdgeOSWebLogin(requests.Session):
         }
 
         self._edgeos_url = API_URL_TEMPLATE.format(host)
+        self._product = "EdgeOS Device"
 
         ''' This function turns off InsecureRequestWarnings '''
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     @property
-    def session_id(self):
-        session_id = None
+    def product(self):
+        return self._product
 
-        if self.cookies is not None and COOKIE_PHPSESSID in self.cookies:
-            session_id = self.cookies[COOKIE_PHPSESSID]
+    @property
+    def session_id(self):
+        session_id = self.get_cookie_data(COOKIE_PHPSESSID)
 
         return session_id
+
+    @property
+    def breaker_session_id(self):
+        breaker_session_id = self.get_cookie_data(COOKIE_BEAKER_SESSION_ID)
+
+        return breaker_session_id
 
     @property
     def cookies_data(self):
         return self.cookies
 
+    def get_cookie_data(self, cookie_key):
+        cookie_data = None
+
+        if self.cookies is not None and cookie_key in self.cookies:
+            cookie_data = self.cookies[cookie_key]
+
+        return cookie_data
+
     def login(self, throw_exception=False):
-        status_code = None
+        logged_in = False
+
         try:
             login_response = self.post(self._edgeos_url, data=self._credentials, verify=False)
 
@@ -47,18 +64,23 @@ class EdgeOSWebLogin(requests.Session):
 
             login_response.raise_for_status()
 
-            _LOGGER.debug("Sleeping 2 to make sure the session id is in the filesystem")
-            sleep(2)
+            _LOGGER.debug("Sleeping 1 to make sure the session id is in the filesystem")
+            sleep(1)
 
-            return True
-        except HTTPError as ex_http:
-            exc_type, exc_obj, tb = sys.exc_info()
-            line_number = tb.tb_lineno
+            logged_in = self.breaker_session_id is not None and self.breaker_session_id == self.session_id
 
-            _LOGGER.error(f'Failed to login, HTTP Error: {ex_http}, Line: {line_number}')
+            if logged_in:
+                html = login_response.text
+                html_lines = html.splitlines()
+                for line in html_lines:
+                    if "EDGE.DeviceModel" in line:
+                        line_parts = line.split(" = ")
+                        value = line_parts[len(line_parts) - 1]
+                        self._product = value.replace("'", "")
+            else:
+                _LOGGER.error(f'Failed to login, Invalid credentials')
 
-            if throw_exception:
-                raise LoginException(status_code)
+                status_code = 403
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -66,10 +88,12 @@ class EdgeOSWebLogin(requests.Session):
 
             _LOGGER.error(f'Failed to login, Error: {ex}, Line: {line_number}')
 
-            if throw_exception:
-                raise LoginException(404)
+            status_code = 404
 
-        return False
+        if throw_exception and status_code is not None and status_code >= 400:
+            raise LoginException(status_code)
+
+        return logged_in
 
 
 class LoginException(HomeAssistantError):

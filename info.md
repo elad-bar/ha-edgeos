@@ -2,8 +2,9 @@
 ### Description
 Provides an integration between EdgeOS (Ubiquiti) routers to Home Assistant.
 
-### How to set it up:
+[Changelog](https://github.com/elad-bar/ha-edgeos/blob/master/CHANGELOG.md)
 
+### How to set it up:
 #### Installation via HACS
 To add repository, go to settings and add:
 ```
@@ -16,6 +17,14 @@ Look for "Integration with EdgeOS (Ubiquiti)" and install
 #### Requirements
 * EdgeRouter User with 'Operator' level access or higher
 * Traffic Analysis set to 'Enabled' (both `dpi` and `export` enabled under `system/traffic-analysis`)
+
+#### Password protection
+In latest version new capability added to encrypt password before saving integration settings to `.storage` </br>
+In order to benefit from that capability, please remove and re-add the integration (after restart of HA between actions) for that capability to work,
+As long as the password will remain in clear text saved in integration setting, the following warning log message will appear during restart:
+```
+EdgeOS password is not encrypted, please remove integration and reintegrate
+```
 
 #### Basic configuration
 * Configuration should be done via Configuration -> Integrations.

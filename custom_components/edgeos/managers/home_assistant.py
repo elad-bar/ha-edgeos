@@ -27,9 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EdgeOSHomeAssistant:
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, password_manager: PasswordManager):
+    def __init__(self, hass: HomeAssistant, password_manager: PasswordManager):
         self._hass = hass
-        self._integration_name = entry.data.get(CONF_NAME)
 
         self._remove_async_track_time_api = None
         self._remove_async_track_time_entities = None
@@ -39,11 +38,11 @@ class EdgeOSHomeAssistant:
         self._is_ready = False
 
         self._entity_registry = None
+        self._data_manager = None
+        self._device_manager = None
+        self._entity_manager = None
 
         self._config_manager = ConfigManager(password_manager)
-        self._data_manager = EdgeOSData(self._hass, self._config_manager, self.update)
-        self._device_manager = DeviceManager(self._hass, self)
-        self._entity_manager = EntityManager(self._hass, self)
 
         self._services = {
             "save_debug_data": self.service_save_debug_data,
@@ -89,6 +88,10 @@ class EdgeOSHomeAssistant:
     async def async_init(self, entry: ConfigEntry):
         self._config_manager.update(entry)
 
+        self._data_manager = EdgeOSData(self._hass, self._config_manager, self.update)
+        self._device_manager = DeviceManager(self._hass, self)
+        self._entity_manager = EntityManager(self._hass, self)
+
         def internal_async_init(now):
             self._hass.async_create_task(self._async_init(now))
 
@@ -111,7 +114,12 @@ class EdgeOSHomeAssistant:
 
             self._hass.services.async_register(DOMAIN, service_name, service_callback, schema=service_schema)
 
-        self._hass.async_create_task(self._data_manager.initialize())
+        self._hass.async_create_task(self._data_manager.initialize(self.async_post_initial_login))
+
+        self._is_initialized = True
+
+    async def async_post_initial_login(self):
+        _LOGGER.debug("Post initial login action")
 
         self._hass.async_create_task(self.async_update_api(datetime.now()))
 
@@ -120,8 +128,6 @@ class EdgeOSHomeAssistant:
                                                                       SCAN_INTERVAL_API)
 
         await self.async_update_entry()
-
-        self._is_initialized = True
 
     async def async_remove(self):
         _LOGGER.debug(f"async_remove called")
@@ -134,9 +140,11 @@ class EdgeOSHomeAssistant:
 
         if self._remove_async_track_time_api is not None:
             self._remove_async_track_time_api()
+            self._remove_async_track_time_api = None
 
         if self._remove_async_track_time_entities is not None:
             self._remove_async_track_time_entities()
+            self._remove_async_track_time_entities = None
 
         unload = self._hass.config_entries.async_forward_entry_unload
 
