@@ -8,9 +8,11 @@ import logging
 
 from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.core import HomeAssistant
 
-from .base_entity import EdgeOSEntity, _async_setup_entry
-from .const import *
+from .models.base_entity import EdgeOSEntity, async_setup_base_entry
+from .helpers.const import *
+from .models.entity_data import EntityData
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = [DOMAIN]
@@ -18,9 +20,16 @@ DEPENDENCIES = [DOMAIN]
 CURRENT_DOMAIN = DOMAIN_DEVICE_TRACKER
 
 
+def get_device_tracker(hass: HomeAssistant, host: str, entity: EntityData):
+    device_tracker = EdgeOSScanner()
+    device_tracker.initialize(hass, host, entity, CURRENT_DOMAIN)
+
+    return device_tracker
+
+
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up EdgeOS based off an entry."""
-    await _async_setup_entry(hass, entry, async_add_entities, CURRENT_DOMAIN, EdgeOSScanner)
+    await async_setup_base_entry(hass, entry, async_add_entities, CURRENT_DOMAIN, get_device_tracker)
 
 
 async def async_unload_entry(hass, config_entry):
@@ -32,16 +41,21 @@ async def async_unload_entry(hass, config_entry):
 class EdgeOSScanner(EdgeOSEntity, ScannerEntity):
     """Represent a tracked device."""
 
-    def __init__(self, hass, ha, entity):
-        """Initialize the EdgeOS Device Tracker."""
-        super().__init__(hass, ha, entity, CURRENT_DOMAIN)
-
     @property
     def is_connected(self):
         """Return true if the device is connected to the network."""
-        return self._entity.get(ENTITY_STATE, False)
+        return self.entity.state
 
     @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
-        return self._entity.get(ATTR_SOURCE_TYPE, SOURCE_TYPE_ROUTER)
+        return self.entity.attributes.get(ATTR_SOURCE_TYPE, SOURCE_TYPE_ROUTER)
+
+    async def async_added_to_hass_local(self):
+        _LOGGER.info(f"Added new {self.name}")
+
+    def _immediate_update(self, previous_state: bool):
+        if previous_state != self.entity.state:
+            _LOGGER.debug(f"{self.name} updated from {previous_state} to {self.entity.state}")
+
+        super()._immediate_update(previous_state)

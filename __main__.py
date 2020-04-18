@@ -3,7 +3,7 @@ import logging
 import time
 from custom_components.edgeos import EdgeOS
 
-from custom_components.edgeos.const import SCAN_INTERVAL
+from custom_components.edgeos.helpers.const import SCAN_INTERVAL
 
 logging.basicConfig(filename="log.txt", filemode="a", level="DEBUG")
 

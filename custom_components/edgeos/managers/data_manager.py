@@ -5,51 +5,52 @@ https://home-assistant.io/components/edgeos/
 """
 import sys
 import logging
+from typing import Optional
 
-from .const import *
-from .web_api import EdgeOSWebAPI
-from .web_login import EdgeOSWebLogin
-from .web_socket import EdgeOSWebSocket
+from .configuration_manager import ConfigManager
+from ..helpers.const import *
+from ..clients.web_api import EdgeOSWebAPI
+from ..clients.web_login import EdgeOSWebLogin
+from ..clients.web_socket import EdgeOSWebSocket
+from ..models.config_data import ConfigData
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class EdgeOSData(object):
-    def __init__(self, hass, entry_data, update_home_assistant):
+    edgeos_data: dict
+    system_data: dict
+
+    def __init__(self, hass, config_manager: ConfigManager, update_home_assistant):
         self._hass = hass
         self._update_home_assistant = update_home_assistant
+        self._config_manager = config_manager
 
         self._is_initialized = False
-
-        self._host = entry_data.get(CONF_HOST)
-        self._username = entry_data.get(CONF_USERNAME, DEFAULT_USERNAME)
-        self._password = entry_data.get(CONF_PASSWORD)
-        self._unit = entry_data.get(CONF_UNIT, ATTR_BYTE)
-        self._edgeos_url = API_URL_TEMPLATE.format(self._host)
-
         self._is_updating = False
-        self._edgeos_data = {}
-        self._system_data = {}
+
+        self.edgeos_data = {}
+        self.system_data = {}
 
         self._ws_handlers = self.get_ws_handlers()
-        self._topics = self._ws_handlers.keys()
 
-        self._api = EdgeOSWebAPI(self._hass, self._edgeos_url, self.edgeos_disconnection_handler)
+        config_data = self._config_manager.data
 
-        self._ws = EdgeOSWebSocket(self._hass,
-                                   self._edgeos_url,
-                                   self._topics,
-                                   self.ws_handler)
+        url = API_URL_TEMPLATE.format(config_data.host)
+        topics = self._ws_handlers.keys()
 
-        self._edgeos_login_service = EdgeOSWebLogin(self._host, self._username, self._password)
+        self._api = EdgeOSWebAPI(self._hass, url, self.edgeos_disconnection_handler)
 
-    @property
-    def edgeos_data(self):
-        return self._edgeos_data
+        self._ws = EdgeOSWebSocket(self._hass, url, topics, self.ws_handler)
+
+        self._edgeos_login_service = EdgeOSWebLogin(config_data.host, config_data.username, config_data.password)
 
     @property
-    def system_data(self):
-        return self._system_data
+    def config_data(self) -> Optional[ConfigData]:
+        if self._config_manager is not None:
+            return self._config_manager.data
+
+        return None
 
     async def initialize(self, call_after_refresh=None):
         try:
@@ -127,7 +128,7 @@ class EdgeOSData(object):
             if system_state is not None:
                 system_state[IS_ALIVE] = self._api.is_connected
 
-            self._system_data = {
+            self.system_data = {
                 INTERFACES_KEY: interfaces,
                 STATIC_DEVICES_KEY: devices,
                 UNKNOWN_DEVICES_KEY: unknown_devices,
@@ -454,33 +455,44 @@ class EdgeOSData(object):
 
             _LOGGER.error(f'Failed to load {EXPORT_KEY}, Error: {ex}, Line: {line_number}')
 
+    def _get_edgeos_data(self, key):
+        if key not in self.edgeos_data:
+            self.edgeos_data[key] = {}
+
+        result = self.edgeos_data[key]
+
+        return result
+
+    def _set_edgeos_data(self, key, data):
+        self.edgeos_data[key] = data
+
+        self.update()
+
     def set_discover_data(self, discover_state):
-        self._edgeos_data[DISCOVER_KEY] = discover_state
+        self._set_edgeos_data(DISCOVER_KEY, discover_state)
 
         self.update()
 
     def get_discover_data(self):
-        result = self._edgeos_data.get(DISCOVER_KEY, {})
+        result = self._get_edgeos_data(DISCOVER_KEY)
 
         return result
 
     def set_unknown_devices(self, unknown_devices):
-        self._edgeos_data[UNKNOWN_DEVICES_KEY] = unknown_devices
+        self._set_edgeos_data(UNKNOWN_DEVICES_KEY, unknown_devices)
 
         self.update()
 
     def get_unknown_devices(self):
-        result = self._edgeos_data.get(UNKNOWN_DEVICES_KEY, {})
+        result = self._get_edgeos_data(UNKNOWN_DEVICES_KEY)
 
         return result
 
     def set_system_state(self, system_state):
-        self._edgeos_data[SYSTEM_STATS_KEY] = system_state
-
-        self.update()
+        self._set_edgeos_data(SYSTEM_STATS_KEY, system_state)
 
     def get_system_state(self):
-        result = self._edgeos_data.get(SYSTEM_STATS_KEY, {})
+        result = self._get_edgeos_data(SYSTEM_STATS_KEY)
 
         return result
 
@@ -496,10 +508,7 @@ class EdgeOSData(object):
             current_interface[key] = interface[key]
 
     def get_interfaces(self):
-        if INTERFACES_KEY not in self._edgeos_data:
-            self._edgeos_data[INTERFACES_KEY] = {}
-
-        result = self._edgeos_data.get(INTERFACES_KEY, {})
+        result = self._get_edgeos_data(INTERFACES_KEY)
 
         return result
 
@@ -510,10 +519,7 @@ class EdgeOSData(object):
         return interface
 
     def get_devices(self):
-        if STATIC_DEVICES_KEY not in self._edgeos_data:
-            self._edgeos_data[STATIC_DEVICES_KEY] = {}
-
-        result = self._edgeos_data[STATIC_DEVICES_KEY]
+        result = self._get_edgeos_data(STATIC_DEVICES_KEY)
 
         return result
 
@@ -547,7 +553,7 @@ class EdgeOSData(object):
 
         return mac
 
-    def is_device_online(self, hostname):
+    def is_device_online(self, hostname) -> bool:
         device = self.get_device(hostname)
 
         connected = device.get(CONNECTED, FALSE_STR)

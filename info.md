@@ -4,8 +4,14 @@ Provides an integration between EdgeOS (Ubiquiti) routers to Home Assistant.
 
 ### How to set it up:
 
-#### Installation
-Please install in HACS, look for "Integration with EdgeOS (Ubiquiti)"
+#### Installation via HACS
+To add repository, go to settings and add:
+```
+Name: elad-bar/ha-edgeos
+Category: Integration
+```
+
+Look for "Integration with EdgeOS (Ubiquiti)" and install
 
 #### Requirements
 * EdgeRouter User with 'Operator' level access or higher
@@ -29,15 +35,21 @@ Please install in HACS, look for "Integration with EdgeOS (Ubiquiti)"
   * Export (traffic-analysis) configuration is disabled, please enable
   * Deep Packet Inspection (traffic-analysis) configuration is disabled, please enable
 
-#### Monitoring interfaces, devices and track devices
+#### Settings for Monitoring interfaces, devices, tracked devices and update interval
 *Configuration -> Integrations -> {Integration} -> Options* <br />
 
-Form will open at the first time with 3 multiple selection drop-downs:
-* Monitored devices
-* Monitored interfaces
-* Track 
+```
+Monitored devices: Drop-down, devices to monitor using binary_sensor and sensor, default=None
+Monitored interfaces: Drop-down, interfaces to monitor using binary_sensor and sensor, default=None
+Track: Drop-down, devices to track using device_tracker, default=None
+Update Interval: Textbox, number of seconds to update entities, default=1
+```
 
-First option in each drop-down is NONE, as long as this option is checked, it will not allow checking other items
+###### Drop-downs
+As workaround for UI not allowing submitting the form without all fields with values,
+First option in each drop-down is NONE, 
+as long as this option is checked, 
+it will not allow checking other items
   
 ### By default, following entities will be generated 
 ###### Binary Sensor

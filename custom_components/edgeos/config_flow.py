@@ -3,38 +3,80 @@ import logging
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import callback, HomeAssistant
 
-from custom_components.edgeos.web_api import EdgeOSWebAPI
-from custom_components.edgeos.web_login import EdgeOSWebLogin, LoginException
-from . import EdgeOSHomeAssistant
-from .EdgeOSData import EdgeOSData
-from .const import *
+from . import get_ha
+from .helpers.const import *
+
+from .clients.web_api import EdgeOSWebAPI
+from .clients.web_login import EdgeOSWebLogin, LoginException
+
+from .managers.home_assistant import EdgeOSHomeAssistant
+from .managers.configuration_manager import ConfigManager
+from .managers.password_manager import PasswordManager
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class EdgeOSConfigValidation:
-    def __init__(self, hass):
-        self._hass = hass
-        self._auth_error = False
+class EdgeOSConfigFlow:
+    config_manager: ConfigManager
+    password_manager: PasswordManager
+    is_initialized: bool = False
+    auth_error: bool
+    ha: HomeAssistant
+    options: dict
+    data: dict
+
+    def initialize(self, hass: HomeAssistant):
+        if not self.is_initialized:
+            self.password_manager = PasswordManager(hass)
+            self.config_manager = ConfigManager(self.password_manager)
+
+            self.is_initialized = True
+            self.auth_error = False
+            self.ha = hass
+            self.options = {}
+            self.data = {}
+
+    def get_user_input_option(self, key):
+        options = self.options.get(key, [OPTION_EMPTY])
+
+        if OPTION_EMPTY in options:
+            options.clear()
+
+        return options
+
+    def update_config_data(self, data: dict, options: dict = None):
+        self.data = data
+        self.options = options
+
+        if self.options is not None:
+            options_keys = [CONF_MONITORED_DEVICES, CONF_MONITORED_INTERFACES, CONF_TRACK_DEVICES]
+            for key in options_keys:
+                self.options[key] = self.get_user_input_option(key)
+
+        entry = ConfigEntry(0, "", "", data, "", "", {}, options=options)
+
+        self.config_manager.update(entry)
 
     async def edgeos_disconnection_handler(self):
-        self._auth_error = True
+        self.auth_error = True
 
-    async def get_login_errors(self, user_input):
+    async def validate_login(self):
         errors = None
-        name = user_input.get(CONF_NAME)
-        host = user_input.get(CONF_HOST)
-        username = user_input.get(CONF_USERNAME)
-        password = user_input.get(CONF_PASSWORD)
+        config_data = self.config_manager.data
+
+        name = config_data.name
+        host = config_data.host
+        username = config_data.username
+        password = config_data.password
 
         try:
             login_api = EdgeOSWebLogin(host, username, password)
 
             if login_api.login(throw_exception=True):
                 edgeos_url = API_URL_TEMPLATE.format(host)
-                api = EdgeOSWebAPI(self._hass, edgeos_url, self.edgeos_disconnection_handler)
+                api = EdgeOSWebAPI(self.ha, edgeos_url, self.edgeos_disconnection_handler)
                 cookies = login_api.cookies_data
 
                 await api.initialize(cookies)
@@ -99,7 +141,7 @@ class EdgeOSConfigValidation:
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class EdgeOSFlowHandler(config_entries.ConfigFlow):
+class EdgeOSFlowHandler(config_entries.ConfigFlow, EdgeOSConfigFlow):
     """Handle a EdgeOS config flow."""
 
     VERSION = 1
@@ -114,9 +156,6 @@ class EdgeOSFlowHandler(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
         _LOGGER.debug(f"Starting async_step_user of {DEFAULT_NAME}")
-
-        config_validation = EdgeOSConfigValidation(self.hass)
-
         fields = {
             vol.Required(CONF_NAME, DEFAULT_NAME): str,
             vol.Required(CONF_HOST): str,
@@ -127,33 +166,20 @@ class EdgeOSFlowHandler(config_entries.ConfigFlow):
 
         errors = None
 
+        self.initialize(self.hass)
+
         if user_input is not None:
-            name = user_input.get(CONF_NAME)
-            host = user_input.get(CONF_HOST)
-            username = user_input.get(CONF_USERNAME)
-            password = user_input.get(CONF_PASSWORD)
+            if CONF_PASSWORD is user_input:
+                password = user_input[CONF_PASSWORD]
+                user_input[CONF_PASSWORD] = self.password_manager.encrypt(password)
 
-            for entry in self._async_current_entries():
-                if entry.data[CONF_NAME] == name:
-                    _LOGGER.warning(f"EdgeOS ({name}) already configured")
-
-                    return self.async_abort(reason="already_configured",
-                                            description_placeholders={
-                                                CONF_NAME: name
-                                            })
-
-            errors = await config_validation.get_login_errors(user_input)
+            self.update_config_data(user_input)
+            errors = await self.validate_login()
 
             if errors is None:
                 return self.async_create_entry(
-                    title=name,
-                    data={
-                        CONF_NAME: name,
-                        CONF_HOST: host,
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
-                        CONF_UNIT: user_input.get(CONF_UNIT, ATTR_BYTE)
-                    },
+                    title=self.config_manager.data.name,
+                    data=user_input,
                 )
 
         return self.async_show_form(step_id="user", data_schema=vol.Schema(fields), errors=errors)
@@ -164,38 +190,29 @@ class EdgeOSFlowHandler(config_entries.ConfigFlow):
 
         return self.async_create_entry(
             title=f"{DEFAULT_NAME} (import from configuration.yaml)",
-            data={
-                CONF_NAME: info.get(CONF_NAME),
-                CONF_HOST: info.get(CONF_HOST),
-                CONF_USERNAME: info.get(CONF_USERNAME),
-                CONF_PASSWORD: info.get(CONF_PASSWORD),
-                CONF_UNIT: info.get(CONF_UNIT)
-            },
+            data=info,
         )
 
 
-class EdgeOSOptionsFlowHandler(config_entries.OptionsFlow):
+class EdgeOSOptionsFlowHandler(config_entries.OptionsFlow, EdgeOSConfigFlow):
     """Handle Plex options."""
 
     def __init__(self, config_entry: ConfigEntry):
         """Initialize EdgeOS options flow."""
-        self.options = {}
-        self._data = {}
-        self._config_validation = EdgeOSConfigValidation(self.hass)
 
         for key in config_entry.options.keys():
             self.options[key] = config_entry.options[key]
 
         for key in config_entry.data.keys():
-            self._data[key] = config_entry.data[key]
+            self.data[key] = config_entry.data[key]
 
     async def async_step_init(self, user_input=None):
         """Manage the EdgeOS options."""
         return await self.async_step_edge_os_additional_settings(user_input)
 
-    def get_option(self, option_key):
+    @staticmethod
+    def get_options(data):
         result = []
-        data = self.options.get(option_key)
 
         if data is not None:
             if isinstance(data, list):
@@ -225,38 +242,28 @@ class EdgeOSOptionsFlowHandler(config_entries.OptionsFlow):
 
         return available_items
 
-    @staticmethod
-    def get_user_input_option(user_input, key):
-        options = user_input.get(key, [])
-
-        if OPTION_EMPTY in options:
-            options = []
-
-        return options
-
     async def async_step_edge_os_additional_settings(self, user_input=None):
         _LOGGER.info(f"async_step_edge_os_additional_settings: {user_input}")
 
+        self.initialize(self.hass)
+
         if user_input is not None:
-            self.options[CONF_MONITORED_DEVICES] = self.get_user_input_option(user_input, CONF_MONITORED_DEVICES)
-            self.options[CONF_MONITORED_INTERFACES] = self.get_user_input_option(user_input, CONF_MONITORED_INTERFACES)
-            self.options[CONF_TRACK_DEVICES] = self.get_user_input_option(user_input, CONF_TRACK_DEVICES)
+            self.update_config_data(self.data, user_input)
 
             return self.async_create_entry(title="", data=self.options)
 
-        monitored_devices = self.get_option(CONF_MONITORED_DEVICES)
-        monitored_interfaces = self.get_option(CONF_MONITORED_INTERFACES)
-        track_devices = self.get_option(CONF_TRACK_DEVICES)
+        config_data = self.config_manager.data
+        name = config_data.name
 
-        name = self._data.get(CONF_NAME)
-
-        edgeos_data = self.hass.data[DATA_EDGEOS]
-        ha: EdgeOSHomeAssistant = edgeos_data.get(name)
-        data_manager: EdgeOSData = ha.data_manager
-        system_data = data_manager.system_data
+        ha: EdgeOSHomeAssistant = get_ha(self.hass, name)
+        system_data = ha.data_manager.system_data
 
         all_interfaces = self.get_available_options(system_data, INTERFACES_KEY)
         all_devices = self.get_available_options(system_data, STATIC_DEVICES_KEY)
+
+        monitored_devices = self.get_options(config_data.monitored_devices)
+        monitored_interfaces = self.get_options(config_data.monitored_interfaces)
+        device_trackers = self.get_options(config_data.device_trackers)
 
         schema = vol.Schema(
             {
@@ -264,15 +271,15 @@ class EdgeOSOptionsFlowHandler(config_entries.OptionsFlow):
                     cv.multi_select(all_devices),
                 vol.Optional(CONF_MONITORED_INTERFACES, default=monitored_interfaces):
                     cv.multi_select(all_interfaces),
-                vol.Optional(CONF_TRACK_DEVICES, default=track_devices):
+                vol.Optional(CONF_TRACK_DEVICES, default=device_trackers):
                     cv.multi_select(all_devices),
+                vol.Optional(CONF_UPDATE_INTERVAL, default=config_data.update_interval):
+                    cv.positive_int()
             }
         )
 
         return self.async_show_form(
             step_id="edge_os_additional_settings",
             data_schema=schema,
-            description_placeholders={
-                CONF_NAME: self._data.get(CONF_NAME)
-            }
+            description_placeholders=self.data
         )
