@@ -60,17 +60,20 @@ class EdgeOSWebSocket:
                 if connection_attempt > 1:
                     await asyncio.sleep(10)
 
-                _LOGGER.info(f"Connection attempt #{connection_attempt}")
+                if connection_attempt < MAXIMUM_RECONNECT:
+                    _LOGGER.info(f"Connection attempt #{connection_attempt}")
 
-                async with self._session.ws_connect(self._ws_url,
-                                                    origin=self._edgeos_url,
-                                                    ssl=False,
-                                                    max_msg_size=MAX_MSG_SIZE,
-                                                    timeout=SCAN_INTERVAL_WS_TIMEOUT) as ws:
-                    self._ws = ws
-                    await self.listen()
+                    async with self._session.ws_connect(self._ws_url,
+                                                        origin=self._edgeos_url,
+                                                        ssl=False,
+                                                        max_msg_size=MAX_MSG_SIZE,
+                                                        timeout=SCAN_INTERVAL_WS_TIMEOUT) as ws:
+                        self._ws = ws
+                        await self.listen()
 
-                connection_attempt = connection_attempt + 1
+                    connection_attempt = connection_attempt + 1
+                else:
+                    _LOGGER.error(f"Failed to connect on retry #{connection_attempt}")
 
             except Exception as ex:
                 error_message = str(ex)

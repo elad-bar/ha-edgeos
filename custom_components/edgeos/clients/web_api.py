@@ -26,6 +26,8 @@ class EdgeOSWebAPI:
 
         self._disconnection_handler = disconnection_handler
 
+        self._disconnections = 0
+
     async def initialize(self, cookies):
         if self._hass is None:
             if self._session is not None:
@@ -53,8 +55,11 @@ class EdgeOSWebAPI:
                 self._is_connected = response.status < 400
 
                 if response.status == 403:
-                    await self._disconnection_handler()
-
+                    if self._disconnections + 1 < MAXIMUM_RECONNECT:
+                        self._disconnections = self._disconnections + 1
+                        await self._disconnection_handler()
+                    else:
+                        _LOGGER.error(f'Failed to make authenticated request to {url} {self._disconnections} times')
                 else:
                     response.raise_for_status()
 

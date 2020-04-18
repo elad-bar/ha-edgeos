@@ -30,8 +30,10 @@ class ConfigManager:
         result.device_trackers = options.get(CONF_TRACK_DEVICES, [])
         result.update_interval = options.get(CONF_UPDATE_INTERVAL, 1)
 
-        if len(result.password) > 0:
+        if result.password is not None and len(result.password) > 0:
             result.password_clear_text = self.password_manager.decrypt(result.password)
+        else:
+            result.password_clear_text = result.password
 
         self.config_entry = config_entry
         self.data = result

@@ -9,6 +9,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .entity_data import EntityData
+from .. import EdgeOSHomeAssistant
 from ..helpers import get_ha
 from ..helpers.const import *
 
@@ -28,7 +29,7 @@ async def async_setup_base_entry(hass: HomeAssistant,
         entry_data = entry.data
         name = entry_data.get(CONF_NAME)
 
-        ha = get_ha(hass, name)
+        ha: EdgeOSHomeAssistant = get_ha(hass, name)
         entity_manager = ha.entity_manager
 
         entity_manager.set_domain_component(domain, async_add_entities, component)
@@ -41,28 +42,28 @@ async def async_setup_base_entry(hass: HomeAssistant,
 
 class EdgeOSEntity(Entity):
     """Representation a binary sensor that is updated by EdgeOS."""
-    hass: HomeAssistant = None
     integration_name: str = None
     entity: EntityData = None
     remove_dispatcher = None
     current_domain: str = None
 
-    ha = None
-    entity_manager = None
-    device_manager = None
-    api = None
+    ha: EdgeOSHomeAssistant
 
     def initialize(self, hass: HomeAssistant, integration_name: str, entity: EntityData, current_domain: str):
-        self.hass = hass
         self.integration_name = integration_name
         self.entity = entity
         self.remove_dispatcher = None
         self.current_domain = current_domain
 
-        self.ha = get_ha(self.hass, self.integration_name)
-        self.entity_manager = self.ha.entity_manager
-        self.device_manager = self.ha.device_manager
-        self.api = self.ha.api
+        self.ha = get_ha(hass, self.integration_name)
+
+    @property
+    def device_manager(self):
+        return self.ha.device_manager
+
+    @property
+    def entity_manager(self):
+        return self.ha.entity_manager
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -104,6 +105,7 @@ class EdgeOSEntity(Entity):
     async def async_will_remove_from_hass(self) -> None:
         if self.remove_dispatcher is not None:
             self.remove_dispatcher()
+            self.remove_dispatcher = None
 
         await self.async_will_remove_from_hass_local()
 

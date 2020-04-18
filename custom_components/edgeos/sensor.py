@@ -17,14 +17,14 @@ _LOGGER = logging.getLogger(__name__)
 CURRENT_DOMAIN = DOMAIN_SENSOR
 
 
-def get_device_tracker(hass: HomeAssistant, host: str, entity: EntityData):
+def get_device_tracker(hass: HomeAssistant, integration_name: str, entity: EntityData):
     sensor = EdgeOSSensor()
-    sensor.initialize(hass, host, entity, CURRENT_DOMAIN)
+    sensor.initialize(hass, integration_name, entity, CURRENT_DOMAIN)
 
     return sensor
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
     """Set up EdgeOS based off an entry."""
     await async_setup_base_entry(hass, entry, async_add_entities, CURRENT_DOMAIN, get_device_tracker)
 

@@ -18,6 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EdgeOSData(object):
+    hostname: str
+    version: str
     edgeos_data: dict
     system_data: dict
 
@@ -39,11 +41,20 @@ class EdgeOSData(object):
         url = API_URL_TEMPLATE.format(config_data.host)
         topics = self._ws_handlers.keys()
 
+        self.hostname = config_data.host
+        self.version = "N/A"
+
         self._api = EdgeOSWebAPI(self._hass, url, self.edgeos_disconnection_handler)
 
         self._ws = EdgeOSWebSocket(self._hass, url, topics, self.ws_handler)
 
-        self._edgeos_login_service = EdgeOSWebLogin(config_data.host, config_data.username, config_data.password)
+        self._edgeos_login_service = EdgeOSWebLogin(config_data.host,
+                                                    config_data.username,
+                                                    config_data.password_clear_text)
+
+    @property
+    def product(self):
+        return self._edgeos_login_service.product
 
     @property
     def config_data(self) -> Optional[ConfigData]:
@@ -52,7 +63,7 @@ class EdgeOSData(object):
 
         return None
 
-    async def initialize(self, call_after_refresh=None):
+    async def initialize(self, post_login_action=None):
         try:
             if self._edgeos_login_service.login():
                 cookies = self._edgeos_login_service.cookies_data
@@ -65,8 +76,8 @@ class EdgeOSData(object):
                 _LOGGER.debug(f'Requesting initial data')
                 await self.refresh()
 
-                if call_after_refresh is not None:
-                    await call_after_refresh()
+                if post_login_action is not None:
+                    await post_login_action()
 
                 _LOGGER.debug(f'Initializing WS using session: {session_id}')
                 await self._ws.initialize(cookies, session_id)
@@ -262,12 +273,19 @@ class EdgeOSData(object):
 
             self.set_interface(ethernet_key, interface)
 
+    def load_system_data(self, devices_data, system_info_data):
+        system_data = devices_data.get("system", {})
+        self.hostname = system_data.get("host-name", self.hostname)
+        self.version = system_info_data.get("sw_ver", "N/A")
+
     async def load_devices_data(self):
         try:
             _LOGGER.debug('Getting devices by API')
 
             devices_data = await self._api.get_devices_data()
+            system_info_data = await self._api.get_general_data(SYS_INFO_KEY)
 
+            self.load_system_data(devices_data, system_info_data)
             self.load_devices(devices_data)
             self.load_interfaces(devices_data)
 

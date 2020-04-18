@@ -17,14 +17,14 @@ _LOGGER = logging.getLogger(__name__)
 CURRENT_DOMAIN = DOMAIN_BINARY_SENSOR
 
 
-def get_binary_sensor(hass: HomeAssistant, host: str, entity: EntityData):
+def get_binary_sensor(hass: HomeAssistant, integration_name: str, entity: EntityData):
     binary_sensor = EdgeOSBinarySensor()
-    binary_sensor.initialize(hass, host, entity, CURRENT_DOMAIN)
+    binary_sensor.initialize(hass, integration_name, entity, CURRENT_DOMAIN)
 
     return binary_sensor
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
     """Set up EdgeOS based off an entry."""
     await async_setup_base_entry(hass, entry, async_add_entities, CURRENT_DOMAIN, get_binary_sensor)
 

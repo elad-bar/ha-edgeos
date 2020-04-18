@@ -2,6 +2,7 @@ import sys
 import logging
 from homeassistant.helpers.device_registry import async_get_registry
 
+from .data_manager import EdgeOSData
 from ..helpers.const import *
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,9 +17,13 @@ class DeviceManager:
 
         self._data_manager = self._ha.data_manager
 
+    @property
+    def data_manager(self) -> EdgeOSData:
+        return self._data_manager
+
     async def async_remove_entry(self, entry_id):
-        device_reg = await async_get_registry(self._hass)
-        device_reg.async_clear_config_entry(entry_id)
+        dr = await async_get_registry(self._hass)
+        dr.async_clear_config_entry(entry_id)
 
     async def async_remove(self):
         for device_name in self._devices:
@@ -35,11 +40,9 @@ class DeviceManager:
 
     def generate_system_device(self):
         try:
-            discover_data = self._data_manager.get_discover_data()
-
-            hostname = discover_data.get("hostname")
-            product = discover_data.get("product")
-            version = discover_data.get("fwversion")
+            hostname = self.data_manager.hostname
+            product = self.data_manager.product
+            version = self.data_manager.version
 
             if hostname is None or product is None:
                 _LOGGER.info(f"Cannot generate {DEFAULT_NAME} device")
