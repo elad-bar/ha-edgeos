@@ -7,7 +7,7 @@ import sys
 import logging
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import aiohttp
-from .const import *
+from ..helpers.const import *
 
 REQUIREMENTS = ['aiohttp']
 

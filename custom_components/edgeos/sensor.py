@@ -6,17 +6,27 @@ https://home-assistant.io/components/binary_sensor.edgeos/
 import logging
 from typing import Union
 
-from .base_entity import EdgeOSEntity, _async_setup_entry
-from .const import *
+from homeassistant.core import HomeAssistant
+
+from custom_components.edgeos.models.base_entity import EdgeOSEntity, async_setup_base_entry
+from custom_components.edgeos.helpers.const import *
+from custom_components.edgeos.models.entity_data import EntityData
 
 _LOGGER = logging.getLogger(__name__)
 
 CURRENT_DOMAIN = DOMAIN_SENSOR
 
 
+def get_device_tracker(hass: HomeAssistant, host: str, entity: EntityData):
+    sensor = EdgeOSSensor()
+    sensor.initialize(hass, host, entity, CURRENT_DOMAIN)
+
+    return sensor
+
+
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up EdgeOS based off an entry."""
-    await _async_setup_entry(hass, entry, async_add_entities, CURRENT_DOMAIN, EdgeOSSensor)
+    await async_setup_base_entry(hass, entry, async_add_entities, CURRENT_DOMAIN, get_device_tracker)
 
 
 async def async_unload_entry(hass, config_entry):
@@ -28,11 +38,16 @@ async def async_unload_entry(hass, config_entry):
 class EdgeOSSensor(EdgeOSEntity):
     """Representation a binary sensor that is updated by EdgeOS."""
 
-    def __init__(self, hass, ha, entity):
-        """Initialize the EdgeOS Sensor."""
-        super().__init__(hass, ha, entity, CURRENT_DOMAIN)
-
     @property
     def state(self) -> Union[None, str, int, float]:
         """Return the state of the sensor."""
-        return self._entity.get(ENTITY_STATE)
+        return self.entity.state
+
+    async def async_added_to_hass_local(self):
+        _LOGGER.info(f"Added new {self.name}")
+
+    def _immediate_update(self, previous_state: bool):
+        if previous_state != self.entity.state:
+            _LOGGER.debug(f"{self.name} updated from {previous_state} to {self.entity.state}")
+
+        super()._immediate_update(previous_state)
