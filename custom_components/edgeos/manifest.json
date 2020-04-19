@@ -1,7 +1,7 @@
 {
     "domain": "edgeos",
     "name": "Integration to Ubiquiti EdgeOS Routers",
-    "documentation": "https://github.com/elad-bar/ha-edgeos/blob/master/README.md",
+    "documentation": "https://github.com/elad-bar/ha-edgeos",
     "dependencies": [],
     "codeowners": ["@elad-bar"],
     "requirements": ["aiohttp"],
