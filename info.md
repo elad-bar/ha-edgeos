@@ -5,12 +5,6 @@ Provides an integration between EdgeOS (Ubiquiti) routers to Home Assistant.
 [Changelog](https://github.com/elad-bar/ha-edgeos/blob/master/CHANGELOG.md)
 
 ### How to set it up:
-#### Installation via HACS
-To add repository, go to settings and add:
-```
-Name: elad-bar/ha-edgeos
-Category: Integration
-```
 
 Look for "Integration with EdgeOS (Ubiquiti)" and install
 
