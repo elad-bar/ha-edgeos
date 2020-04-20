@@ -172,6 +172,7 @@ DEVICE_SERVICES_STATS_MAP = {
     'tx_rate': {ATTR_NAME: '{}/ps (Sent)', ATTR_UNIT_OF_MEASUREMENT: 'Bps'},
 }
 
+WS_KEEP_ALIVE_INTERVAL = timedelta(seconds=30)
 SCAN_INTERVAL_WS_TIMEOUT = timedelta(seconds=60)
 SCAN_INTERVAL_API = timedelta(seconds=60)
 EMPTY_LAST_VALID = datetime.fromtimestamp(100000)

@@ -1,6 +1,12 @@
 # Changelog
 
-## 2020-04-20
+## 2020-04-20 #2
+
+**Fixed bugs:**
+
+- Fix connection maximum attempts and added keep-alive WS message every 30 seconds [\#21](https://github.com/elad-bar/ha-edgeos/issues/21)
+
+## 2020-04-20 #1
 
 **Fixed bugs:**
 

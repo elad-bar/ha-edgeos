@@ -11,6 +11,7 @@ import asyncio
 
 from urllib.parse import urlparse
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 
 from ..helpers.const import *
 
@@ -33,10 +34,19 @@ class EdgeOSWebSocket:
         self._ws = None
         self._pending_payloads = []
         self._shutting_down = False
+        self._is_connected = False
 
         url = urlparse(self._edgeos_url)
 
         self._ws_url = WEBSOCKET_URL_TEMPLATE.format(url.netloc)
+
+        def send_keep_alive(internal_now):
+            data = self.get_keep_alive_data()
+            self._hass.async_create_task(self._ws.send_str(data))
+
+            _LOGGER.debug(f"Keep alive message sent @{internal_now}")
+
+        self._send_keep_alive = send_keep_alive
 
     async def initialize(self, cookies, session_id):
         _LOGGER.debug("Initializing WS connection")
@@ -68,14 +78,22 @@ class EdgeOSWebSocket:
                                                         ssl=False,
                                                         max_msg_size=MAX_MSG_SIZE,
                                                         timeout=SCAN_INTERVAL_WS_TIMEOUT) as ws:
+
+                        self._is_connected = True
+
                         self._ws = ws
                         await self.listen()
 
                     connection_attempt = connection_attempt + 1
                 else:
                     _LOGGER.error(f"Failed to connect on retry #{connection_attempt}")
+                    await self.close()
+
+                self._is_connected = False
 
             except Exception as ex:
+                self._is_connected = False
+
                 error_message = str(ex)
 
                 if error_message == ERROR_SHUTDOWN:
@@ -136,11 +154,15 @@ class EdgeOSWebSocket:
 
         _LOGGER.info('Subscribed to WS payloads')
 
+        remove_time_tracker = async_track_time_interval(self._hass, self._send_keep_alive, WS_KEEP_ALIVE_INTERVAL)
+
         async for msg in self._ws:
             continue_to_next = self.handle_next_message(msg)
 
             if not continue_to_next or not self.is_initialized:
-                return
+                break
+
+        remove_time_tracker()
 
         _LOGGER.info(f'Stop listening')
 
@@ -182,6 +204,14 @@ class EdgeOSWebSocket:
 
         self._ws = None
 
+    @staticmethod
+    def get_keep_alive_data():
+        content = "{CLIENT_PING}"
+
+        _LOGGER.debug(f'Keep alive data to be sent: {content}')
+
+        return content
+
     def get_subscription_data(self):
         topics_to_subscribe = [{WS_TOPIC_NAME: topic} for topic in self._topics]
         topics_to_unsubscribe = []
@@ -192,10 +222,10 @@ class EdgeOSWebSocket:
             WS_SESSION_ID: self._session_id
         }
 
-        subscription_content = json.dumps(data, separators=(STRING_COMMA, STRING_COLON))
-        subscription_content_length = len(subscription_content)
-        subscription_data = f'{subscription_content_length}\n{subscription_content}'
+        content = json.dumps(data, separators=(STRING_COMMA, STRING_COLON))
+        content_length = len(content)
+        data = f'{content_length}\n{content}'
 
-        _LOGGER.debug(f'get_subscription_data - Subscription data: {subscription_content}')
+        _LOGGER.debug(f'Subscription data to be sent: {data}')
 
-        return subscription_data
+        return data
