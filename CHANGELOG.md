@@ -1,5 +1,11 @@
 # Changelog
 
+## 2020-04-20
+
+**Fixed bugs:**
+
+- Missing resource for update interval field [\#19](https://github.com/elad-bar/ha-edgeos/issues/19)
+
 ## 2020-04-18
 
 **Implemented enhancements:**

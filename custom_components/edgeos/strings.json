@@ -33,11 +33,9 @@
               "description": "Set up your monitored devices / interfaces and tracked devices, use comma separated values, to clear existing value, use the checkbox.",
               "data": {
                   "monitored_interfaces": "Monitored interfaces",
-                  "monitored_interfaces_clear": "Clear monitored interfaces values",
                   "monitored_devices": "Monitored devices",
-                  "monitored_devices_clear": "Clear monitored devices values",
                   "track_devices": "Tracked devices",
-                  "track_devices_clear": "Clear tracked devices values"
+                  "update_interval": "Update interval (Seconds)"
               }
           }
       }
