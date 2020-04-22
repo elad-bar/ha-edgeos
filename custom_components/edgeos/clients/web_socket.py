@@ -3,25 +3,25 @@ This component provides support for Home Automation Manager (HAM).
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/edgeos/
 """
-import re
-import logging
-import json
-import aiohttp
 import asyncio
-
+import json
+import logging
+import re
 from urllib.parse import urlparse
+
+import aiohttp
+
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
 from ..helpers.const import *
 
-REQUIREMENTS = ['aiohttp']
+REQUIREMENTS = ["aiohttp"]
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class EdgeOSWebSocket:
-
     def __init__(self, hass, edgeos_url, topics, edgeos_callback):
         self._last_update = datetime.now()
         self._edgeos_url = edgeos_url
@@ -58,7 +58,9 @@ class EdgeOSWebSocket:
             if self._hass is None:
                 self._session = aiohttp.client.ClientSession(cookies=cookies)
             else:
-                self._session = async_create_clientsession(hass=self._hass, cookies=cookies)
+                self._session = async_create_clientsession(
+                    hass=self._hass, cookies=cookies
+                )
 
         except Exception as ex:
             _LOGGER.warning(f"Failed to create session of EdgeOS WS, Error: {str(ex)}")
@@ -73,11 +75,13 @@ class EdgeOSWebSocket:
                 if connection_attempt < MAXIMUM_RECONNECT:
                     _LOGGER.info(f"Connection attempt #{connection_attempt}")
 
-                    async with self._session.ws_connect(self._ws_url,
-                                                        origin=self._edgeos_url,
-                                                        ssl=False,
-                                                        max_msg_size=MAX_MSG_SIZE,
-                                                        timeout=SCAN_INTERVAL_WS_TIMEOUT) as ws:
+                    async with self._session.ws_connect(
+                        self._ws_url,
+                        origin=self._edgeos_url,
+                        ssl=False,
+                        max_msg_size=MAX_MSG_SIZE,
+                        timeout=SCAN_INTERVAL_WS_TIMEOUT,
+                    ) as ws:
 
                         self._is_connected = True
 
@@ -126,8 +130,8 @@ class EdgeOSWebSocket:
             message = re.sub(BEGINS_WITH_SIX_DIGITS, EMPTY_STRING, message)
 
             if len(self._pending_payloads) > 0:
-                message_previous = ''.join(self._pending_payloads)
-                message = f'{message_previous}{message}'
+                message_previous = "".join(self._pending_payloads)
+                message = f"{message_previous}{message}"
 
             if len(message) > 0:
                 payload_json = json.loads(message)
@@ -135,10 +139,10 @@ class EdgeOSWebSocket:
                 self._edgeos_callback(payload_json)
                 parsed = True
             else:
-                _LOGGER.debug('Parse message skipped (Empty)')
+                _LOGGER.debug("Parse message skipped (Empty)")
 
         except Exception as ex:
-            _LOGGER.debug(f'Parse message failed due to partial payload, Error: {ex}')
+            _LOGGER.debug(f"Parse message failed due to partial payload, Error: {ex}")
 
         finally:
             if parsed or len(self._pending_payloads) > MAX_PENDING_PAYLOADS:
@@ -152,9 +156,11 @@ class EdgeOSWebSocket:
         subscription_data = self.get_subscription_data()
         await self._ws.send_str(subscription_data)
 
-        _LOGGER.info('Subscribed to WS payloads')
+        _LOGGER.info("Subscribed to WS payloads")
 
-        remove_time_tracker = async_track_time_interval(self._hass, self._send_keep_alive, WS_KEEP_ALIVE_INTERVAL)
+        remove_time_tracker = async_track_time_interval(
+            self._hass, self._send_keep_alive, WS_KEEP_ALIVE_INTERVAL
+        )
 
         async for msg in self._ws:
             continue_to_next = self.handle_next_message(msg)
@@ -164,27 +170,29 @@ class EdgeOSWebSocket:
 
         remove_time_tracker()
 
-        _LOGGER.info(f'Stop listening')
+        _LOGGER.info(f"Stop listening")
 
     def handle_next_message(self, msg):
         _LOGGER.debug(f"Starting to handle next message")
         result = False
 
-        if msg.type in (aiohttp.WSMsgType.CLOSE,
-                        aiohttp.WSMsgType.CLOSED,
-                        aiohttp.WSMsgType.CLOSING):
+        if msg.type in (
+            aiohttp.WSMsgType.CLOSE,
+            aiohttp.WSMsgType.CLOSED,
+            aiohttp.WSMsgType.CLOSING,
+        ):
             _LOGGER.info("Connection closed (By Message Close)")
 
         elif msg.type == aiohttp.WSMsgType.ERROR:
-            _LOGGER.warning(f'Connection error, Description: {self._ws.exception()}')
+            _LOGGER.warning(f"Connection error, Description: {self._ws.exception()}")
 
         else:
             if self._log_events:
-                _LOGGER.debug(f'New message received: {str(msg)}')
+                _LOGGER.debug(f"New message received: {str(msg)}")
 
             self._last_update = datetime.now()
 
-            if msg.data == 'close':
+            if msg.data == "close":
                 result = False
             else:
                 self.parse_message(msg.data)
@@ -208,7 +216,7 @@ class EdgeOSWebSocket:
     def get_keep_alive_data():
         content = "{CLIENT_PING}"
 
-        _LOGGER.debug(f'Keep alive data to be sent: {content}')
+        _LOGGER.debug(f"Keep alive data to be sent: {content}")
 
         return content
 
@@ -219,13 +227,13 @@ class EdgeOSWebSocket:
         data = {
             WS_TOPIC_SUBSCRIBE: topics_to_subscribe,
             WS_TOPIC_UNSUBSCRIBE: topics_to_unsubscribe,
-            WS_SESSION_ID: self._session_id
+            WS_SESSION_ID: self._session_id,
         }
 
         content = json.dumps(data, separators=(STRING_COMMA, STRING_COLON))
         content_length = len(content)
-        data = f'{content_length}\n{content}'
+        data = f"{content_length}\n{content}"
 
-        _LOGGER.debug(f'Subscription data to be sent: {data}')
+        _LOGGER.debug(f"Subscription data to be sent: {data}")
 
         return data

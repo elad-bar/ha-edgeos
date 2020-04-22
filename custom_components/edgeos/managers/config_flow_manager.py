@@ -3,11 +3,9 @@ from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
 
-from ..helpers.const import *
-
 from ..clients.web_api import EdgeOSWebAPI
 from ..clients.web_login import EdgeOSWebLogin, LoginException
-
+from ..helpers.const import *
 from ..managers.configuration_manager import ConfigManager
 from ..managers.password_manager import PasswordManager
 from ..models.config_data import ConfigData
@@ -68,11 +66,17 @@ class ConfigFlowManager:
         if options is not None:
             new_options = {}
 
-            options_keys = [CONF_MONITORED_DEVICES, CONF_MONITORED_INTERFACES, CONF_TRACK_DEVICES]
+            options_keys = [
+                CONF_MONITORED_DEVICES,
+                CONF_MONITORED_INTERFACES,
+                CONF_TRACK_DEVICES,
+            ]
             for key in options_keys:
                 new_options[key] = self.get_user_input_option(options, key)
 
-            new_options[CONF_UPDATE_INTERVAL] = options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
+            new_options[CONF_UPDATE_INTERVAL] = options.get(
+                CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+            )
 
             self.options = new_options
         else:
@@ -116,7 +120,9 @@ class ConfigFlowManager:
 
             if login_api.login(throw_exception=True):
                 edgeos_url = API_URL_TEMPLATE.format(host)
-                api = EdgeOSWebAPI(self._hass, edgeos_url, self.edgeos_disconnection_handler)
+                api = EdgeOSWebAPI(
+                    self._hass, edgeos_url, self.edgeos_disconnection_handler
+                )
                 cookies = login_api.cookies_data
 
                 await api.initialize(cookies)
@@ -124,18 +130,16 @@ class ConfigFlowManager:
                 await api.heartbeat()
 
                 if not api.is_connected:
-                    _LOGGER.warning(f"Failed to login EdgeOS ({name}) due to invalid credentials")
-                    errors = {
-                        "base": "invalid_credentials"
-                    }
+                    _LOGGER.warning(
+                        f"Failed to login EdgeOS ({name}) due to invalid credentials"
+                    )
+                    errors = {"base": "invalid_credentials"}
 
                 device_data = await api.get_devices_data()
 
                 if device_data is None:
                     _LOGGER.warning(f"Failed to retrieve EdgeOS ({name}) device data")
-                    errors = {
-                        "base": "empty_device_data"
-                    }
+                    errors = {"base": "empty_device_data"}
                 else:
                     system_data = device_data.get("system", {})
                     traffic_analysis_data = system_data.get("traffic-analysis", {})
@@ -145,36 +149,34 @@ class ConfigFlowManager:
                     error_prefix = f"Invalid EdgeOS ({name}) configuration -"
 
                     if dpi != "enable":
-                        _LOGGER.warning(f"{error_prefix} Deep Packet Inspection (DPI) is disabled")
-                        errors = {
-                            "base": "invalid_dpi_configuration"
-                        }
+                        _LOGGER.warning(
+                            f"{error_prefix} Deep Packet Inspection (DPI) is disabled"
+                        )
+                        errors = {"base": "invalid_dpi_configuration"}
 
                     if export != "enable":
-                        _LOGGER.warning(f"{error_prefix} Traffic Analysis Export is disabled")
-                        errors = {
-                            "base": "invalid_export_configuration"
-                        }
+                        _LOGGER.warning(
+                            f"{error_prefix} Traffic Analysis Export is disabled"
+                        )
+                        errors = {"base": "invalid_export_configuration"}
 
             else:
                 _LOGGER.warning(f"Failed to login EdgeOS ({name})")
 
-                errors = {
-                    "base": "auth_general_error"
-                }
+                errors = {"base": "auth_general_error"}
 
         except LoginException as ex:
-            _LOGGER.warning(f"Failed to login EdgeOS ({name}) due to HTTP Status Code: {ex.status_code}")
+            _LOGGER.warning(
+                f"Failed to login EdgeOS ({name}) due to HTTP Status Code: {ex.status_code}"
+            )
 
-            errors = {
-                "base": HTTP_ERRORS.get(ex.status_code, "auth_general_error")
-            }
+            errors = {"base": HTTP_ERRORS.get(ex.status_code, "auth_general_error")}
 
         except Exception as ex:
-            _LOGGER.warning(f"Failed to login EdgeOS ({name}) due to general error: {str(ex)}")
+            _LOGGER.warning(
+                f"Failed to login EdgeOS ({name}) due to general error: {str(ex)}"
+            )
 
-            errors = {
-                "base": "auth_general_error"
-            }
+            errors = {"base": "auth_general_error"}
 
         return errors

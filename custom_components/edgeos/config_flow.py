@@ -8,7 +8,6 @@ from homeassistant.core import callback
 from . import get_ha
 from .helpers.const import *
 from .managers.config_flow_manager import ConfigFlowManager
-
 from .managers.home_assistant import EdgeOSHomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,7 +17,7 @@ BASE_FIELDS = {
     vol.Required(CONF_HOST): str,
     vol.Required(CONF_USERNAME): str,
     vol.Required(CONF_PASSWORD): str,
-    vol.Optional(CONF_UNIT, default=ATTR_BYTE): vol.In(ALLOWED_UNITS_LIST)
+    vol.Optional(CONF_UNIT, default=ATTR_BYTE): vol.In(ALLOWED_UNITS_LIST),
 }
 
 
@@ -51,7 +50,9 @@ class EdgeOSFlowHandler(config_entries.ConfigFlow):
         if user_input is not None:
             if CONF_PASSWORD in user_input:
                 password_clear_text = user_input[CONF_PASSWORD]
-                password = self._config_flow.password_manager.encrypt(password_clear_text)
+                password = self._config_flow.password_manager.encrypt(
+                    password_clear_text
+                )
 
                 user_input[CONF_PASSWORD] = password
 
@@ -66,15 +67,18 @@ class EdgeOSFlowHandler(config_entries.ConfigFlow):
             else:
                 _LOGGER.warning(f"EdgeOS ({name}) already configured")
 
-                return self.async_abort(reason="already_configured",
-                                        description_placeholders=user_input)
+                return self.async_abort(
+                    reason="already_configured", description_placeholders=user_input
+                )
 
             if errors is None:
                 _LOGGER.info(f"Storing configuration data: {user_input}")
 
                 return self.async_create_entry(title=name, data=user_input)
 
-        return self.async_show_form(step_id="user", data_schema=vol.Schema(BASE_FIELDS), errors=errors)
+        return self.async_show_form(
+            step_id="user", data_schema=vol.Schema(BASE_FIELDS), errors=errors
+        )
 
     async def async_step_import(self, info):
         """Import existing configuration from Z-Wave."""
@@ -118,9 +122,7 @@ class EdgeOSOptionsFlowHandler(config_entries.OptionsFlow):
     def get_available_options(system_data, key):
         all_items = system_data.get(key)
 
-        available_items = {
-            OPTION_EMPTY: OPTION_EMPTY
-        }
+        available_items = {OPTION_EMPTY: OPTION_EMPTY}
 
         for item_key in all_items:
             item = all_items[item_key]
@@ -157,19 +159,23 @@ class EdgeOSOptionsFlowHandler(config_entries.OptionsFlow):
 
         schema = vol.Schema(
             {
-                vol.Optional(CONF_MONITORED_DEVICES, default=monitored_devices):
-                    cv.multi_select(all_devices),
-                vol.Optional(CONF_MONITORED_INTERFACES, default=monitored_interfaces):
-                    cv.multi_select(all_interfaces),
-                vol.Optional(CONF_TRACK_DEVICES, default=device_trackers):
-                    cv.multi_select(all_devices),
-                vol.Optional(CONF_UPDATE_INTERVAL, default=config_data.update_interval):
-                    cv.positive_int
+                vol.Optional(
+                    CONF_MONITORED_DEVICES, default=monitored_devices
+                ): cv.multi_select(all_devices),
+                vol.Optional(
+                    CONF_MONITORED_INTERFACES, default=monitored_interfaces
+                ): cv.multi_select(all_interfaces),
+                vol.Optional(
+                    CONF_TRACK_DEVICES, default=device_trackers
+                ): cv.multi_select(all_devices),
+                vol.Optional(
+                    CONF_UPDATE_INTERVAL, default=config_data.update_interval
+                ): cv.positive_int,
             }
         )
 
         return self.async_show_form(
             step_id="edge_os_additional_settings",
             data_schema=schema,
-            description_placeholders=self._config_flow.data
+            description_placeholders=self._config_flow.data,
         )

@@ -6,11 +6,14 @@ https://home-assistant.io/components/binary_sensor.edgeos/
 import logging
 from typing import Union
 
-from homeassistant.core import HomeAssistant
-
-from custom_components.edgeos.models.base_entity import EdgeOSEntity, async_setup_base_entry
 from custom_components.edgeos.helpers.const import *
+from custom_components.edgeos.models.base_entity import (
+    EdgeOSEntity,
+    async_setup_base_entry,
+)
 from custom_components.edgeos.models.entity_data import EntityData
+
+from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +29,9 @@ def get_device_tracker(hass: HomeAssistant, integration_name: str, entity: Entit
 
 async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
     """Set up EdgeOS based off an entry."""
-    await async_setup_base_entry(hass, entry, async_add_entities, CURRENT_DOMAIN, get_device_tracker)
+    await async_setup_base_entry(
+        hass, entry, async_add_entities, CURRENT_DOMAIN, get_device_tracker
+    )
 
 
 async def async_unload_entry(hass, config_entry):
@@ -48,6 +53,8 @@ class EdgeOSSensor(EdgeOSEntity):
 
     def _immediate_update(self, previous_state: bool):
         if previous_state != self.entity.state:
-            _LOGGER.debug(f"{self.name} updated from {previous_state} to {self.entity.state}")
+            _LOGGER.debug(
+                f"{self.name} updated from {previous_state} to {self.entity.state}"
+            )
 
         super()._immediate_update(previous_state)

@@ -50,7 +50,7 @@ class ConfigData:
             CONF_UPDATE_INTERVAL: self.update_interval,
             CONF_MONITORED_DEVICES: self.monitored_devices,
             CONF_MONITORED_INTERFACES: self.monitored_interfaces,
-            CONF_TRACK_DEVICES: self.device_trackers
+            CONF_TRACK_DEVICES: self.device_trackers,
         }
 
         to_string = f"{obj}"

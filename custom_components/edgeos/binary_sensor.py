@@ -5,11 +5,11 @@ https://home-assistant.io/components/binary_sensor.edgeos/
 """
 import logging
 
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
-from .models.base_entity import EdgeOSEntity, async_setup_base_entry
 from .helpers.const import *
+from .models.base_entity import EdgeOSEntity, async_setup_base_entry
 from .models.entity_data import EntityData
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,9 @@ def get_binary_sensor(hass: HomeAssistant, integration_name: str, entity: Entity
 
 async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
     """Set up EdgeOS based off an entry."""
-    await async_setup_base_entry(hass, entry, async_add_entities, CURRENT_DOMAIN, get_binary_sensor)
+    await async_setup_base_entry(
+        hass, entry, async_add_entities, CURRENT_DOMAIN, get_binary_sensor
+    )
 
 
 async def async_unload_entry(hass, config_entry):
@@ -53,6 +55,8 @@ class EdgeOSBinarySensor(EdgeOSEntity):
 
     def _immediate_update(self, previous_state: bool):
         if previous_state != self.entity.state:
-            _LOGGER.debug(f"{self.name} updated from {previous_state} to {self.entity.state}")
+            _LOGGER.debug(
+                f"{self.name} updated from {previous_state} to {self.entity.state}"
+            )
 
         super()._immediate_update(previous_state)

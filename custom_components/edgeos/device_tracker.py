@@ -10,8 +10,8 @@ from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SOURCE_TYP
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.core import HomeAssistant
 
-from .models.base_entity import EdgeOSEntity, async_setup_base_entry
 from .helpers.const import *
+from .models.base_entity import EdgeOSEntity, async_setup_base_entry
 from .models.entity_data import EntityData
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,9 @@ def get_device_tracker(hass: HomeAssistant, integration_name: str, entity: Entit
 
 async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
     """Set up EdgeOS based off an entry."""
-    await async_setup_base_entry(hass, entry, async_add_entities, CURRENT_DOMAIN, get_device_tracker)
+    await async_setup_base_entry(
+        hass, entry, async_add_entities, CURRENT_DOMAIN, get_device_tracker
+    )
 
 
 async def async_unload_entry(hass, config_entry):
@@ -56,6 +58,8 @@ class EdgeOSScanner(EdgeOSEntity, ScannerEntity):
 
     def _immediate_update(self, previous_state: bool):
         if previous_state != self.entity.state:
-            _LOGGER.debug(f"{self.name} updated from {previous_state} to {self.entity.state}")
+            _LOGGER.debug(
+                f"{self.name} updated from {previous_state} to {self.entity.state}"
+            )
 
         super()._immediate_update(previous_state)
