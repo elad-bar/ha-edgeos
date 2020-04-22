@@ -1,3 +1,5 @@
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+
 from ..helpers.const import *
 
 

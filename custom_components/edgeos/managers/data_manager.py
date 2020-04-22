@@ -7,6 +7,8 @@ import logging
 import sys
 from typing import Optional
 
+from homeassistant.const import CONF_HOST
+
 from ..clients.web_api import EdgeOSWebAPI
 from ..clients.web_login import EdgeOSWebLogin
 from ..clients.web_socket import EdgeOSWebSocket

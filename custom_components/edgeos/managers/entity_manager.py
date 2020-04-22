@@ -3,7 +3,7 @@ import sys
 from typing import Dict, List, Optional
 
 from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SOURCE_TYPE_ROUTER
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 

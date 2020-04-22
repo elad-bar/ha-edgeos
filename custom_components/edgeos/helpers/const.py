@@ -6,14 +6,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSOR
 from homeassistant.components.device_tracker import DOMAIN as DOMAIN_DEVICE_TRACKER
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
-from homeassistant.const import (
-    ATTR_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import ATTR_NAME, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.helpers import config_validation as cv
 
 VERSION = "2.0.0"

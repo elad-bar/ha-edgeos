@@ -3,9 +3,9 @@ import sys
 from time import sleep
 
 import requests
-from requests import HTTPError
 import urllib3
 
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import HomeAssistantError
 
 from ..helpers.const import *

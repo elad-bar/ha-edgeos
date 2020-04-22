@@ -8,6 +8,7 @@ import sys
 from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import EntityRegistry, async_get_registry

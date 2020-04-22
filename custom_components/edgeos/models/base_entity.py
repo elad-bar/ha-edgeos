@@ -3,13 +3,14 @@ import sys
 from typing import Any, Callable, Optional
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .. import EdgeOSHomeAssistant
 from ..helpers import get_ha
 from ..helpers.const import *
+from ..managers.home_assistant import EdgeOSHomeAssistant
 from .entity_data import EntityData
 
 _LOGGER = logging.getLogger(__name__)
