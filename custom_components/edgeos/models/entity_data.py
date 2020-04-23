@@ -27,7 +27,7 @@ class EntityData:
             ENTITY_ICON: self.icon,
             ENTITY_DEVICE_NAME: self.device_name,
             ENTITY_STATUS: self.status,
-            ENTITY_UNIQUE_ID: self.status
+            ENTITY_UNIQUE_ID: self.status,
         }
 
         to_string = f"{obj}"

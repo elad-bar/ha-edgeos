@@ -3,25 +3,24 @@ This component provides support for Home Automation Manager (HAM).
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/edgeos/
 """
-import sys
 import logging
+import sys
 from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get_registry, EntityRegistry
-
-from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-from .configuration_manager import ConfigManager
-from .device_manager import DeviceManager
-from .entity_manager import EntityManager
-from .data_manager import EdgeOSData
-from .password_manager import PasswordManager
+from homeassistant.helpers.entity_registry import EntityRegistry, async_get_registry
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
 from ..helpers.const import *
 from ..models.config_data import ConfigData
+from .configuration_manager import ConfigManager
+from .data_manager import EdgeOSData
+from .device_manager import DeviceManager
+from .entity_manager import EntityManager
+from .password_manager import PasswordManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,12 +45,10 @@ class EdgeOSHomeAssistant:
 
         self._services = {
             "save_debug_data": self.service_save_debug_data,
-            "log_events": self.service_log_events
+            "log_events": self.service_log_events,
         }
 
-        self._service_schema = {
-            "log_events": SERVICE_LOG_EVENTS_SCHEMA
-        }
+        self._service_schema = {"log_events": SERVICE_LOG_EVENTS_SCHEMA}
 
         def update_api(internal_now):
             self._hass.async_create_task(self.async_update_api(internal_now))
@@ -105,16 +102,22 @@ class EdgeOSHomeAssistant:
         load = self._hass.config_entries.async_forward_entry_setup
 
         for domain in SIGNALS:
-            self._hass.async_create_task(load(self._config_manager.config_entry, domain))
+            self._hass.async_create_task(
+                load(self._config_manager.config_entry, domain)
+            )
 
         # Register Service
         for service_name in self._services:
             service_callback = self._services[service_name]
             service_schema = self._service_schema.get(service_name)
 
-            self._hass.services.async_register(DOMAIN, service_name, service_callback, schema=service_schema)
+            self._hass.services.async_register(
+                DOMAIN, service_name, service_callback, schema=service_schema
+            )
 
-        self._hass.async_create_task(self._data_manager.initialize(self.async_post_initial_login))
+        self._hass.async_create_task(
+            self._data_manager.initialize(self.async_post_initial_login)
+        )
 
         self._is_initialized = True
 
@@ -123,9 +126,9 @@ class EdgeOSHomeAssistant:
 
         self._hass.async_create_task(self.async_update_api(datetime.now()))
 
-        self._remove_async_track_time_api = async_track_time_interval(self._hass,
-                                                                      self._update_api,
-                                                                      SCAN_INTERVAL_API)
+        self._remove_async_track_time_api = async_track_time_interval(
+            self._hass, self._update_api, SCAN_INTERVAL_API
+        )
 
         await self.async_update_entry()
 
@@ -149,9 +152,13 @@ class EdgeOSHomeAssistant:
         unload = self._hass.config_entries.async_forward_entry_unload
 
         for domain in SIGNALS:
-            self._hass.async_create_task(unload(self._config_manager.config_entry, domain))
+            self._hass.async_create_task(
+                unload(self._config_manager.config_entry, domain)
+            )
 
-        await self._device_manager.async_remove_entry(self._config_manager.config_entry.entry_id)
+        await self._device_manager.async_remove_entry(
+            self._config_manager.config_entry.entry_id
+        )
 
     async def async_update_entry(self, entry: ConfigEntry = None):
         is_update = entry is not None
@@ -168,7 +175,10 @@ class EdgeOSHomeAssistant:
 
             is_interval_changed = previous_interval != self.config_data.update_interval
 
-            if is_interval_changed and self._remove_async_track_time_entities is not None:
+            if (
+                is_interval_changed
+                and self._remove_async_track_time_entities is not None
+            ):
                 msg = f"ConfigEntry interval changed from {previous_interval} to {self.config_data.update_interval}"
                 _LOGGER.info(msg)
 
@@ -178,9 +188,9 @@ class EdgeOSHomeAssistant:
         if self._remove_async_track_time_entities is None:
             interval = timedelta(seconds=self.config_data.update_interval)
 
-            self._remove_async_track_time_entities = async_track_time_interval(self._hass,
-                                                                               self._update_entities,
-                                                                               interval)
+            self._remove_async_track_time_entities = async_track_time_interval(
+                self._hass, self._update_entities, interval
+            )
 
         self._is_ready = False
 
@@ -190,17 +200,17 @@ class EdgeOSHomeAssistant:
 
     async def async_update_api(self, event_time):
         if not self._is_initialized:
-            _LOGGER.info(f'NOT INITIALIZED, cannot update data from API: {event_time}')
+            _LOGGER.info(f"NOT INITIALIZED, cannot update data from API: {event_time}")
 
             return
 
-        _LOGGER.debug(f'Update API: {event_time}')
+        _LOGGER.debug(f"Update API: {event_time}")
 
         await self._data_manager.refresh()
 
     async def async_update_entities(self, event_time):
         if not self._is_initialized:
-            _LOGGER.info(f'NOT INITIALIZED, cannot update entities: {event_time}')
+            _LOGGER.info(f"NOT INITIALIZED, cannot update entities: {event_time}")
 
             return
 
@@ -223,7 +233,7 @@ class EdgeOSHomeAssistant:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f'Failed to update, Error: {ex}, Line: {line_number}')
+            _LOGGER.error(f"Failed to update, Error: {ex}, Line: {line_number}")
 
     async def discover_all(self):
         if not self._is_ready or not self._is_initialized:
@@ -251,7 +261,9 @@ class EdgeOSHomeAssistant:
 
             device_in_use = self.entity_manager.is_device_name_in_use(device_name)
 
-            entity_id = self.entity_registry.async_get_entity_id(domain, DOMAIN, unique_id)
+            entity_id = self.entity_registry.async_get_entity_id(
+                domain, DOMAIN, unique_id
+            )
             self.entity_registry.async_remove(entity_id)
 
             if not device_in_use:
@@ -260,25 +272,27 @@ class EdgeOSHomeAssistant:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f'Failed to delete_entity, Error: {ex}, Line: {line_number}')
+            _LOGGER.error(f"Failed to delete_entity, Error: {ex}, Line: {line_number}")
 
     def service_save_debug_data(self, service):
-        _LOGGER.debug(f'Save Debug Data: {service}')
+        _LOGGER.debug(f"Save Debug Data: {service}")
 
         try:
             path = self._hass.config.path(EDGEOS_DATA_LOG)
 
-            with open(path, 'w+') as out:
+            with open(path, "w+") as out:
                 out.write(str(self.data_manager.edgeos_data))
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f'Failed to log EdgeOS data, Error: {ex}, Line: {line_number}')
+            _LOGGER.error(
+                f"Failed to log EdgeOS data, Error: {ex}, Line: {line_number}"
+            )
 
     def service_log_events(self, service):
-        _LOGGER.debug(f'Log Events: {service}')
+        _LOGGER.debug(f"Log Events: {service}")
 
         enabled = service.data.get(ATTR_ENABLED, False)
 

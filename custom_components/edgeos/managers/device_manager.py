@@ -1,9 +1,10 @@
-import sys
 import logging
+import sys
+
 from homeassistant.helpers.device_registry import async_get_registry
 
-from .data_manager import EdgeOSData
 from ..helpers.const import *
+from .data_manager import EdgeOSData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,13 +55,11 @@ class DeviceManager:
             device_name = f"{MANUFACTURER} {product} {hostname}"
 
             device_info = {
-                "identifiers": {
-                    (DEFAULT_NAME, device_name)
-                },
+                "identifiers": {(DEFAULT_NAME, device_name)},
                 "name": device_name,
                 "manufacturer": MANUFACTURER,
                 "model": product,
-                "sw_version": version
+                "sw_version": version,
             }
 
             if current_device_info.get("name", "") != device_name:
@@ -72,7 +71,9 @@ class DeviceManager:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f'Failed to generate system device, Error: {ex}, Line: {line_number}')
+            _LOGGER.error(
+                f"Failed to generate system device, Error: {ex}, Line: {line_number}"
+            )
 
     async def delete_device(self, name):
         _LOGGER.info(f"Deleting device {name}")

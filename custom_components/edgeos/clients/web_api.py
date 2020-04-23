@@ -3,13 +3,16 @@ This component provides support for Home Automation Manager (HAM).
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/edgeos/
 """
-import sys
 import logging
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+import sys
+
 import aiohttp
+
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
+
 from ..helpers.const import *
 
-REQUIREMENTS = ['aiohttp']
+REQUIREMENTS = ["aiohttp"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +53,7 @@ class EdgeOSWebAPI:
 
         try:
             async with self._session.get(url, ssl=False) as response:
-                _LOGGER.debug(f'Status of {url}: {response.status}')
+                _LOGGER.debug(f"Status of {url}: {response.status}")
 
                 self._is_connected = response.status < 400
 
@@ -59,7 +62,9 @@ class EdgeOSWebAPI:
                         self._disconnections = self._disconnections + 1
                         await self._disconnection_handler()
                     else:
-                        _LOGGER.error(f'Failed to make authenticated request to {url} {self._disconnections} times')
+                        _LOGGER.error(
+                            f"Failed to make authenticated request to {url} {self._disconnections} times"
+                        )
                 else:
                     response.raise_for_status()
 
@@ -73,7 +78,7 @@ class EdgeOSWebAPI:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f'Failed to connect {url}, Error: {ex}, Line: {line_number}')
+            _LOGGER.error(f"Failed to connect {url}, Error: {ex}, Line: {line_number}")
 
         return result
 
@@ -91,21 +96,27 @@ class EdgeOSWebAPI:
                 if current_invocation > timedelta(seconds=max_age):
                     current_ts = str(int(ts.timestamp()))
 
-                    heartbeat_req_url = self.get_edgeos_api_endpoint(EDGEOS_API_HEARTBREAT)
-                    heartbeat_req_full_url = API_URL_HEARTBEAT_TEMPLATE.format(heartbeat_req_url, current_ts)
+                    heartbeat_req_url = self.get_edgeos_api_endpoint(
+                        EDGEOS_API_HEARTBREAT
+                    )
+                    heartbeat_req_full_url = API_URL_HEARTBEAT_TEMPLATE.format(
+                        heartbeat_req_url, current_ts
+                    )
 
                     response = await self.async_get(heartbeat_req_full_url)
 
-                    _LOGGER.debug(f'Heartbeat response: {response}')
+                    _LOGGER.debug(f"Heartbeat response: {response}")
 
                     self._last_valid = ts
             else:
-                _LOGGER.warning(f'Heartbeat not ran due to closed session')
+                _LOGGER.warning(f"Heartbeat not ran due to closed session")
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f'Failed to perform heartbeat, Error: {ex}, Line: {line_number}')
+            _LOGGER.error(
+                f"Failed to perform heartbeat, Error: {ex}, Line: {line_number}"
+            )
 
     async def get_devices_data(self):
         result = None
@@ -117,23 +128,25 @@ class EdgeOSWebAPI:
                 result_json = await self.async_get(get_req_url)
 
                 if result_json is not None and RESPONSE_SUCCESS_KEY in result_json:
-                    success_key = str(result_json.get(RESPONSE_SUCCESS_KEY, '')).lower()
+                    success_key = str(result_json.get(RESPONSE_SUCCESS_KEY, "")).lower()
 
                     if success_key == TRUE_STR:
                         if EDGEOS_API_GET.upper() in result_json:
                             result = result_json.get(EDGEOS_API_GET.upper(), {})
                     else:
                         error_message = result_json[RESPONSE_ERROR_KEY]
-                        _LOGGER.error(f'Failed, Error: {error_message}')
+                        _LOGGER.error(f"Failed, Error: {error_message}")
                 else:
-                    _LOGGER.error('Invalid response, not contain success status')
+                    _LOGGER.error("Invalid response, not contain success status")
             else:
-                _LOGGER.warning(f'Get devices data not ran due to closed session')
+                _LOGGER.warning(f"Get devices data not ran due to closed session")
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f'Failed to get devices data, Error: {ex}, Line: {line_number}')
+            _LOGGER.error(
+                f"Failed to get devices data, Error: {ex}, Line: {line_number}"
+            )
 
         return result
 
@@ -144,7 +157,9 @@ class EdgeOSWebAPI:
             if self.is_initialized:
                 clean_item = item.replace(STRING_DASH, STRING_UNDERSCORE)
                 data_req_url = self.get_edgeos_api_endpoint(EDGEOS_API_DATA)
-                data_req_full_url = API_URL_DATA_TEMPLATE.format(data_req_url, clean_item)
+                data_req_full_url = API_URL_DATA_TEMPLATE.format(
+                    data_req_url, clean_item
+                )
 
                 data = await self.async_get(data_req_full_url)
 
@@ -152,18 +167,18 @@ class EdgeOSWebAPI:
                     if str(data.get(RESPONSE_SUCCESS_KEY)) == RESPONSE_FAILURE_CODE:
                         error = data.get(RESPONSE_ERROR_KEY, EMPTY_STRING)
 
-                        _LOGGER.error(f'Failed to load {item}, Reason: {error}')
+                        _LOGGER.error(f"Failed to load {item}, Reason: {error}")
                         result = None
                     else:
                         result = data.get(RESPONSE_OUTPUT)
             else:
-                _LOGGER.warning(f'Get data of {item} not ran due to closed session')
+                _LOGGER.warning(f"Get data of {item} not ran due to closed session")
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f'Failed to load {item}, Error: {ex}, Line: {line_number}')
+            _LOGGER.error(f"Failed to load {item}, Error: {ex}, Line: {line_number}")
             result = None
 
         return result

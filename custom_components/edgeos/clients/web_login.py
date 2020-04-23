@@ -1,10 +1,12 @@
-import sys
 import logging
-import requests
+import sys
 from time import sleep
+
+import requests
 import urllib3
+
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import HomeAssistantError
-from requests import HTTPError
 
 from ..helpers.const import *
 
@@ -15,15 +17,12 @@ class EdgeOSWebLogin(requests.Session):
     def __init__(self, host, username, password):
         requests.Session.__init__(self)
 
-        self._credentials = {
-            CONF_USERNAME: username,
-            CONF_PASSWORD: password
-        }
+        self._credentials = {CONF_USERNAME: username, CONF_PASSWORD: password}
 
         self._edgeos_url = API_URL_TEMPLATE.format(host)
         self._product = "EdgeOS Device"
 
-        ''' This function turns off InsecureRequestWarnings '''
+        """ This function turns off InsecureRequestWarnings """
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     @property
@@ -58,7 +57,9 @@ class EdgeOSWebLogin(requests.Session):
         logged_in = False
 
         try:
-            login_response = self.post(self._edgeos_url, data=self._credentials, verify=False)
+            login_response = self.post(
+                self._edgeos_url, data=self._credentials, verify=False
+            )
 
             status_code = login_response.status_code
 
@@ -67,7 +68,10 @@ class EdgeOSWebLogin(requests.Session):
             _LOGGER.debug("Sleeping 1 to make sure the session id is in the filesystem")
             sleep(1)
 
-            logged_in = self.breaker_session_id is not None and self.breaker_session_id == self.session_id
+            logged_in = (
+                self.breaker_session_id is not None
+                and self.breaker_session_id == self.session_id
+            )
 
             if logged_in:
                 html = login_response.text
@@ -78,7 +82,7 @@ class EdgeOSWebLogin(requests.Session):
                         value = line_parts[len(line_parts) - 1]
                         self._product = value.replace("'", "")
             else:
-                _LOGGER.error(f'Failed to login, Invalid credentials')
+                _LOGGER.error(f"Failed to login, Invalid credentials")
 
                 status_code = 403
 
@@ -86,7 +90,7 @@ class EdgeOSWebLogin(requests.Session):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f'Failed to login, Error: {ex}, Line: {line_number}')
+            _LOGGER.error(f"Failed to login, Error: {ex}, Line: {line_number}")
 
             status_code = 404
 
