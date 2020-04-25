@@ -30,6 +30,8 @@ class ConfigManager:
         result.monitored_interfaces = options.get(CONF_MONITORED_INTERFACES, [])
         result.device_trackers = options.get(CONF_TRACK_DEVICES, [])
         result.update_interval = options.get(CONF_UPDATE_INTERVAL, 1)
+        result.log_level = options.get(CONF_LOG_LEVEL, LOG_LEVEL_DEFAULT)
+        result.log_incoming_messages = options.get(CONF_LOG_INCOMING_MESSAGES, False)
 
         if result.password is not None and len(result.password) > 0:
             result.password_clear_text = self.password_manager.decrypt(result.password)

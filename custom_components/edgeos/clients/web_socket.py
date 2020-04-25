@@ -7,6 +7,7 @@ import asyncio
 import json
 import logging
 import re
+from typing import Optional
 from urllib.parse import urlparse
 
 import aiohttp
@@ -15,6 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
 from ..helpers.const import *
+from ..models.config_data import ConfigData
 
 REQUIREMENTS = ["aiohttp"]
 
@@ -22,7 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EdgeOSWebSocket:
-    def __init__(self, hass, edgeos_url, topics, edgeos_callback):
+    def __init__(self, hass, config_manager, edgeos_url, topics, edgeos_callback):
+        self._config_manager = config_manager
         self._last_update = datetime.now()
         self._edgeos_url = edgeos_url
         self._edgeos_callback = edgeos_callback
@@ -30,7 +33,6 @@ class EdgeOSWebSocket:
         self._session_id = None
         self._topics = topics
         self._session = None
-        self._log_events = False
         self._ws = None
         self._pending_payloads = []
         self._shutting_down = False
@@ -47,6 +49,13 @@ class EdgeOSWebSocket:
             _LOGGER.debug(f"Keep alive message sent @{internal_now}")
 
         self._send_keep_alive = send_keep_alive
+
+    @property
+    def config_data(self) -> Optional[ConfigData]:
+        if self._config_manager is not None:
+            return self._config_manager.data
+
+        return None
 
     async def initialize(self, cookies, session_id):
         _LOGGER.debug("Initializing WS connection")
@@ -108,9 +117,6 @@ class EdgeOSWebSocket:
                     _LOGGER.warning(f"Failed to listen EdgeOS, Error: {error_message}")
 
         _LOGGER.info("WS Connection terminated")
-
-    def log_events(self, log_event_enabled):
-        self._log_events = log_event_enabled
 
     @property
     def is_initialized(self):
@@ -187,7 +193,7 @@ class EdgeOSWebSocket:
             _LOGGER.warning(f"Connection error, Description: {self._ws.exception()}")
 
         else:
-            if self._log_events:
+            if self.config_data.log_incoming_messages:
                 _LOGGER.debug(f"New message received: {str(msg)}")
 
             self._last_update = datetime.now()

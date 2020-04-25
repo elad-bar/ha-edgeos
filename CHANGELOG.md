@@ -1,5 +1,12 @@
 # Changelog
 
+**Implemented enhancements:**
+
+- Simplified the way calculating whether device is connected or not, based on report of traffic analysis instead of calculating amount of traffic (bps) over the last 3 minutes [\#24](https://github.com/elad-bar/ha-edgeos/issues/24) 
+- Moved service `edgeos.save_debug_data` to Integration -> Options as configuration (that being reset after doing the action once)
+- Moved service `edgeos.log_events` to Integration -> Options as configuration to toggle upon need
+- Added ability to configure the log level of the component from Integration - Options, more details in README
+
 ## 2020-04-20 #2
 
 **Fixed bugs:**

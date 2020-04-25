@@ -43,13 +43,6 @@ class EdgeOSHomeAssistant:
 
         self._config_manager = ConfigManager(password_manager)
 
-        self._services = {
-            "save_debug_data": self.service_save_debug_data,
-            "log_events": self.service_log_events,
-        }
-
-        self._service_schema = {"log_events": SERVICE_LOG_EVENTS_SCHEMA}
-
         def update_api(internal_now):
             self._hass.async_create_task(self.async_update_api(internal_now))
 
@@ -106,15 +99,6 @@ class EdgeOSHomeAssistant:
                 load(self._config_manager.config_entry, domain)
             )
 
-        # Register Service
-        for service_name in self._services:
-            service_callback = self._services[service_name]
-            service_schema = self._service_schema.get(service_name)
-
-            self._hass.services.async_register(
-                DOMAIN, service_name, service_callback, schema=service_schema
-            )
-
         self._hass.async_create_task(
             self._data_manager.initialize(self.async_post_initial_login)
         )
@@ -136,10 +120,6 @@ class EdgeOSHomeAssistant:
         _LOGGER.debug(f"async_remove called")
 
         await self._data_manager.terminate()
-
-        # Unregister Service
-        for service_name in self._services:
-            self._hass.services.async_remove(DOMAIN, service_name)
 
         if self._remove_async_track_time_api is not None:
             self._remove_async_track_time_api()
@@ -274,8 +254,8 @@ class EdgeOSHomeAssistant:
 
             _LOGGER.error(f"Failed to delete_entity, Error: {ex}, Line: {line_number}")
 
-    def service_save_debug_data(self, service):
-        _LOGGER.debug(f"Save Debug Data: {service}")
+    def service_save_debug_data(self):
+        _LOGGER.debug(f"Save Debug Data")
 
         try:
             path = self._hass.config.path(EDGEOS_DATA_LOG)
@@ -290,10 +270,3 @@ class EdgeOSHomeAssistant:
             _LOGGER.error(
                 f"Failed to log EdgeOS data, Error: {ex}, Line: {line_number}"
             )
-
-    def service_log_events(self, service):
-        _LOGGER.debug(f"Log Events: {service}")
-
-        enabled = service.data.get(ATTR_ENABLED, False)
-
-        self._data_manager.log_events(enabled)

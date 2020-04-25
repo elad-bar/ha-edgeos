@@ -15,6 +15,8 @@ class ConfigData:
     monitored_devices: list
     monitored_interfaces: list
     device_trackers: list
+    log_level: str
+    log_incoming_messages: bool
 
     def __init__(self):
         self.name = ""
@@ -28,6 +30,9 @@ class ConfigData:
         self.monitored_devices = []
         self.monitored_interfaces = []
         self.device_trackers = []
+        self.log_level = ""
+        self.log_incoming_messages = False
+        self.store_debug_files = False
 
     @property
     def unit_size(self):
@@ -53,6 +58,8 @@ class ConfigData:
             CONF_MONITORED_DEVICES: self.monitored_devices,
             CONF_MONITORED_INTERFACES: self.monitored_interfaces,
             CONF_TRACK_DEVICES: self.device_trackers,
+            CONF_LOG_LEVEL: self.log_level,
+            CONF_LOG_INCOMING_MESSAGES: self.log_incoming_messages,
         }
 
         to_string = f"{obj}"

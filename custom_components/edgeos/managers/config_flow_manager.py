@@ -2,13 +2,16 @@ import logging
 from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
+from .. import get_ha
 from ..clients.web_api import EdgeOSWebAPI
 from ..clients.web_login import EdgeOSWebLogin, LoginException
 from ..helpers.const import *
 from ..managers.configuration_manager import ConfigManager
 from ..managers.password_manager import PasswordManager
 from ..models.config_data import ConfigData
+from .home_assistant import EdgeOSHomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,17 +69,8 @@ class ConfigFlowManager:
         if options is not None:
             new_options = {}
 
-            options_keys = [
-                CONF_MONITORED_DEVICES,
-                CONF_MONITORED_INTERFACES,
-                CONF_TRACK_DEVICES,
-            ]
-            for key in options_keys:
-                new_options[key] = self.get_user_input_option(options, key)
-
-            new_options[CONF_UPDATE_INTERVAL] = options.get(
-                CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
-            )
+            for key in options:
+                new_options[key] = options[key]
 
             self.options = new_options
         else:
@@ -106,7 +100,92 @@ class ConfigFlowManager:
     async def edgeos_disconnection_handler(self):
         self._auth_error = True
 
-    async def validate_login(self):
+    @staticmethod
+    def get_default_data():
+        fields = {
+            vol.Required(CONF_NAME, DEFAULT_NAME): str,
+            vol.Required(CONF_HOST): str,
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Optional(CONF_UNIT, default=ATTR_BYTE): vol.In(ALLOWED_UNITS_LIST),
+        }
+
+        data_schema = vol.Schema(fields)
+
+        return data_schema
+
+    def get_default_options(self):
+        config_data = self.config_data
+        name = config_data.name
+
+        ha: EdgeOSHomeAssistant = get_ha(self._hass, name)
+        system_data = ha.data_manager.system_data
+
+        all_interfaces = self.get_available_options(system_data, INTERFACES_KEY)
+        all_devices = self.get_available_options(system_data, STATIC_DEVICES_KEY)
+
+        monitored_devices = self.get_options(config_data.monitored_devices)
+        monitored_interfaces = self.get_options(config_data.monitored_interfaces)
+        device_trackers = self.get_options(config_data.device_trackers)
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_MONITORED_DEVICES, default=monitored_devices
+                ): cv.multi_select(all_devices),
+                vol.Optional(
+                    CONF_MONITORED_INTERFACES, default=monitored_interfaces
+                ): cv.multi_select(all_interfaces),
+                vol.Optional(
+                    CONF_TRACK_DEVICES, default=device_trackers
+                ): cv.multi_select(all_devices),
+                vol.Optional(
+                    CONF_UPDATE_INTERVAL, default=config_data.update_interval
+                ): cv.positive_int,
+                vol.Optional(CONF_STORE_DEBUG_FILE, default=False): bool,
+                vol.Required(CONF_LOG_LEVEL, default=config_data.log_level): vol.In(
+                    LOG_LEVELS
+                ),
+                vol.Optional(
+                    CONF_LOG_INCOMING_MESSAGES,
+                    default=config_data.log_incoming_messages,
+                ): bool,
+            }
+        )
+
+        return data_schema
+
+    @staticmethod
+    def get_options(data):
+        result = []
+
+        if data is not None:
+            if isinstance(data, list):
+                result = data
+            else:
+                clean_data = data.replace(" ", "")
+                result = clean_data.split(",")
+
+        if len(result) == 0:
+            result = [OPTION_EMPTY]
+
+        return result
+
+    @staticmethod
+    def get_available_options(system_data, key):
+        all_items = system_data.get(key)
+
+        available_items = {OPTION_EMPTY: OPTION_EMPTY}
+
+        for item_key in all_items:
+            item = all_items[item_key]
+            item_name = item.get(CONF_NAME)
+
+            available_items[item_key] = item_name
+
+        return available_items
+
+    async def valid_login(self):
         errors = None
         config_data = self.config_manager.data
 

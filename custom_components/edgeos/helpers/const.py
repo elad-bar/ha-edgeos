@@ -139,6 +139,9 @@ DEFAULT_DATE_FORMAT = "%x %X"
 
 EDGEOS_DATA_LOG = "edgeos_data.log"
 
+DOMAIN_LOGGER = "logger"
+SERVICE_SET_LEVEL = "set_level"
+
 INTERFACES_MAIN_MAP = {
     LINK_UP: {ATTR_NAME: "Connected", ATTR_UNIT_OF_MEASUREMENT: "Connectivity"},
     "speed": {ATTR_NAME: "Link Speed (Mbps)"},
@@ -225,3 +228,22 @@ DOMAIN_UNLOAD = "unload"
 OPTION_EMPTY = " NONE "
 
 DOMAIN_KEY_FILE = f"{DOMAIN}.key"
+
+CONF_LOG_LEVEL = "log_level"
+CONF_LOG_INCOMING_MESSAGES = "log_incoming_messages"
+
+CONF_STORE_DEBUG_FILE = "store_debug_file"
+
+LOG_LEVEL_DEFAULT = "Default"
+LOG_LEVEL_DEBUG = "Debug"
+LOG_LEVEL_INFO = "Info"
+LOG_LEVEL_WARNING = "Warning"
+LOG_LEVEL_ERROR = "Error"
+
+LOG_LEVELS = [
+    LOG_LEVEL_DEFAULT,
+    LOG_LEVEL_DEBUG,
+    LOG_LEVEL_INFO,
+    LOG_LEVEL_WARNING,
+    LOG_LEVEL_ERROR,
+]

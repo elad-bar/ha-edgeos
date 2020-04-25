@@ -7,8 +7,6 @@ import logging
 import sys
 from typing import Optional
 
-from homeassistant.const import CONF_HOST
-
 from ..clients.web_api import EdgeOSWebAPI
 from ..clients.web_login import EdgeOSWebLogin
 from ..clients.web_socket import EdgeOSWebSocket
@@ -48,7 +46,9 @@ class EdgeOSData:
 
         self._api = EdgeOSWebAPI(self._hass, url, self.edgeos_disconnection_handler)
 
-        self._ws = EdgeOSWebSocket(self._hass, url, topics, self.ws_handler)
+        self._ws = EdgeOSWebSocket(
+            self._hass, config_manager, url, topics, self.ws_handler
+        )
 
         self._edgeos_login_service = EdgeOSWebLogin(
             config_data.host, config_data.username, config_data.password_clear_text
@@ -94,9 +94,6 @@ class EdgeOSData:
     @property
     def is_initialized(self):
         return self._is_initialized
-
-    def log_events(self, log_event_enabled):
-        self._ws.log_events(log_event_enabled)
 
     async def edgeos_disconnection_handler(self):
         _LOGGER.debug(f"Disconnection detected, reconnecting...")
@@ -439,48 +436,41 @@ class EdgeOSData:
                 return
 
             all_devices = self.get_devices().keys()
-            updated_devices = []
 
-            for device_key in all_devices:
-                device = self.get_device(device_key)
+            for hostname in all_devices:
+                device = self.get_device(hostname)
                 device_ip = device.get(IP)
                 device_data = data.get(device_ip)
+                is_connected = device_data is not None
 
-                if device_data is None:
-                    self.check_last_activity(device)
-                    updated_devices.append({CONF_HOST: device_key, "device": device})
+                device[CONNECTED] = is_connected
 
-                    continue
+                if is_connected:
+                    traffic: dict = {}
 
-                traffic = {}
-                for item in DEVICE_SERVICES_STATS_MAP:
-                    traffic[item] = int(0)
+                    for item in DEVICE_SERVICES_STATS_MAP:
+                        traffic[item] = int(0)
 
-                for service in device_data:
-                    service_data = device_data.get(service, {})
-                    for item in service_data:
-                        current_value = traffic.get(item, 0)
-                        service_data_item_value = 0
+                    for service in device_data:
+                        service_data = device_data.get(service, {})
+                        for item in service_data:
+                            current_value = traffic.get(item, 0)
+                            service_data_item_value = 0
 
-                        if item in service_data and service_data[item] != "":
-                            service_data_item_value = int(service_data[item])
+                            if item in service_data and service_data[item] != "":
+                                service_data_item_value = int(service_data[item])
 
-                        if "x_rate" in item and current_value > 0:
-                            device[LAST_ACTIVITY] = datetime.now()
+                            if "x_rate" in item and current_value > 0:
+                                device[LAST_ACTIVITY] = datetime.now()
 
-                        traffic_value = current_value + service_data_item_value
+                            traffic_value = current_value + service_data_item_value
 
-                        traffic[item] = traffic_value
-                        device[item] = traffic_value
+                            traffic[item] = traffic_value
+                            device[item] = traffic_value
 
-                self.check_last_activity(device)
-                updated_devices.append({CONF_HOST: device_key, "device": device})
+                    device[CONNECTED] = is_connected
 
-            for updated_device in updated_devices:
-                hostname = updated_device.get(CONF_HOST)
-                device = updated_device.get("device")
-
-                self.set_device(hostname, device)
+                    self.set_device(hostname, device)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -561,13 +551,14 @@ class EdgeOSData:
     def set_device(self, hostname, device):
         all_devices = self.get_devices()
 
-        if hostname not in all_devices:
-            all_devices[hostname] = {}
+        if hostname is not None:
+            if hostname not in all_devices:
+                all_devices[hostname] = {}
 
-        current_device = all_devices[hostname]
+            current_device = all_devices[hostname]
 
-        for key in device:
-            current_device[key] = device[key]
+            for key in device:
+                current_device[key] = device[key]
 
     def get_device(self, hostname):
         devices = self.get_devices()
