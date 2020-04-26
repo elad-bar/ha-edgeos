@@ -162,13 +162,22 @@ class EntityManager:
                             entity_component.entity_id = entity_id
 
                             state = self.hass.states.get(entity_id)
-                            restored = state.attributes.get("restored", False)
+
+                            if state is None:
+                                restored = True
+                            else:
+                                restored = state.attributes.get("restored", False)
+
+                                if restored:
+                                    _LOGGER.info(
+                                        f"Entity {entity.name} restored | {entity_id}"
+                                    )
 
                             if restored:
-                                _LOGGER.info(
-                                    f"Entity {entity.name} restored | {entity_id}"
-                                )
-                                entities_to_add.append(entity_component)
+                                entity_item = self.entity_registry.async_get(entity_id)
+
+                                if entity_item is None or not entity_item.disabled:
+                                    entities_to_add.append(entity_component)
                         else:
                             entities_to_add.append(entity_component)
 

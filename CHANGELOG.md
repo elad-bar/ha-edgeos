@@ -1,5 +1,13 @@
 # Changelog
 
+## 2020-04-26
+
+**Fixed bugs:**
+
+- Fix disabled entities are getting enabled after periodic update (update interval)
+
+## 2020-04-25
+
 **Implemented enhancements:**
 
 - Simplified the way calculating whether device is connected or not, based on report of traffic analysis instead of calculating amount of traffic (bps) over the last 3 minutes [\#24](https://github.com/elad-bar/ha-edgeos/issues/24) 
