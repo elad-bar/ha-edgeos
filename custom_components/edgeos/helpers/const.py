@@ -205,6 +205,7 @@ ENTITY_ATTRIBUTES = "attributes"
 ENTITY_NAME = "name"
 ENTITY_DEVICE_NAME = "device-name"
 ENTITY_UNIQUE_ID = "unique-id"
+ENTITY_DISABLED = "disabled"
 
 ENTITY_STATUS = "entity-status"
 ENTITY_STATUS_EMPTY = None
