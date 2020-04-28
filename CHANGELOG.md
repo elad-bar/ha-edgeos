@@ -1,6 +1,12 @@
 # Changelog
 
-## 2020-04-28
+## 2020-04-28 #2
+
+**Fixed bugs:**
+
+- Async login without sleep 1 second
+
+## 2020-04-28 #1
 
 **Fixed bugs:**
 

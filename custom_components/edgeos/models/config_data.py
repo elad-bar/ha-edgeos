@@ -47,6 +47,12 @@ class ConfigData:
 
         return has_credentials
 
+    @property
+    def url(self):
+        url = API_URL_TEMPLATE.format(self.host)
+
+        return url
+
     def __repr__(self):
         obj = {
             CONF_NAME: self.name,

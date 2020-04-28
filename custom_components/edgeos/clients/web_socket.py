@@ -24,10 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EdgeOSWebSocket:
-    def __init__(self, hass, config_manager, edgeos_url, topics, edgeos_callback):
+    def __init__(self, hass, config_manager, topics, edgeos_callback):
         self._config_manager = config_manager
         self._last_update = datetime.now()
-        self._edgeos_url = edgeos_url
         self._edgeos_callback = edgeos_callback
         self._hass = hass
         self._session_id = None
@@ -37,10 +36,6 @@ class EdgeOSWebSocket:
         self._pending_payloads = []
         self._shutting_down = False
         self._is_connected = False
-
-        url = urlparse(self._edgeos_url)
-
-        self._ws_url = WEBSOCKET_URL_TEMPLATE.format(url.netloc)
 
         def send_keep_alive(internal_now):
             data = self.get_keep_alive_data()
@@ -56,6 +51,14 @@ class EdgeOSWebSocket:
             return self._config_manager.data
 
         return None
+
+    @property
+    def ws_url(self):
+        url = urlparse(self.config_data.url)
+
+        ws_url = WEBSOCKET_URL_TEMPLATE.format(url.netloc)
+
+        return ws_url
 
     async def initialize(self, cookies, session_id):
         _LOGGER.debug("Initializing WS connection")
@@ -85,8 +88,8 @@ class EdgeOSWebSocket:
                     _LOGGER.info(f"Connection attempt #{connection_attempt}")
 
                     async with self._session.ws_connect(
-                        self._ws_url,
-                        origin=self._edgeos_url,
+                        self.ws_url,
+                        origin=self.config_data.url,
                         ssl=False,
                         max_msg_size=MAX_MSG_SIZE,
                         timeout=SCAN_INTERVAL_WS_TIMEOUT,

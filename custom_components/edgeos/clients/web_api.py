@@ -5,12 +5,16 @@ https://home-assistant.io/components/edgeos/
 """
 import logging
 import sys
+from typing import Optional
 
-import aiohttp
+from aiohttp import ClientSession
 
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+from . import LoginException
 from ..helpers.const import *
+from ..managers.configuration_manager import ConfigManager
 
 REQUIREMENTS = ["aiohttp"]
 
@@ -18,27 +22,31 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EdgeOSWebAPI:
-    def __init__(self, hass, edgeos_url, disconnection_handler):
+    def __init__(self, hass, config_manager: ConfigManager, disconnection_handler):
+        self._config_manager = config_manager
         self._last_update = datetime.now()
-        self._session = None
+        self._session: Optional[ClientSession] = None
 
         self._last_valid = EMPTY_LAST_VALID
-        self._edgeos_url = edgeos_url
         self._hass = hass
         self._is_connected = False
+        self._cookies = {}
 
+        self._product = PRODUCT_NAME
         self._disconnection_handler = disconnection_handler
 
         self._disconnections = 0
 
-    async def initialize(self, cookies):
+    async def initialize(self):
         if self._hass is None:
             if self._session is not None:
                 await self._session.close()
 
-            self._session = aiohttp.client.ClientSession(cookies=cookies)
+            self._session = ClientSession()
         else:
-            self._session = async_create_clientsession(hass=self._hass, cookies=cookies)
+            self._session = async_create_clientsession(
+                hass=self._hass, cookies=self._cookies
+            )
 
     @property
     def is_initialized(self):
@@ -47,6 +55,86 @@ class EdgeOSWebAPI:
     @property
     def is_connected(self):
         return self._is_connected
+
+    @property
+    def product(self):
+        return self._product
+
+    @property
+    def session_id(self):
+        session_id = self.get_cookie_data(COOKIE_PHPSESSID)
+
+        return session_id
+
+    @property
+    def breaker_session_id(self):
+        breaker_session_id = self.get_cookie_data(COOKIE_BEAKER_SESSION_ID)
+
+        return breaker_session_id
+
+    @property
+    def cookies_data(self):
+        return self._cookies
+
+    def get_cookie_data(self, cookie_key):
+        cookie_data = None
+
+        if self._cookies is not None:
+            cookie_data = self._cookies.get(cookie_key)
+
+        return cookie_data
+
+    async def login(self, throw_exception=False):
+        logged_in = False
+
+        try:
+            username = self._config_manager.data.username
+            password = self._config_manager.data.password_clear_text
+
+            credentials = {CONF_USERNAME: username, CONF_PASSWORD: password}
+
+            url = self._config_manager.data.url
+
+            async with self._session.post(url, data=credentials, ssl=False) as response:
+                all_cookies = self._session.cookie_jar.filter_cookies(response.url)
+
+                for key, cookie in all_cookies.items():
+                    self._cookies[cookie.key] = cookie.value
+
+                status_code = response.status
+
+                response.raise_for_status()
+
+                logged_in = (
+                    self.breaker_session_id is not None
+                    and self.breaker_session_id == self.session_id
+                )
+
+                if logged_in:
+                    html = await response.text()
+                    html_lines = html.splitlines()
+                    for line in html_lines:
+                        if "EDGE.DeviceModel" in line:
+                            line_parts = line.split(" = ")
+                            value = line_parts[len(line_parts) - 1]
+                            self._product = value.replace("'", "")
+                else:
+                    _LOGGER.error(f"Failed to login, Invalid credentials")
+
+                    status_code = 403
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(f"Failed to login, Error: {ex}, Line: {line_number}")
+
+            status_code = 404
+
+        if throw_exception and status_code is not None and status_code >= 400:
+            raise LoginException(status_code)
+
+        return logged_in
 
     async def async_get(self, url):
         result = None
@@ -184,6 +272,6 @@ class EdgeOSWebAPI:
         return result
 
     def get_edgeos_api_endpoint(self, controller):
-        url = EDGEOS_API_URL.format(self._edgeos_url, controller)
+        url = EDGEOS_API_URL.format(self._config_manager.data.url, controller)
 
         return url

@@ -5,8 +5,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
 from .. import get_ha
+from ..clients import LoginException
 from ..clients.web_api import EdgeOSWebAPI
-from ..clients.web_login import EdgeOSWebLogin, LoginException
 from ..helpers.const import *
 from ..managers.configuration_manager import ConfigManager
 from ..managers.password_manager import PasswordManager
@@ -190,22 +190,15 @@ class ConfigFlowManager:
         config_data = self.config_manager.data
 
         name = config_data.name
-        host = config_data.host
-        username = config_data.username
-        password = config_data.password_clear_text
 
         try:
-            login_api = EdgeOSWebLogin(host, username, password)
+            api = EdgeOSWebAPI(
+                self._hass, self.config_manager, self.edgeos_disconnection_handler
+            )
 
-            if login_api.login(throw_exception=True):
-                edgeos_url = API_URL_TEMPLATE.format(host)
-                api = EdgeOSWebAPI(
-                    self._hass, edgeos_url, self.edgeos_disconnection_handler
-                )
-                cookies = login_api.cookies_data
+            await api.initialize()
 
-                await api.initialize(cookies)
-
+            if await api.login(throw_exception=True):
                 await api.heartbeat()
 
                 if not api.is_connected:

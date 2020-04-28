@@ -8,7 +8,6 @@ import sys
 from typing import Optional
 
 from ..clients.web_api import EdgeOSWebAPI
-from ..clients.web_login import EdgeOSWebLogin
 from ..clients.web_socket import EdgeOSWebSocket
 from ..helpers.const import *
 from ..models.config_data import ConfigData
@@ -38,25 +37,20 @@ class EdgeOSData:
 
         config_data = self._config_manager.data
 
-        url = API_URL_TEMPLATE.format(config_data.host)
         topics = self._ws_handlers.keys()
 
         self.hostname = config_data.host
         self.version = "N/A"
 
-        self._api = EdgeOSWebAPI(self._hass, url, self.edgeos_disconnection_handler)
-
-        self._ws = EdgeOSWebSocket(
-            self._hass, config_manager, url, topics, self.ws_handler
+        self._api = EdgeOSWebAPI(
+            self._hass, config_manager, self.edgeos_disconnection_handler
         )
 
-        self._edgeos_login_service = EdgeOSWebLogin(
-            config_data.host, config_data.username, config_data.password_clear_text
-        )
+        self._ws = EdgeOSWebSocket(self._hass, config_manager, topics, self.ws_handler)
 
     @property
     def product(self):
-        return self._edgeos_login_service.product
+        return self._api.product
 
     @property
     def config_data(self) -> Optional[ConfigData]:
@@ -67,19 +61,18 @@ class EdgeOSData:
 
     async def initialize(self, post_login_action=None):
         try:
-            if self._edgeos_login_service.login():
-                cookies = self._edgeos_login_service.cookies_data
-                session_id = self._edgeos_login_service.session_id
+            _LOGGER.debug(f"Initializing API")
+            await self._api.initialize()
 
-                _LOGGER.debug(f"Initializing API")
-
-                await self._api.initialize(cookies)
-
+            if await self._api.login():
                 _LOGGER.debug(f"Requesting initial data")
                 await self.refresh()
 
                 if post_login_action is not None:
                     await post_login_action()
+
+                cookies = self._api.cookies_data
+                session_id = self._api.session_id
 
                 _LOGGER.debug(f"Initializing WS using session: {session_id}")
                 await self._ws.initialize(cookies, session_id)
