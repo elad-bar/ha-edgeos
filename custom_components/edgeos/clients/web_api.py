@@ -7,7 +7,7 @@ import logging
 import sys
 from typing import Optional
 
-from aiohttp import ClientSession
+from aiohttp import ClientSession, CookieJar
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -38,14 +38,16 @@ class EdgeOSWebAPI:
         self._disconnections = 0
 
     async def initialize(self):
+        cookie_jar = CookieJar(unsafe=True)
+
         if self._hass is None:
             if self._session is not None:
                 await self._session.close()
 
-            self._session = ClientSession()
+            self._session = ClientSession(cookie_jar=cookie_jar)
         else:
             self._session = async_create_clientsession(
-                hass=self._hass, cookies=self._cookies
+                hass=self._hass, cookies=self._cookies, cookie_jar=cookie_jar,
             )
 
     @property

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2020-04-28 #3
+
+**Fixed bugs:**
+
+- Invalid credentials to EdgeOS Router when using IP [\#25](https://github.com/elad-bar/ha-edgeos/issues/25)
+
 ## 2020-04-28 #2
 
 **Fixed bugs:**
