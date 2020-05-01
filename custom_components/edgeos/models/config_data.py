@@ -19,7 +19,7 @@ class ConfigData:
     log_incoming_messages: bool
 
     def __init__(self):
-        self.name = ""
+        self.name = DEFAULT_NAME
         self.host = ""
         self.port = 0
         self.username = ""

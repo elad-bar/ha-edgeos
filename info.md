@@ -48,6 +48,11 @@ EdgeOS password is not encrypted, please remove integration and reintegrate
 
 Fields name | Type | Required | Default | Description
 --- | --- | --- | --- | --- |
+Host | Textbox | + | - | Hostname or IP address to access EdgeOS device
+Username | Textbox | + | - | Username of user with `Operator` level access or higher, better to create a dedicated user for that integration for faster issues identification
+Password | Textbox  | + | - | 
+Clear credentials | Check-box | + | Unchecked |  Will reset username and password (Not being stored under options)
+Unit | Drop-down | + | Bytes | Unit for sensors, available options are: Bytes, KiloBytes, MegaBytes  
 Monitored devices | Drop-down | + | NONE | Devices to monitor using binary_sensor and sensor
 Monitored interfaces | Drop-down | + | NONE | Interfaces to monitor using binary_sensor and sensor,
 Track | Drop-down | + | NONE | Devices to track using device_trac

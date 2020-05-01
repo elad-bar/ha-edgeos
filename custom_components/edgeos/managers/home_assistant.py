@@ -53,6 +53,10 @@ class EdgeOSHomeAssistant:
         self._update_entities = update_entities
 
     @property
+    def config_manager(self) -> ConfigManager:
+        return self._config_manager
+
+    @property
     def config_data(self) -> Optional[ConfigData]:
         if self._config_manager is not None:
             return self._config_manager.data

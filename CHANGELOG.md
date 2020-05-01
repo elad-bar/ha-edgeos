@@ -1,5 +1,12 @@
 # Changelog
 
+## 2020-05-01
+
+**Implemented enhancements:**
+
+- More enhancements to options, ability to change setup details
+- Support new translation format of HA 0.109.0
+
 ## 2020-04-28 #3
 
 **Fixed bugs:**

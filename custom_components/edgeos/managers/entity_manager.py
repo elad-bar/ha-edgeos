@@ -3,7 +3,7 @@ import sys
 from typing import Dict, List, Optional
 
 from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SOURCE_TYPE_ROUTER
-from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_HOST
+from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -11,6 +11,7 @@ from ..helpers.const import *
 from ..managers.data_manager import EdgeOSData
 from ..models.config_data import ConfigData
 from ..models.entity_data import EntityData
+from .configuration_manager import ConfigManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,12 +33,20 @@ class EntityManager:
         return self.ha.entity_registry
 
     @property
+    def config_manager(self) -> ConfigManager:
+        return self.ha.config_manager
+
+    @property
     def config_data(self) -> ConfigData:
         return self.ha.config_data
 
     @property
     def data_manager(self) -> EdgeOSData:
         return self.ha.data_manager
+
+    @property
+    def integration_title(self) -> str:
+        return self.config_manager.config_entry.title
 
     @property
     def system_data(self):
@@ -157,7 +166,7 @@ class EntityManager:
                         step = f"Mark as created - {domain} -> {entity_key}"
 
                         entity_component = domain_component(
-                            self.hass, self.config_data.name, entity
+                            self.hass, self.config_manager.config_entry.entry_id, entity
                         )
 
                         if entity_id is not None:
@@ -266,7 +275,7 @@ class EntityManager:
     ):
         try:
             if key in allowed_items:
-                entity_name = f"{DEFAULT_NAME} {sensor_type} {key}"
+                entity_name = f"{self.integration_title} {sensor_type} {key}"
 
                 main_entity_details = data.get(main_attribute, FALSE_STR)
 
@@ -322,7 +331,7 @@ class EntityManager:
         unknown_devices = self.system_data.get(UNKNOWN_DEVICES_KEY)
 
         try:
-            entity_name = f"{DEFAULT_NAME} Unknown Devices"
+            entity_name = f"{self.integration_title} Unknown Devices"
 
             state = len(unknown_devices)
             if state < 1:
@@ -345,7 +354,7 @@ class EntityManager:
         self, system_state, api_last_update, web_socket_last_update
     ):
         try:
-            entity_name = f"{DEFAULT_NAME} {ATTR_SYSTEM_UPTIME}"
+            entity_name = f"{self.integration_title} {ATTR_SYSTEM_UPTIME}"
 
             state = system_state.get(UPTIME, 0)
             attributes = {}
@@ -374,7 +383,7 @@ class EntityManager:
         self, system_state, api_last_update, web_socket_last_update
     ):
         try:
-            entity_name = f"{DEFAULT_NAME} {ATTR_SYSTEM_STATUS}"
+            entity_name = f"{self.integration_title} {ATTR_SYSTEM_STATUS}"
 
             attributes = {}
             is_alive = False
@@ -408,7 +417,7 @@ class EntityManager:
             allowed_items = self.config_data.device_trackers
 
             if host in allowed_items:
-                entity_name = f"{DEFAULT_NAME} {host}"
+                entity_name = f"{self.integration_title} {host}"
 
                 state = self.data_manager.is_device_online(host)
 

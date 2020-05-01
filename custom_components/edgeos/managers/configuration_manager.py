@@ -18,13 +18,7 @@ class ConfigManager:
         data = config_entry.data
         options = config_entry.options
 
-        result = ConfigData()
-
-        result.host = data.get(CONF_HOST)
-        result.name = data.get(CONF_NAME)
-        result.username = data.get(CONF_USERNAME)
-        result.password = data.get(CONF_PASSWORD)
-        result.unit = data.get(CONF_UNIT)
+        result: ConfigData = self.get_basic_data(data)
 
         result.monitored_devices = options.get(CONF_MONITORED_DEVICES, [])
         result.monitored_interfaces = options.get(CONF_MONITORED_INTERFACES, [])
@@ -40,6 +34,19 @@ class ConfigManager:
 
         self.config_entry = config_entry
         self.data = result
+
+    @staticmethod
+    def get_basic_data(data):
+        result = ConfigData()
+
+        if data is not None:
+            result.host = data.get(CONF_HOST)
+            result.name = data.get(CONF_NAME, DEFAULT_NAME)
+            result.username = data.get(CONF_USERNAME)
+            result.password = data.get(CONF_PASSWORD)
+            result.unit = data.get(CONF_UNIT, ATTR_BYTE)
+
+        return result
 
     @staticmethod
     def _get_config_data_item(key, options, data):

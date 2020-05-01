@@ -7,7 +7,6 @@ import logging
 import sys
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from .helpers import async_set_ha, clear_ha, get_ha, handle_log_level
@@ -31,9 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         _LOGGER.debug(f"Starting async_setup_entry of {DOMAIN}")
         entry.add_update_listener(async_options_updated)
-        name = entry.data.get(CONF_NAME)
 
-        await async_set_ha(hass, name, entry)
+        await async_set_ha(hass, entry)
 
         initialized = True
 
@@ -48,13 +46,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    name = entry.data.get(CONF_NAME)
-    ha = get_ha(hass, name)
+    ha = get_ha(hass, entry.entry_id)
 
     if ha is not None:
         await ha.async_remove()
 
-    clear_ha(hass, name)
+    clear_ha(hass, entry.entry_id)
 
     return True
 
@@ -65,8 +62,7 @@ async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.info(f"async_options_updated, Entry: {entry.as_dict()} ")
 
-    name = entry.data.get(CONF_NAME)
-    ha = get_ha(hass, name)
+    ha = get_ha(hass, entry.entry_id)
 
     if ha is not None:
         await ha.async_update_entry(entry)

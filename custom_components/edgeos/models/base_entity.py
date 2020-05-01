@@ -3,7 +3,6 @@ import sys
 from typing import Any, Callable, Optional
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -28,10 +27,7 @@ async def async_setup_base_entry(
     _LOGGER.debug(f"Starting async_setup_entry {domain}")
 
     try:
-        entry_data = entry.data
-        name = entry_data.get(CONF_NAME)
-
-        ha: EdgeOSHomeAssistant = get_ha(hass, name)
+        ha: EdgeOSHomeAssistant = get_ha(hass, entry.entry_id)
         entity_manager = ha.entity_manager
 
         entity_manager.set_domain_component(domain, async_add_entities, component)
@@ -133,7 +129,10 @@ class EdgeOSEntity(Entity):
 
                 entity = self.entity_manager.get_entity(self.current_domain, self.name)
 
-                if entity.disabled:
+                if entity is None:
+                    _LOGGER.debug(f"Skip updating {self.name}, Entity is None")
+
+                elif entity.disabled:
                     _LOGGER.debug(f"Skip updating {self.name}, Entity is disabled")
 
                 else:

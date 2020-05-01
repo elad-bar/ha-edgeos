@@ -25,7 +25,7 @@ def get_ha(hass: HomeAssistant, name):
     return ha
 
 
-async def async_set_ha(hass: HomeAssistant, name, entry: ConfigEntry):
+async def async_set_ha(hass: HomeAssistant, entry: ConfigEntry):
     initialized = False
     try:
         if DATA_EDGEOS not in hass.data:
@@ -36,12 +36,12 @@ async def async_set_ha(hass: HomeAssistant, name, entry: ConfigEntry):
 
         password_manager = hass.data[PASSWORD_MANAGER_EDGEOS]
 
-        if name in hass.data[DATA_EDGEOS]:
-            _LOGGER.info(f"EdgeOS {name} already defined")
+        if entry.entry_id in hass.data[DATA_EDGEOS]:
+            _LOGGER.info(f"EdgeOS {entry.title} already defined")
         else:
             ha = EdgeOSHomeAssistant(hass, password_manager)
 
-            hass.data[DATA_EDGEOS][name] = ha
+            hass.data[DATA_EDGEOS][entry.entry_id] = ha
 
             await ha.async_init(entry)
 

@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EdgeOSWebAPI:
-    def __init__(self, hass, config_manager: ConfigManager, disconnection_handler):
+    def __init__(self, hass, config_manager: ConfigManager, disconnection_handler=None):
         self._config_manager = config_manager
         self._last_update = datetime.now()
         self._session: Optional[ClientSession] = None
@@ -150,7 +150,9 @@ class EdgeOSWebAPI:
                 if response.status == 403:
                     if self._disconnections + 1 < MAXIMUM_RECONNECT:
                         self._disconnections = self._disconnections + 1
-                        await self._disconnection_handler()
+
+                        if self._disconnection_handler is not None:
+                            await self._disconnection_handler()
                     else:
                         _LOGGER.error(
                             f"Failed to make authenticated request to {url} {self._disconnections} times"

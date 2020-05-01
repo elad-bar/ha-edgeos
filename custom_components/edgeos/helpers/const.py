@@ -6,7 +6,14 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSOR
 from homeassistant.components.device_tracker import DOMAIN as DOMAIN_DEVICE_TRACKER
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
-from homeassistant.const import ATTR_NAME, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    ATTR_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.helpers import config_validation as cv
 
 VERSION = "2.0.0"
@@ -41,6 +48,20 @@ CONF_TRACK_DEVICES = "track_devices"
 CONF_TRACK_DEVICES_CLEAR = f"{CONF_TRACK_DEVICES}{CLEAR_SUFFIX}"
 CONF_UNIT = "unit"
 CONF_UPDATE_INTERVAL = "update_interval"
+CONF_CLEAR_CREDENTIALS = "clear-credentials"
+CONF_ARR = [CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_UNIT]
+
+DROP_DOWNS_CONF = [
+    CONF_MONITORED_DEVICES,
+    CONF_MONITORED_INTERFACES,
+    CONF_TRACK_DEVICES,
+]
+
+ENTRY_PRIMARY_KEY = CONF_NAME
+
+CONFIG_FLOW_DATA = "config_flow_data"
+CONFIG_FLOW_OPTIONS = "config_flow_options"
+CONFIG_FLOW_INIT = "config_flow_init"
 
 DEFAULT_UPDATE_INTERVAL = 1
 

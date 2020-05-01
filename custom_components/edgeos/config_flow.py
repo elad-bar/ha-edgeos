@@ -3,19 +3,18 @@ import logging
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import callback
 
-from . import get_ha
 from .helpers.const import *
 from .managers.config_flow_manager import ConfigFlowManager
+from .models import AlreadyExistsError, LoginError
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class EdgeOSFlowHandler(config_entries.ConfigFlow):
-    """Handle a EdgeOS config flow."""
+class DomainFlowHandler(config_entries.ConfigFlow):
+    """Handle a domain config flow."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
@@ -29,7 +28,7 @@ class EdgeOSFlowHandler(config_entries.ConfigFlow):
     @callback
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
-        return EdgeOSOptionsFlowHandler(config_entry)
+        return DomainOptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
@@ -37,43 +36,40 @@ class EdgeOSFlowHandler(config_entries.ConfigFlow):
 
         errors = None
 
-        self._config_flow.initialize(self.hass)
+        await self._config_flow.initialize(self.hass)
+
+        new_user_input = self._config_flow.clone_items(user_input)
 
         if user_input is not None:
-            if CONF_PASSWORD in user_input:
-                password_clear_text = user_input[CONF_PASSWORD]
-                password = self._config_flow.password_manager.encrypt(
-                    password_clear_text
+            try:
+                await self._config_flow.update_data(user_input, CONFIG_FLOW_DATA)
+
+                title, data = self._config_flow.get_data_user_input()
+
+                return self.async_create_entry(title=title, data=data)
+            except LoginError as lex:
+                _LOGGER.warning(f"Cannot complete login")
+
+                errors = lex.errors
+
+            except AlreadyExistsError as aeex:
+                _LOGGER.warning(
+                    f"{DEFAULT_NAME} with {ENTRY_PRIMARY_KEY}: {aeex.title} already exists"
                 )
 
-                user_input[CONF_PASSWORD] = password
+                errors = {"base": "already_configured"}
 
-            self._config_flow.update_data(user_input, True)
+        schema = self._config_flow.get_default_data(new_user_input)
 
-            name = self._config_flow.config_data.name
-
-            ha = get_ha(self.hass, self._config_flow.config_data.name)
-
-            if ha is None:
-                errors = await self._config_flow.valid_login()
-            else:
-                _LOGGER.warning(f"EdgeOS ({name}) already configured")
-
-                return self.async_abort(
-                    reason="already_configured", description_placeholders=user_input
-                )
-
-            if errors is None:
-                _LOGGER.info(f"Storing configuration data: {user_input}")
-
-                return self.async_create_entry(title=name, data=user_input)
-
-        schema = self._config_flow.get_default_data()
-
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders=new_user_input,
+        )
 
     async def async_step_import(self, info):
-        """Import existing configuration from Z-Wave."""
+        """Import existing configuration."""
         _LOGGER.debug(f"Starting async_step_import of {DEFAULT_NAME}")
 
         title = f"{DEFAULT_NAME} (import from configuration.yaml)"
@@ -81,46 +77,54 @@ class EdgeOSFlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(title=title, data=info)
 
 
-class EdgeOSOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle Plex options."""
+class DomainOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle domain options."""
 
     def __init__(self, config_entry: ConfigEntry):
-        """Initialize EdgeOS options flow."""
+        """Initialize domain options flow."""
         super().__init__()
 
-        self._config_flow = ConfigFlowManager(config_entry)
+        self._config_entry = config_entry
+
+        self._config_flow = ConfigFlowManager()
 
     async def async_step_init(self, user_input=None):
-        """Manage the EdgeOS options."""
+        """Manage the domain options."""
         return await self.async_step_edge_os_additional_settings(user_input)
 
     async def async_step_edge_os_additional_settings(self, user_input=None):
-        _LOGGER.info(f"async_step_edge_os_additional_settings: {user_input}")
+        _LOGGER.info(f"Starting additional settings step: {user_input}")
+        errors = None
 
-        self._config_flow.initialize(self.hass)
+        await self._config_flow.initialize(self.hass, self._config_entry)
 
         if user_input is not None:
-            self._config_flow.update_options(user_input, True)
+            if user_input is not None:
+                try:
+                    await self._config_flow.update_options(
+                        user_input, CONFIG_FLOW_OPTIONS
+                    )
 
-            options = self._config_flow.options
+                    title, data = self._config_flow.get_options_user_input()
 
-            if CONF_STORE_DEBUG_FILE in options:
-                if options.get(CONF_STORE_DEBUG_FILE, False):
-                    ha = get_ha(self.hass, self._config_flow.config_data.name)
+                    return self.async_create_entry(title=title, data=data)
+                except LoginError as lex:
+                    _LOGGER.warning(f"Cannot complete login")
 
-                    if ha is not None:
-                        ha.service_save_debug_data()
+                    errors = lex.errors
 
-                del options[CONF_STORE_DEBUG_FILE]
+                except AlreadyExistsError as aeex:
+                    _LOGGER.warning(
+                        f"{DEFAULT_NAME} with {ENTRY_PRIMARY_KEY}: {aeex.title} already exists"
+                    )
 
-            _LOGGER.info(f"Storing configuration options: {user_input}")
-
-            return self.async_create_entry(title="", data=self._config_flow.options)
+                    errors = {"base": "already_configured"}
 
         schema = self._config_flow.get_default_options()
 
         return self.async_show_form(
             step_id="edge_os_additional_settings",
             data_schema=schema,
-            description_placeholders=self._config_flow.data,
+            errors=errors,
+            description_placeholders=user_input,
         )
