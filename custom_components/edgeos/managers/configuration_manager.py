@@ -27,16 +27,10 @@ class ConfigManager:
         result.log_level = options.get(CONF_LOG_LEVEL, LOG_LEVEL_DEFAULT)
         result.log_incoming_messages = options.get(CONF_LOG_INCOMING_MESSAGES, False)
 
-        if result.password is not None and len(result.password) > 0:
-            result.password_clear_text = self.password_manager.decrypt(result.password)
-        else:
-            result.password_clear_text = result.password
-
         self.config_entry = config_entry
         self.data = result
 
-    @staticmethod
-    def get_basic_data(data):
+    def get_basic_data(self, data):
         result = ConfigData()
 
         if data is not None:
@@ -45,6 +39,11 @@ class ConfigManager:
             result.username = data.get(CONF_USERNAME)
             result.password = data.get(CONF_PASSWORD)
             result.unit = data.get(CONF_UNIT, ATTR_BYTE)
+
+            if result.password is not None and len(result.password) > 0:
+                result.password_clear_text = self.password_manager.decrypt(result.password)
+            else:
+                result.password_clear_text = result.password
 
         return result
 
