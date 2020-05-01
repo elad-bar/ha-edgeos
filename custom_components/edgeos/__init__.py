@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         exc_type, exc_obj, tb = sys.exc_info()
         line_number = tb.tb_lineno
 
-        _LOGGER.error(f"Failed to load BlueIris, error: {ex}, line: {line_number}")
+        _LOGGER.error(f"Failed to load EdgeOS, error: {ex}, line: {line_number}")
 
     return initialized
 

@@ -1,4 +1,4 @@
-"""Config flow to configure HPPrinter."""
+"""Config flow to configure domain."""
 import logging
 
 from homeassistant import config_entries

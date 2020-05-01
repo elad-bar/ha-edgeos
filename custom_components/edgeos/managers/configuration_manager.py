@@ -14,6 +14,9 @@ class ConfigManager:
     def __init__(self, password_manager: PasswordManager):
         self.password_manager = password_manager
 
+    def set_data(self, data: ConfigData):
+        self.data = data
+
     def update(self, config_entry: ConfigEntry):
         data = config_entry.data
         options = config_entry.options
@@ -41,7 +44,9 @@ class ConfigManager:
             result.unit = data.get(CONF_UNIT, ATTR_BYTE)
 
             if result.password is not None and len(result.password) > 0:
-                result.password_clear_text = self.password_manager.decrypt(result.password)
+                result.password_clear_text = self.password_manager.decrypt(
+                    result.password
+                )
             else:
                 result.password_clear_text = result.password
 

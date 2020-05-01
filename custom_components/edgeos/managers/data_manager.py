@@ -399,12 +399,12 @@ class EdgeOSData:
         device_connected = device.get(CONNECTED, False)
         device_last_activity = device.get(LAST_ACTIVITY, date_minimum)
 
-        is_connected = FALSE_STR
+        is_connected = False
 
         time_since_last_action = (datetime.now() - device_last_activity).total_seconds()
 
         if time_since_last_action < DISCONNECTED_INTERVAL:
-            is_connected = TRUE_STR
+            is_connected = True
         else:
             if (
                 device_connected != is_connected
@@ -464,6 +464,8 @@ class EdgeOSData:
                     device[CONNECTED] = is_connected
 
                     self.set_device(hostname, device)
+                else:
+                    self.check_last_activity(device)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -575,11 +577,6 @@ class EdgeOSData:
     def is_device_online(self, hostname) -> bool:
         device = self.get_device(hostname)
 
-        connected = device.get(CONNECTED, FALSE_STR)
+        connected = device.get(CONNECTED, False)
 
-        if connected == TRUE_STR:
-            is_online = True
-        else:
-            is_online = False
-
-        return is_online
+        return connected

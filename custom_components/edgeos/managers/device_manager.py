@@ -3,8 +3,8 @@ import sys
 
 from homeassistant.helpers.device_registry import async_get_registry
 
-from .configuration_manager import ConfigManager
 from ..helpers.const import *
+from .configuration_manager import ConfigManager
 from .data_manager import EdgeOSData
 
 _LOGGER = logging.getLogger(__name__)

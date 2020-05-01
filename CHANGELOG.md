@@ -2,10 +2,15 @@
 
 ## 2020-05-01
 
+**Fixed bugs:**
+
+- Fix device_tracker didn't work correctly. It is always displayed not home
+
 **Implemented enhancements:**
 
 - More enhancements to options, ability to change setup details
 - Support new translation format of HA 0.109.0
+- Added __main__.py to root directory for debugging 
 
 ## 2020-04-28 #3
 

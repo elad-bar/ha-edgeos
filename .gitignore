@@ -62,4 +62,5 @@ log.txt
 
 venv/
 
-__main__.py
+test_consts.py
+edgeos.key

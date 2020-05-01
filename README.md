@@ -14,7 +14,7 @@ Look for "Integration with EdgeOS (Ubiquiti)" and install
 * Traffic Analysis set to 'Enabled' (both `dpi` and `export` enabled under `system/traffic-analysis`)
 
 #### Setup
-To add integration use Configuration -> Integrations -> Add `Blue Iris`
+To add integration use Configuration -> Integrations -> Add `EdgeOS`
 Integration supports  **multiple** EdgeOS devices
 
 Fields name | Type | Required | Default | Description
