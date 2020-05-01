@@ -1,14 +1,13 @@
 import asyncio
 import logging
 
-from homeassistant.core import HomeAssistant
-
 from custom_components.edgeos.managers.configuration_manager import ConfigManager
 from custom_components.edgeos.managers.data_manager import EdgeOSData
 from custom_components.edgeos.managers.password_manager import PasswordManager
 from custom_components.edgeos.models.config_data import ConfigData
-
 from test_consts import *
+
+from homeassistant.core import HomeAssistant
 
 logging.basicConfig(filename="log.txt", filemode="a", level="DEBUG")
 
@@ -51,8 +50,3 @@ class Test:
 if __name__ == "__main__":
     t = Test()
     loop.run_until_complete(t.initialize())
-
-
-
-
-
