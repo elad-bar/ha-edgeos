@@ -10,6 +10,7 @@ Provides an integration between EdgeOS (Ubiquiti) routers to Home Assistant.
 Look for "Integration with EdgeOS (Ubiquiti)" and install
 
 #### Requirements
+* EdgeRouter with version 1.10 at least
 * EdgeRouter User with 'Operator' level access or higher
 * Traffic Analysis set to 'Enabled' (both `dpi` and `export` enabled under `system/traffic-analysis`)
 
@@ -34,6 +35,7 @@ General authentication error (when failed to get valid response from device) |
 Could not retrieve device data from EdgeOS Router |
 Export (traffic-analysis) configuration is disabled, please enable |
 Deep Packet Inspection (traffic-analysis) configuration is disabled, please enable |
+Incompatible version (Required at least v1.10)
 
 ###### Password protection
 In latest version new capability added to encrypt password before saving integration settings to `.storage` </br>

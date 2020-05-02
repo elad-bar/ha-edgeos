@@ -77,7 +77,7 @@ COOKIE_PHPSESSID = "PHPSESSID"
 COOKIE_BEAKER_SESSION_ID = "beaker.session.id"
 
 MAXIMUM_RECONNECT = 3
-DISCONNECTED_INTERVAL = 120
+DISCONNECTED_INTERVAL = 180
 
 TRUE_STR = "true"
 FALSE_STR = "false"
@@ -243,7 +243,11 @@ CONNECTED_ICONS = {True: "mdi:lan-connect", False: "mdi:lan-disconnect"}
 
 SERVICE_LOG_EVENTS_SCHEMA = vol.Schema({vol.Required(ATTR_ENABLED): cv.boolean})
 
-HTTP_ERRORS = {404: "not_found", 403: "invalid_credentials"}
+HTTP_ERRORS = {
+    404: "not_found",
+    403: "invalid_credentials",
+    500: "incompatible_version",
+}
 
 DOMAIN_LOAD = "load"
 DOMAIN_UNLOAD = "unload"

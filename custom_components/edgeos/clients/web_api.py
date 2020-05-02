@@ -9,7 +9,6 @@ from typing import Optional
 
 from aiohttp import ClientSession, CookieJar
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from . import LoginException
@@ -69,10 +68,10 @@ class EdgeOSWebAPI:
         return session_id
 
     @property
-    def breaker_session_id(self):
-        breaker_session_id = self.get_cookie_data(COOKIE_BEAKER_SESSION_ID)
+    def beaker_session_id(self):
+        beaker_session_id = self.get_cookie_data(COOKIE_BEAKER_SESSION_ID)
 
-        return breaker_session_id
+        return beaker_session_id
 
     @property
     def cookies_data(self):
@@ -108,8 +107,8 @@ class EdgeOSWebAPI:
                 response.raise_for_status()
 
                 logged_in = (
-                    self.breaker_session_id is not None
-                    and self.breaker_session_id == self.session_id
+                    self.beaker_session_id is not None
+                    and self.beaker_session_id == self.session_id
                 )
 
                 if logged_in:
@@ -123,7 +122,10 @@ class EdgeOSWebAPI:
                 else:
                     _LOGGER.error(f"Failed to login, Invalid credentials")
 
-                    status_code = 403
+                    if self.beaker_session_id is None and self.session_id is not None:
+                        status_code = 500
+                    else:
+                        status_code = 403
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()

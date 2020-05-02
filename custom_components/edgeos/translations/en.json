@@ -23,7 +23,8 @@
       "invalid_export_configuration": "Export (traffic-analysis) configuration is disabled, please enable",
       "invalid_dpi_configuration": "Deep Packet Inspection (traffic-analysis) configuration is disabled, please enable",
       "empty_device_data": "Could not retrieve device data from EdgeOS Router",
-      "already_configured": "EdgeOS integration already configured with the name"
+      "already_configured": "EdgeOS integration already configured with the name",
+      "incompatible_version": "Incompatible version (Required at least v1.10)"
     }
   },
   "options": {
@@ -55,7 +56,8 @@
         "invalid_export_configuration": "Export (traffic-analysis) configuration is disabled, please enable",
         "invalid_dpi_configuration": "Deep Packet Inspection (traffic-analysis) configuration is disabled, please enable",
         "empty_device_data": "Could not retrieve device data from EdgeOS Router",
-        "already_configured": "EdgeOS integration already configured with the name"
+        "already_configured": "EdgeOS integration already configured with the name",
+        "incompatible_version": "Incompatible version (Required at least v1.10)"
       }
   }
 }

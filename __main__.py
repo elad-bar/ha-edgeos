@@ -4,6 +4,7 @@ import logging
 from custom_components.edgeos.managers.configuration_manager import ConfigManager
 from custom_components.edgeos.managers.data_manager import EdgeOSData
 from custom_components.edgeos.managers.password_manager import PasswordManager
+from custom_components.edgeos.managers.version_check import VersionCheck
 from custom_components.edgeos.models.config_data import ConfigData
 from test_consts import *
 
@@ -37,9 +38,16 @@ class Test:
 
         self._data_manager = EdgeOSData(self._hass, self._config_manager, self.update)
 
+        self._version_check = VersionCheck()
+
     def update(self):
-        _LOGGER.info(self._data_manager.edgeos_data)
-        _LOGGER.info(self._data_manager.system_data)
+        print(f"Version: {self._data_manager.version}")
+
+        #  print(self._version_check.is_compatible(self._data_manager.version))
+        #  print(self._version_check.is_compatible("1.9"))
+
+        #  _LOGGER.info(self._data_manager.edgeos_data)
+        #  _LOGGER.info(self._data_manager.system_data)
 
     async def initialize(self):
         await self._data_manager.initialize()

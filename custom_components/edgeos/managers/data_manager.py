@@ -434,11 +434,8 @@ class EdgeOSData:
                 device = self.get_device(hostname)
                 device_ip = device.get(IP)
                 device_data = data.get(device_ip)
-                is_connected = device_data is not None
 
-                device[CONNECTED] = is_connected
-
-                if is_connected:
+                if device_data is not None:
                     traffic: dict = {}
 
                     for item in DEVICE_SERVICES_STATS_MAP:
@@ -461,11 +458,9 @@ class EdgeOSData:
                             traffic[item] = traffic_value
                             device[item] = traffic_value
 
-                    device[CONNECTED] = is_connected
+                self.check_last_activity(device)
 
-                    self.set_device(hostname, device)
-                else:
-                    self.check_last_activity(device)
+                self.set_device(hostname, device)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()

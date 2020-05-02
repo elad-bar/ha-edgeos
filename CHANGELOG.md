@@ -1,5 +1,12 @@
 # Changelog
 
+## 2020-05-02
+
+**Implemented enhancements:**
+
+- Improved device tracker is home logic to consider traffic instead of just DPI report
+- Version validation upon adding new integration (Required at least v1.10)
+
 ## 2020-05-01
 
 **Fixed bugs:**
