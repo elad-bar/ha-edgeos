@@ -67,14 +67,20 @@ class EdgeOSData:
 
     async def initialize(self, post_login_action=None):
         try:
+            is_first_time = True
+
             while self._should_restart:
-                await self._initialize()
+                if is_first_time:
+                    is_first_time = False
 
-                _LOGGER.debug(
-                    f"Sleeping {RECONNECT_INTERVAL} seconds until next reconnect attempt"
-                )
+                else:
+                    _LOGGER.debug(
+                        f"Sleeping {RECONNECT_INTERVAL} seconds until next reconnect attempt"
+                    )
 
-                await sleep(RECONNECT_INTERVAL)
+                    await sleep(RECONNECT_INTERVAL)
+
+                await self._initialize(post_login_action)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -281,6 +287,8 @@ class EdgeOSData:
                     device[MAC] = mac
                     device[ATTR_NAME] = name
 
+                    self.check_last_activity(device)
+
                     self.set_device(hostname, device)
 
     def load_interfaces(self, device_data):
@@ -440,7 +448,7 @@ class EdgeOSData:
                 msg = [
                     f"Device {device_ip} disconnected",
                     f"due to inactivity since {device_last_activity}",
-                    f"({time_since_last_action} seconds",
+                    f"({time_since_last_action} seconds)",
                 ]
 
                 _LOGGER.info(" ".join(msg))
