@@ -3,6 +3,7 @@ This component provides support for Home Automation Manager (HAM).
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/edgeos/
 """
+from asyncio import sleep
 import logging
 import sys
 from typing import Optional
@@ -48,6 +49,8 @@ class EdgeOSData:
 
         self._ws = EdgeOSWebSocket(self._hass, config_manager, topics, self.ws_handler)
 
+        self._should_restart = True
+
     @property
     def product(self):
         return self._api.product
@@ -59,7 +62,29 @@ class EdgeOSData:
 
         return None
 
+    def disconnect(self):
+        self._ws.disconnect()
+
     async def initialize(self, post_login_action=None):
+        try:
+            while self._should_restart:
+                await self._initialize()
+
+                _LOGGER.debug(
+                    f"Sleeping {RECONNECT_INTERVAL} seconds until next reconnect attempt"
+                )
+
+                await sleep(RECONNECT_INTERVAL)
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(
+                f"Failed to initialize EdgeOS Manager, Error: {str(ex)}, Line: {line_number}"
+            )
+
+    async def _initialize(self, post_login_action=None):
         try:
             _LOGGER.debug(f"Initializing API")
             await self._api.initialize()
@@ -98,6 +123,8 @@ class EdgeOSData:
     async def terminate(self):
         try:
             _LOGGER.debug(f"Terminating WS")
+
+            self._should_restart = False
 
             await self._ws.close()
 

@@ -18,6 +18,8 @@ loop = asyncio.get_event_loop()
 
 
 class Test:
+    messages: int = 0
+
     def __init__(self):
         self._instance = None
 
@@ -40,8 +42,16 @@ class Test:
 
         self._version_check = VersionCheck()
 
+    async def terminate(self):
+        await self._data_manager.terminate()
+
     def update(self):
         print(f"Version: {self._data_manager.version}")
+
+        self.messages = self.messages + 1
+
+        if self.messages == 10:
+            self._data_manager.disconnect()
 
         #  print(self._version_check.is_compatible(self._data_manager.version))
         #  print(self._version_check.is_compatible("1.9"))

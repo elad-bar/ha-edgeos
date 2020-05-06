@@ -1,5 +1,11 @@
 # Changelog
 
+## 2020-05-06
+
+**Fixed bugs:**
+
+- Fix WebSocket disconnections [\#26](https://github.com/elad-bar/ha-edgeos/issues/26)
+
 ## 2020-05-02
 
 **Implemented enhancements:**
