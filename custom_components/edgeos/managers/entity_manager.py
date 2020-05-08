@@ -297,9 +297,7 @@ class EntityManager:
                         else:
                             name = name.format(self.config_data.unit)
 
-                            attributes[name] = (
-                                int(value) * BITS_IN_BYTE
-                            ) / self.config_data.unit_size
+                            attributes[name] = (int(value)) / self.config_data.unit_size
 
                 is_on = str(main_entity_details).lower() == TRUE_STR
 

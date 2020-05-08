@@ -1,6 +1,12 @@
 # Changelog
 
-## 2020-05-08
+## 2020-05-08 #2
+
+**Fixed bugs:**
+
+- Fix redundant calculation of bits to bytes as data is already bytes    
+
+## 2020-05-08 #1
 
 **Implemented enhancements:**
 
