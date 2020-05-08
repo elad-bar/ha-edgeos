@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020-05-07
+## 2020-05-08
 
 **Implemented enhancements:**
 
