@@ -17,6 +17,7 @@ class ConfigData:
     device_trackers: list
     log_level: str
     log_incoming_messages: bool
+    consider_away_interval: int
 
     def __init__(self):
         self.name = DEFAULT_NAME
@@ -33,6 +34,7 @@ class ConfigData:
         self.log_level = ""
         self.log_incoming_messages = False
         self.store_debug_files = False
+        self.consider_away_interval = DEFAULT_CONSIDER_AWAY_INTERVAL
 
     @property
     def unit_size(self):
@@ -66,6 +68,7 @@ class ConfigData:
             CONF_TRACK_DEVICES: self.device_trackers,
             CONF_LOG_LEVEL: self.log_level,
             CONF_LOG_INCOMING_MESSAGES: self.log_incoming_messages,
+            CONF_CONSIDER_AWAY_INTERVAL: self.consider_away_interval,
         }
 
         to_string = f"{obj}"

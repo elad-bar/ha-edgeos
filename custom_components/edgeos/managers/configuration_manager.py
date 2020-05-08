@@ -29,6 +29,9 @@ class ConfigManager:
         result.update_interval = options.get(CONF_UPDATE_INTERVAL, 1)
         result.log_level = options.get(CONF_LOG_LEVEL, LOG_LEVEL_DEFAULT)
         result.log_incoming_messages = options.get(CONF_LOG_INCOMING_MESSAGES, False)
+        result.consider_away_interval = options.get(
+            CONF_CONSIDER_AWAY_INTERVAL, DEFAULT_CONSIDER_AWAY_INTERVAL
+        )
 
         self.config_entry = config_entry
         self.data = result

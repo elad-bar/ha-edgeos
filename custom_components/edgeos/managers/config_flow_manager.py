@@ -141,7 +141,9 @@ class ConfigFlowManager:
         fields[
             vol.Optional(CONF_PASSWORD, default=config_data.password_clear_text)
         ] = str
-        fields[vol.Optional(CONF_UNIT, default=False)] = vol.In(ALLOWED_UNITS_LIST)
+        fields[vol.Optional(CONF_UNIT, default=config_data.unit)] = vol.In(
+            ALLOWED_UNITS_LIST
+        )
 
         return fields
 
@@ -172,6 +174,11 @@ class ConfigFlowManager:
         fields = self._get_default_fields(CONFIG_FLOW_OPTIONS)
 
         fields[vol.Optional(CONF_CLEAR_CREDENTIALS, default=False)] = bool
+        fields[
+            vol.Optional(
+                CONF_CONSIDER_AWAY_INTERVAL, default=config_data.consider_away_interval
+            )
+        ] = int
         fields[vol.Optional(CONF_UNIT, default=config_data.unit)] = vol.In(
             ALLOWED_UNITS_LIST
         )

@@ -39,6 +39,7 @@
                   "password": "Password",
                   "clear-credentials": "Clear credentials",
                   "unit": "Unit",
+                  "consider_away_interval": "Consider away interval (Seconds)",
                   "monitored_interfaces": "Monitored interfaces",
                   "monitored_devices": "Monitored devices",
                   "track_devices": "Tracked devices",

@@ -427,8 +427,7 @@ class EdgeOSData:
                 f"Failed to load {DISCOVER_KEY}, Original Message: {data}, Error: {ex}, Line: {line_number}"
             )
 
-    @staticmethod
-    def check_last_activity(device):
+    def check_last_activity(self, device):
         date_minimum = datetime.fromtimestamp(0)
         device_ip = device.get(IP)
         device_connected = device.get(CONNECTED, False)
@@ -438,7 +437,7 @@ class EdgeOSData:
 
         time_since_last_action = (datetime.now() - device_last_activity).total_seconds()
 
-        if time_since_last_action < DISCONNECTED_INTERVAL:
+        if time_since_last_action < self.config_data.consider_away_interval:
             is_connected = True
         else:
             if (

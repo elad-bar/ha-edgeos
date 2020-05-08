@@ -1,5 +1,15 @@
 # Changelog
 
+## 2020-05-07
+
+**Implemented enhancements:**
+
+- Consider away interval can be modified in integration's options, interval is in seconds, default=180
+
+**Fixed bugs:**
+
+- Fix default value of unit in integration's options 
+
 ## 2020-05-06
 
 **Fixed bugs:**
