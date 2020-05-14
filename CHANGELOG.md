@@ -5,12 +5,13 @@
 **Implemented enhancements:**
 
 - Integration's options - Renamed `Update interval` to `Update entities interval` (will reset the value to default in the first run)
-- Integration's options - Added `Update API interval` to set the interval in seconds of the component to access EdgeOS API to get new devices and router settings, default=30 [\#27](https://github.com/elad-bar/ha-edgeos/issues/27)
+- Integration's options - Added `Update API interval` to set the interval in seconds of the component to access EdgeOS API to get new devices and router settings, default=60 [\#27](https://github.com/elad-bar/ha-edgeos/issues/27)
 - Improved the logic of heartbeat to take place every 30 seconds for both WebSocket and API connections
 
 **Fixed bugs:**
 
 - Fix API disconnection that causes "Failed to load devices data" errors [\#29](https://github.com/elad-bar/ha-edgeos/issues/29)
+- Fix error message on HA termination
 
 ## 2020-05-08 #2
 

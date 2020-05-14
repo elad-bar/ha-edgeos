@@ -201,7 +201,7 @@ class EdgeOSHomeAssistant:
             )
 
         if self._remove_async_track_time_entities is None:
-            interval = timedelta(seconds=self.config_data.update_interval)
+            interval = timedelta(seconds=self.config_data.update_entities_interval)
 
             self._remove_async_track_time_entities = async_track_time_interval(
                 self._hass, self._update_entities, interval

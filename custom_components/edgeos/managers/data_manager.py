@@ -74,21 +74,31 @@ class EdgeOSData:
                     is_first_time = False
 
                 else:
-                    _LOGGER.debug(
-                        f"Sleeping {RECONNECT_INTERVAL} seconds until next reconnect attempt"
-                    )
+                    slept = False
 
-                    await sleep(RECONNECT_INTERVAL)
+                    try:
+                        _LOGGER.debug(
+                            f"Sleeping {RECONNECT_INTERVAL} seconds until next reconnect attempt"
+                        )
 
-                await self._initialize(post_login_action)
+                        await sleep(RECONNECT_INTERVAL)
+                        slept = True
+
+                    finally:
+                        if not slept:
+                            return
+
+                if self._is_active:
+                    await self._initialize(post_login_action)
+
+                post_login_action = None
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(
-                f"Failed to initialize EdgeOS Manager, Error: {str(ex)}, Line: {line_number}"
-            )
+            if ex is not None or self._is_active:
+                _LOGGER.error(f"Failed to initialize EdgeOS Manager, Error: {ex}, Line: {line_number}")
 
     async def _initialize(self, post_login_action=None):
         try:
