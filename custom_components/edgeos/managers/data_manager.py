@@ -43,13 +43,13 @@ class EdgeOSData:
         self.hostname = config_data.host
         self.version = "N/A"
 
-        self._api = EdgeOSWebAPI(
-            self._hass, config_manager, self.edgeos_disconnection_handler
-        )
-
         self._ws = EdgeOSWebSocket(self._hass, config_manager, topics, self.ws_handler)
 
-        self._should_restart = True
+        self._api = EdgeOSWebAPI(
+            self._hass, config_manager, self.edgeos_disconnection_handler, self._ws
+        )
+
+        self._is_active = True
 
     @property
     def product(self):
@@ -69,7 +69,7 @@ class EdgeOSData:
         try:
             is_first_time = True
 
-            while self._should_restart:
+            while self._is_active:
                 if is_first_time:
                     is_first_time = False
 
@@ -130,7 +130,7 @@ class EdgeOSData:
         try:
             _LOGGER.debug(f"Terminating WS")
 
-            self._should_restart = False
+            self._is_active = False
 
             await self._ws.close()
 
@@ -143,12 +143,52 @@ class EdgeOSData:
                 f"Failed to terminate connection to WS, Error: {ex}, Line: {line_number}"
             )
 
-    async def refresh(self):
-        await self._api.heartbeat()
-        await self.load_devices_data()
-        await self.load_unknown_devices()
+    async def async_send_heartbeat(self):
+        if not self._api.is_initialized:
+            self.disconnect()
 
-        self.update()
+        result = await self._api.async_send_heartbeat()
+
+        if result:
+            await self._ws.async_send_heartbeat()
+
+    async def refresh(self):
+        if not self._api.is_initialized:
+            self.disconnect()
+
+        try:
+            _LOGGER.debug("Getting devices by API")
+
+            should_update = False
+
+            devices_data = await self._api.get_devices_data()
+            system_info_data = await self._api.get_general_data(SYS_INFO_KEY)
+            unknown_devices_data = await self._api.get_general_data(DHCP_LEASES_KEY)
+
+            if devices_data is not None:
+                should_update = True
+
+                if system_info_data is not None:
+                    self.load_system_data(devices_data, system_info_data)
+
+                self.load_devices(devices_data)
+                self.load_interfaces(devices_data)
+
+            if unknown_devices_data is not None:
+                should_update = True
+
+                self.load_unknown_devices(unknown_devices_data)
+
+            if should_update:
+                self.update()
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(
+                f"Failed to load devices data, Error: {ex}, Line: {line_number}"
+            )
 
     def update(self, force=False):
         try:
@@ -165,8 +205,10 @@ class EdgeOSData:
             api_last_update = self._api.last_update
             web_socket_last_update = self._ws.last_update
 
-            if system_state is not None:
-                system_state[IS_ALIVE] = self._api.is_connected
+            if system_state is None:
+                system_state = {}
+
+            system_state[IS_ALIVE] = self._api.is_connected
 
             self.system_data = {
                 INTERFACES_KEY: interfaces,
@@ -217,12 +259,8 @@ class EdgeOSData:
 
         return ws_handlers
 
-    async def load_unknown_devices(self):
+    def load_unknown_devices(self, unknown_devices_data):
         try:
-            _LOGGER.debug("Getting unknown devices by API")
-
-            unknown_devices_data = await self._api.get_general_data(DHCP_LEASES_KEY)
-
             if unknown_devices_data is not None:
                 result = []
 
@@ -247,8 +285,7 @@ class EdgeOSData:
                         result.append(device)
 
                 self.set_unknown_devices(result)
-            else:
-                _LOGGER.warning(f"Invalid data: {unknown_devices_data}")
+
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -309,30 +346,15 @@ class EdgeOSData:
             self.set_interface(ethernet_key, interface)
 
     def load_system_data(self, devices_data, system_info_data):
+        if devices_data is None:
+            devices_data = {}
+
+        if system_info_data is None:
+            system_info_data = {}
+
         system_data = devices_data.get("system", {})
         self.hostname = system_data.get("host-name", self.hostname)
         self.version = system_info_data.get("sw_ver", "N/A")
-
-    async def load_devices_data(self):
-        try:
-            _LOGGER.debug("Getting devices by API")
-
-            devices_data = await self._api.get_devices_data()
-            system_info_data = await self._api.get_general_data(SYS_INFO_KEY)
-
-            self.load_system_data(devices_data, system_info_data)
-            self.load_devices(devices_data)
-            self.load_interfaces(devices_data)
-
-            self.update()
-
-        except Exception as ex:
-            exc_type, exc_obj, tb = sys.exc_info()
-            line_number = tb.tb_lineno
-
-            _LOGGER.error(
-                f"Failed to load devices data, Error: {ex}, Line: {line_number}"
-            )
 
     def handle_interfaces(self, data):
         try:

@@ -59,7 +59,8 @@ Consider away interval | Textbox | + | 180 | Consider away interval in seconds
 Monitored devices | Drop-down | + | NONE | Devices to monitor using binary_sensor and sensor
 Monitored interfaces | Drop-down | + | NONE | Interfaces to monitor using binary_sensor and sensor,
 Track | Drop-down | + | NONE | Devices to track using device_trac
-Update Interval | Textbox | + | 1 | Number of seconds to update entities
+Update API Interval | Textbox | + | 30 | Number of seconds to update new devices and router settings
+Update Entities Interval | Textbox | + | 1 | Number of seconds to update entities
 Save debug file | Check-box | + | Unchecked |  Will store debug file, more details below (Not being stored under options)
 Log level | Drop-down | + | Default | Changes component's log level (more details below)
 Log incoming messages | Check-box | + | Unchecked | Whether to log as DEBUG incoming web-socket messages or not

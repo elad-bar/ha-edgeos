@@ -1,5 +1,4 @@
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
 from ..helpers.const import *
 from ..models.config_data import ConfigData
@@ -26,7 +25,12 @@ class ConfigManager:
         result.monitored_devices = options.get(CONF_MONITORED_DEVICES, [])
         result.monitored_interfaces = options.get(CONF_MONITORED_INTERFACES, [])
         result.device_trackers = options.get(CONF_TRACK_DEVICES, [])
-        result.update_interval = options.get(CONF_UPDATE_INTERVAL, 1)
+        result.update_api_interval = options.get(
+            CONF_UPDATE_API_INTERVAL, DEFAULT_UPDATE_API_INTERVAL
+        )
+        result.update_entities_interval = options.get(
+            CONF_UPDATE_ENTITIES_INTERVAL, DEFAULT_UPDATE_ENTITIES_INTERVAL
+        )
         result.log_level = options.get(CONF_LOG_LEVEL, LOG_LEVEL_DEFAULT)
         result.log_incoming_messages = options.get(CONF_LOG_INCOMING_MESSAGES, False)
         result.consider_away_interval = options.get(

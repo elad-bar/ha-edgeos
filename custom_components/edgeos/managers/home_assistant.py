@@ -8,7 +8,6 @@ import sys
 from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import EntityRegistry, async_get_registry
@@ -30,6 +29,7 @@ class EdgeOSHomeAssistant:
         self._hass = hass
 
         self._remove_async_track_time_api = None
+        self._remove_async_track_time_heartbeat = None
         self._remove_async_track_time_entities = None
 
         self._is_first_time_online = True
@@ -49,6 +49,10 @@ class EdgeOSHomeAssistant:
         def update_entities(internal_now):
             self._hass.async_create_task(self.async_update_entities(internal_now))
 
+        def send_heartbeat(internal_now):
+            self._hass.async_create_task(self.async_send_heartbeat(internal_now))
+
+        self._send_heartbeat = send_heartbeat
         self._update_api = update_api
         self._update_entities = update_entities
 
@@ -114,8 +118,8 @@ class EdgeOSHomeAssistant:
 
         self._hass.async_create_task(self.async_update_api(datetime.now()))
 
-        self._remove_async_track_time_api = async_track_time_interval(
-            self._hass, self._update_api, SCAN_INTERVAL_API
+        self._remove_async_track_time_heartbeat = async_track_time_interval(
+            self._hass, self._send_heartbeat, HEARTBEAT_INTERVAL
         )
 
         await self.async_update_entry()
@@ -132,6 +136,10 @@ class EdgeOSHomeAssistant:
         if self._remove_async_track_time_entities is not None:
             self._remove_async_track_time_entities()
             self._remove_async_track_time_entities = None
+
+        if self._remove_async_track_time_heartbeat is not None:
+            self._remove_async_track_time_heartbeat()
+            self._remove_async_track_time_heartbeat = None
 
         unload = self._hass.config_entries.async_forward_entry_unload
 
@@ -153,21 +161,44 @@ class EdgeOSHomeAssistant:
         _LOGGER.info(f"Handling ConfigEntry change: {entry.as_dict()}")
 
         if is_update:
-            previous_interval = self.config_data.update_interval
+            previous_entities_interval = self.config_data.update_entities_interval
+            previous_api_interval = self.config_data.update_api_interval
 
             self._config_manager.update(entry)
 
-            is_interval_changed = previous_interval != self.config_data.update_interval
+            is_update_entities_interval_changed = (
+                previous_entities_interval != self.config_data.update_entities_interval
+            )
+            is_update_api_interval_changed = (
+                previous_api_interval != self.config_data.update_api_interval
+            )
 
             if (
-                is_interval_changed
+                is_update_api_interval_changed
+                and self._remove_async_track_time_api is not None
+            ):
+                msg = f"ConfigEntry API interval changed from {previous_api_interval} to {self.config_data.update_api_interval}"
+                _LOGGER.info(msg)
+
+                self._remove_async_track_time_api()
+                self._remove_async_track_time_api = None
+
+            if (
+                is_update_entities_interval_changed
                 and self._remove_async_track_time_entities is not None
             ):
-                msg = f"ConfigEntry interval changed from {previous_interval} to {self.config_data.update_interval}"
+                msg = f"ConfigEntry Entities interval changed from {previous_entities_interval} to {self.config_data.update_entities_interval}"
                 _LOGGER.info(msg)
 
                 self._remove_async_track_time_entities()
                 self._remove_async_track_time_entities = None
+
+        if self._remove_async_track_time_api is None:
+            interval = timedelta(seconds=self.config_data.update_api_interval)
+
+            self._remove_async_track_time_api = async_track_time_interval(
+                self._hass, self._update_api, interval
+            )
 
         if self._remove_async_track_time_entities is None:
             interval = timedelta(seconds=self.config_data.update_interval)
@@ -181,6 +212,14 @@ class EdgeOSHomeAssistant:
         self._data_manager.update(True)
 
         await self.discover_all()
+
+    async def async_send_heartbeat(self, event_time):
+        if not self._is_initialized:
+            _LOGGER.info(f"NOT INITIALIZED, cannot perform heartbeat: {event_time}")
+
+            return
+
+        await self._data_manager.async_send_heartbeat()
 
     async def async_update_api(self, event_time):
         if not self._is_initialized:
