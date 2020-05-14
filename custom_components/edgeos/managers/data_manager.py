@@ -98,7 +98,9 @@ class EdgeOSData:
             line_number = tb.tb_lineno
 
             if ex is not None or self._is_active:
-                _LOGGER.error(f"Failed to initialize EdgeOS Manager, Error: {ex}, Line: {line_number}")
+                _LOGGER.error(
+                    f"Failed to initialize EdgeOS Manager, Error: {ex}, Line: {line_number}"
+                )
 
     async def _initialize(self, post_login_action=None):
         try:
