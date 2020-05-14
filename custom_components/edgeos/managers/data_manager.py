@@ -153,20 +153,22 @@ class EdgeOSData:
             await self._ws.async_send_heartbeat()
 
     async def refresh(self):
-        if not self._api.is_initialized:
-            self.disconnect()
-
         try:
+            if not self._api.is_initialized:
+                self.disconnect()
+
+                return
+
             _LOGGER.debug("Getting devices by API")
 
             should_update = False
 
             devices_data = await self._api.get_devices_data()
-            system_info_data = await self._api.get_general_data(SYS_INFO_KEY)
-            unknown_devices_data = await self._api.get_general_data(DHCP_LEASES_KEY)
 
             if devices_data is not None:
                 should_update = True
+
+                system_info_data = await self._api.get_general_data(SYS_INFO_KEY)
 
                 if system_info_data is not None:
                     self.load_system_data(devices_data, system_info_data)
@@ -174,10 +176,10 @@ class EdgeOSData:
                 self.load_devices(devices_data)
                 self.load_interfaces(devices_data)
 
-            if unknown_devices_data is not None:
-                should_update = True
+                unknown_devices_data = await self._api.get_general_data(DHCP_LEASES_KEY)
 
-                self.load_unknown_devices(unknown_devices_data)
+                if unknown_devices_data is not None:
+                    self.load_unknown_devices(unknown_devices_data)
 
             if should_update:
                 self.update()
@@ -296,7 +298,7 @@ class EdgeOSData:
 
     def load_devices(self, device_data):
         if device_data is None:
-            device_data = {}
+            return
 
         service_data = device_data.get(SERVICE, {})
         dhcp_server_data = service_data.get(DHCP_SERVER, {})
@@ -329,6 +331,9 @@ class EdgeOSData:
                     self.set_device(hostname, device)
 
     def load_interfaces(self, device_data):
+        if device_data is None:
+            return
+
         interfaces_data = device_data.get(INTERFACES_KEY, {})
         ethernet_data = interfaces_data.get("ethernet", {})
 
@@ -346,11 +351,8 @@ class EdgeOSData:
             self.set_interface(ethernet_key, interface)
 
     def load_system_data(self, devices_data, system_info_data):
-        if devices_data is None:
-            devices_data = {}
-
-        if system_info_data is None:
-            system_info_data = {}
+        if devices_data is None or system_info_data is None:
+            return
 
         system_data = devices_data.get("system", {})
         self.hostname = system_data.get("host-name", self.hostname)
