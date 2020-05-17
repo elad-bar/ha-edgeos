@@ -1,5 +1,13 @@
 # Changelog
 
+## 2020-05-17
+
+**Fixed bugs:**
+
+- Fix incorrect error message displayed when WebSocket or API request failed
+- Fix retry mechanism of API requests
+- Fix integration's options error when device or interface list is empty 
+
 ## 2020-05-14
 
 **Implemented enhancements:**

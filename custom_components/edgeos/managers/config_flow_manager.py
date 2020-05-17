@@ -352,7 +352,7 @@ class ConfigFlowManager:
 
     @staticmethod
     def _get_available_options(system_data, key):
-        all_items = system_data.get(key)
+        all_items = system_data.get(key, {})
 
         available_items = {OPTION_EMPTY: OPTION_EMPTY}
 

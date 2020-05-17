@@ -3,6 +3,7 @@ This component provides support for Home Automation Manager (HAM).
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/edgeos/
 """
+from asyncio import sleep
 import logging
 import sys
 from typing import Optional
@@ -151,42 +152,49 @@ class EdgeOSWebAPI:
 
     async def async_get(self, url):
         result = None
+        message = None
 
-        try:
-            async with self._session.get(url, ssl=False) as response:
-                _LOGGER.debug(f"Status of {url}: {response.status}")
+        retry_attempt = 0
+        while retry_attempt < MAXIMUM_RECONNECT:
+            if retry_attempt > 0:
+                await sleep(1)
 
-                self._is_connected = response.status < 400
+            retry_attempt = retry_attempt + 1
 
-                if response.status == 403:
-                    if self._disconnections + 1 < MAXIMUM_RECONNECT:
-                        self._disconnections = self._disconnections + 1
+            try:
+                async with self._session.get(url, ssl=False) as response:
+                    status = response.status
+                    message = (
+                        f"URL: {url}, Status: {response.reason} ({response.status})"
+                    )
 
-                        if self._disconnection_handler is not None:
-                            await self._disconnection_handler()
-                    else:
-                        _LOGGER.error(
-                            f"Failed to make authenticated request to {url} {self._disconnections} times"
-                        )
-                elif response.status == 504:
-                    _LOGGER.warning(f"Timeout while trying to connect to {url}")
+                    if status < 400:
+                        result = await response.json()
+                        break
+                    elif status == 403:
+                        break
 
-                else:
-                    response.raise_for_status()
+            except Exception as ex:
+                exc_type, exc_obj, tb = sys.exc_info()
+                line_number = tb.tb_lineno
+                message = f"URL: {url}, Error: {ex}, Line: {line_number}"
 
-                    result = await response.json()
+        valid_response = status < 400
 
-                    self._last_update = datetime.now()
-        except Exception as ex:
-            self._is_connected = False
+        self._is_connected = valid_response
 
-            exc_type, exc_obj, tb = sys.exc_info()
-            line_number = tb.tb_lineno
+        if retry_attempt > 1:
+            message = f"{message}, Retry attempt #{retry_attempt}"
 
-            _LOGGER.error(f"Failed to connect {url}, Error: {ex}, Line: {line_number}")
+        if valid_response:
+            self._last_update = datetime.now()
+            _LOGGER.debug(message)
 
-        if not self._is_connected and self._ws is not None:
-            self._ws.disconnect()
+        else:
+            _LOGGER.warning(f"Request failed, {message}")
+
+            if self._ws is not None:
+                self._ws.disconnect()
 
         return result
 

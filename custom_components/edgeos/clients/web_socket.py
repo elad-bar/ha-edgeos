@@ -137,7 +137,8 @@ class EdgeOSWebSocket:
 
         data = self.get_keep_alive_data()
 
-        await self._ws.send_str(data)
+        if self._is_connected:
+            await self._ws.send_str(data)
 
     async def listen(self):
         _LOGGER.info(f"Starting to listen connected")
