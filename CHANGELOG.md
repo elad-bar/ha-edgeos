@@ -1,5 +1,11 @@
 # Changelog
 
+## 2020-05-29
+
+**Fixed bugs:**
+
+- Fix `Entity id already exists` warning log message on startup
+
 ## 2020-05-17
 
 **Fixed bugs:**

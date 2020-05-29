@@ -180,6 +180,8 @@ class EntityManager:
                                 restored = state.attributes.get("restored", False)
 
                                 if restored:
+                                    self.hass.states.async_remove(entity_id)
+
                                     _LOGGER.info(
                                         f"Entity {entity.name} restored | {entity_id}"
                                     )
