@@ -85,7 +85,9 @@ class EdgeOSWebSocket:
                 await self.listen()
 
         except Exception as ex:
-            if ex is not None:
+            if self._session is not None and self._session.closed:
+                _LOGGER.info(f"WS Session closed")
+            else:
                 _LOGGER.warning(f"Failed to connect EdgeOS WS, Error: {ex}")
 
         self._is_connected = False

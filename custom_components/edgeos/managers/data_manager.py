@@ -8,6 +8,7 @@ import logging
 import sys
 from typing import Optional
 
+from custom_components.edgeos.clients import SessionTerminatedException
 from ..clients.web_api import EdgeOSWebAPI
 from ..clients.web_socket import EdgeOSWebSocket
 from ..helpers.const import *
@@ -119,6 +120,11 @@ class EdgeOSData:
 
                 _LOGGER.debug(f"Initializing WS using session: {session_id}")
                 await self._ws.initialize(cookies, session_id)
+        except SessionTerminatedException as stex:
+            _LOGGER.info(f"Session terminated ({stex})")
+
+            self._is_active = False
+
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno

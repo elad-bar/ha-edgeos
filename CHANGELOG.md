@@ -1,5 +1,12 @@
 # Changelog
 
+
+## 2020-06-12
+
+**Fixed bugs:**
+
+- Fix logic of reconnect to avoid HA core getting stuck during restart
+
 ## 2020-05-29
 
 **Fixed bugs:**

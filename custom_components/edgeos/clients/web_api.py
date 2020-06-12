@@ -12,7 +12,7 @@ from aiohttp import ClientSession, CookieJar
 
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from . import LoginException
+from . import LoginException, SessionTerminatedException
 from ..helpers.const import *
 from ..managers.configuration_manager import ConfigManager
 from .web_socket import EdgeOSWebSocket
@@ -106,6 +106,9 @@ class EdgeOSWebAPI:
 
             url = self._config_manager.data.url
 
+            if self._session.closed:
+                raise SessionTerminatedException()
+
             async with self._session.post(url, data=credentials, ssl=False) as response:
                 all_cookies = self._session.cookie_jar.filter_cookies(response.url)
 
@@ -172,6 +175,9 @@ class EdgeOSWebAPI:
                         result = await response.json()
                         break
                     elif status == 403:
+                        await self._session.close()
+                        self._cookies = {}
+
                         break
 
             except Exception as ex:
