@@ -50,9 +50,6 @@ class EdgeOSWebAPI:
         cookie_jar = CookieJar(unsafe=True)
 
         if self._hass is None:
-            if self._session is not None:
-                await self._session.close()
-
             self._session = ClientSession(cookie_jar=cookie_jar)
         else:
             self._session = async_create_clientsession(
@@ -139,6 +136,8 @@ class EdgeOSWebAPI:
                         status_code = 500
                     else:
                         status_code = 403
+        except SessionTerminatedException:
+            raise SessionTerminatedException()
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -175,7 +174,7 @@ class EdgeOSWebAPI:
                         result = await response.json()
                         break
                     elif status == 403:
-                        await self._session.close()
+                        self._session = None
                         self._cookies = {}
 
                         break

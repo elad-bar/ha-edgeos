@@ -1,5 +1,12 @@
 # Changelog
 
+## 2020-06-1220
+
+**Fixed bugs:**
+
+- Re-run pre-commit
+- Handle closing HA session better to avoid stuck upon restart
+- Avoid closing manually sessions opened by HA
 
 ## 2020-06-12
 

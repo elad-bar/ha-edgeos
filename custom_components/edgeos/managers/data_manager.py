@@ -9,6 +9,7 @@ import sys
 from typing import Optional
 
 from custom_components.edgeos.clients import SessionTerminatedException
+
 from ..clients.web_api import EdgeOSWebAPI
 from ..clients.web_socket import EdgeOSWebSocket
 from ..helpers.const import *
