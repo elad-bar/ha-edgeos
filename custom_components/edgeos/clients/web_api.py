@@ -155,6 +155,7 @@ class EdgeOSWebAPI:
     async def async_get(self, url):
         result = None
         message = None
+        status = 404
 
         retry_attempt = 0
         while retry_attempt < MAXIMUM_RECONNECT:
@@ -166,6 +167,7 @@ class EdgeOSWebAPI:
             try:
                 async with self._session.get(url, ssl=False) as response:
                     status = response.status
+
                     message = (
                         f"URL: {url}, Status: {response.reason} ({response.status})"
                     )

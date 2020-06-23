@@ -1,6 +1,12 @@
 # Changelog
 
-## 2020-06-1220
+## 2020-06-23
+
+**Fixed bugs:**
+
+- Error fix on failed attempt to access the router
+
+## 2020-06-20
 
 **Fixed bugs:**
 
