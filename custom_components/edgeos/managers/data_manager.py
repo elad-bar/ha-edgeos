@@ -180,13 +180,9 @@ class EdgeOSData:
 
             _LOGGER.debug("Getting devices by API")
 
-            should_update = False
-
             devices_data = await self._api.get_devices_data()
 
             if devices_data is not None:
-                should_update = True
-
                 system_info_data = await self._api.get_general_data(SYS_INFO_KEY)
 
                 if system_info_data is not None:
@@ -200,8 +196,7 @@ class EdgeOSData:
                 if unknown_devices_data is not None:
                     self.load_unknown_devices(unknown_devices_data)
 
-            if should_update:
-                self.update()
+            self.update()
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -211,13 +206,8 @@ class EdgeOSData:
                 f"Failed to load devices data, Error: {ex}, Line: {line_number}"
             )
 
-    def update(self, force=False):
+    def update(self):
         try:
-            if not force and self._is_updating:
-                return
-
-            self._is_updating = True
-
             devices = self.get_devices()
             interfaces = self.get_interfaces()
             system_state = self.get_system_state()
@@ -247,8 +237,6 @@ class EdgeOSData:
 
             _LOGGER.error(f"Failed to refresh data, Error: {ex}, Line: {line_number}")
 
-        self._is_updating = False
-
     def ws_handler(self, payload=None):
         try:
             if payload is not None:
@@ -262,6 +250,8 @@ class EdgeOSData:
                         _LOGGER.error(f"Handler not found for {key}")
                     else:
                         handler(data)
+
+                        self.update()
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -405,8 +395,6 @@ class EdgeOSData:
                             interface[item] = item_data
 
                 self.set_interface(name, interface)
-
-            self.update()
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -558,12 +546,8 @@ class EdgeOSData:
     def _set_edgeos_data(self, key, data):
         self.edgeos_data[key] = data
 
-        self.update()
-
     def set_discover_data(self, discover_state):
         self._set_edgeos_data(DISCOVER_KEY, discover_state)
-
-        self.update()
 
     def get_discover_data(self):
         result = self._get_edgeos_data(DISCOVER_KEY)
@@ -572,8 +556,6 @@ class EdgeOSData:
 
     def set_unknown_devices(self, unknown_devices):
         self._set_edgeos_data(UNKNOWN_DEVICES_KEY, unknown_devices)
-
-        self.update()
 
     def get_unknown_devices(self):
         result = self._get_edgeos_data(UNKNOWN_DEVICES_KEY)
