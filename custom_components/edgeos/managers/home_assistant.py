@@ -125,7 +125,7 @@ class EdgeOSHomeAssistant:
         await self.async_update_entry()
 
     async def async_remove(self):
-        _LOGGER.debug(f"async_remove called")
+        _LOGGER.info(f"async_remove called")
 
         await self._data_manager.terminate()
 
@@ -193,6 +193,10 @@ class EdgeOSHomeAssistant:
                 self._remove_async_track_time_entities()
                 self._remove_async_track_time_entities = None
 
+        self._data_manager.update(True)
+
+        await self.discover_all()
+
         if self._remove_async_track_time_api is None:
             interval = timedelta(seconds=self.config_data.update_api_interval)
 
@@ -208,10 +212,6 @@ class EdgeOSHomeAssistant:
             )
 
         self._is_ready = False
-
-        self._data_manager.update(True)
-
-        await self.discover_all()
 
     async def async_send_heartbeat(self, event_time):
         if not self._is_initialized:

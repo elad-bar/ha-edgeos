@@ -1,4 +1,9 @@
 # Changelog
+## 2020-07-03
+
+**Fixed bugs:**
+
+- Fix error message on load due to duplicate entities being created - Entity id already exists - ignoring: *. Platform edgeos does not generate unique IDs
 
 ## 2020-06-23
 

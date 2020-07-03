@@ -101,7 +101,7 @@ class EdgeOSEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
+        self.remove_dispatcher = async_dispatcher_connect(
             self.hass, SIGNALS[self.current_domain], self._schedule_immediate_update
         )
 
