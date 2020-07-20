@@ -65,12 +65,6 @@ Save debug file | Check-box | + | Unchecked |  Will store debug file, more detai
 Log level | Drop-down | + | Default | Changes component's log level (more details below)
 Log incoming messages | Check-box | + | Unchecked | Whether to log as DEBUG incoming web-socket messages or not
   
-###### Drop-downs work-around
-As workaround for UI not allowing submitting the form without all fields with values,
-First option in each drop-down is NONE, 
-as long as this option is checked, 
-it will not allow checking other items
-
 ###### Log Level's drop-down
 New feature to set the log level for the component without need to set log_level in `customization:` and restart or call manually `logger.set_level` and loose it after restart.
 

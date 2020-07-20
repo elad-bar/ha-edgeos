@@ -225,10 +225,7 @@ class ConfigFlowManager:
 
     @staticmethod
     def _get_user_input_option(options, key):
-        result = options.get(key, [OPTION_EMPTY])
-
-        if OPTION_EMPTY in result:
-            result.clear()
+        result = options.get(key, [])
 
         return result
 
@@ -254,9 +251,6 @@ class ConfigFlowManager:
             for key in user_input:
                 user_input_data = user_input[key]
 
-                if key in DROP_DOWNS_CONF and OPTION_EMPTY in user_input_data:
-                    user_input_data = []
-
                 new_user_input[key] = user_input_data
 
             if flow != CONFIG_FLOW_INIT:
@@ -271,9 +265,6 @@ class ConfigFlowManager:
         if user_input is not None:
             for key in user_input:
                 user_input_data = user_input[key]
-
-                if key in DROP_DOWNS_CONF and OPTION_EMPTY in user_input_data:
-                    user_input_data = []
 
                 new_user_input[key] = user_input_data
 
@@ -345,16 +336,13 @@ class ConfigFlowManager:
                 clean_data = data.replace(" ", "")
                 result = clean_data.split(",")
 
-        if len(result) == 0:
-            result = [OPTION_EMPTY]
-
         return result
 
     @staticmethod
     def _get_available_options(system_data, key):
         all_items = system_data.get(key, {})
 
-        available_items = {OPTION_EMPTY: OPTION_EMPTY}
+        available_items = {}
 
         for item_key in all_items:
             item = all_items[item_key]

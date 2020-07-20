@@ -243,7 +243,7 @@ ENTITY_STATUS_MODIFIED = f"{ENTITY_STATUS}-modified"
 ENTITY_STATUS_IGNORE = f"{ENTITY_STATUS}-ignore"
 ENTITY_STATUS_CANCELLED = f"{ENTITY_STATUS}-cancelled"
 
-ICONS = {SENSOR_TYPE_INTERFACE: "mdi:network-router", SENSOR_TYPE_DEVICE: "mdi:devices"}
+ICONS = {SENSOR_TYPE_INTERFACE: "mdi:router-network", SENSOR_TYPE_DEVICE: "mdi:devices"}
 
 CONNECTED_ICONS = {True: "mdi:lan-connect", False: "mdi:lan-disconnect"}
 
@@ -257,8 +257,6 @@ HTTP_ERRORS = {
 
 DOMAIN_LOAD = "load"
 DOMAIN_UNLOAD = "unload"
-
-OPTION_EMPTY = " NONE "
 
 DOMAIN_KEY_FILE = f"{DOMAIN}.key"
 
