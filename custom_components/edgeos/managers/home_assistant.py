@@ -132,15 +132,9 @@ class EdgeOSHomeAssistant:
         self._device_manager = DeviceManager(self._hass, self)
         self._entity_manager = EntityManager(self._hass, self)
 
-        def internal_async_init(now):
-            self._hass.async_create_task(self._async_init(now))
-
         self._entity_registry = await async_get_registry(self._hass)
 
-        async_call_later(self._hass, 2, internal_async_init)
-
-    async def _async_init(self, now):
-        _LOGGER.debug(f"Initializing EdgeOS @{now}")
+        _LOGGER.debug(f"Initializing EdgeOS")
 
         load = self._hass.config_entries.async_forward_entry_setup
 
@@ -149,7 +143,7 @@ class EdgeOSHomeAssistant:
                 load(self._config_manager.config_entry, domain)
             )
 
-        self._hass.async_create_task(
+        self._hass.loop.create_task(
             self._data_manager.initialize(self.async_update_entry)
         )
 
