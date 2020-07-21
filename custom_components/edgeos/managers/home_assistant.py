@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import EntityRegistry, async_get_registry
-from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.event import async_track_time_interval
 
 from ..helpers.const import *
 from ..models.config_data import ConfigData
@@ -132,28 +132,19 @@ class EdgeOSHomeAssistant:
         self._device_manager = DeviceManager(self._hass, self)
         self._entity_manager = EntityManager(self._hass, self)
 
-        def internal_async_init(now):
-            self._hass.async_create_task(self._async_init(now))
+        self._hass.loop.create_task(self.initialize())
 
+    async def initialize(self):
         self._entity_registry = await async_get_registry(self._hass)
-
-        async_call_later(self._hass, 2, internal_async_init)
-
-    async def _async_init(self, now):
-        _LOGGER.debug(f"Initializing EdgeOS @{now}")
 
         load = self._hass.config_entries.async_forward_entry_setup
 
         for domain in SIGNALS:
-            self._hass.async_create_task(
-                load(self._config_manager.config_entry, domain)
-            )
-
-        self._hass.async_create_task(
-            self._data_manager.initialize(self.async_update_entry)
-        )
+            await load(self._config_manager.config_entry, domain)
 
         self._is_initialized = True
+
+        await self._data_manager.initialize(self.async_update_entry)
 
     async def async_remove(self):
         _LOGGER.info(f"async_remove called")
@@ -166,9 +157,7 @@ class EdgeOSHomeAssistant:
         unload = self._hass.config_entries.async_forward_entry_unload
 
         for domain in SIGNALS:
-            self._hass.async_create_task(
-                unload(self._config_manager.config_entry, domain)
-            )
+            await unload(self._config_manager.config_entry, domain)
 
         await self._device_manager.async_remove_entry(
             self._config_manager.config_entry.entry_id

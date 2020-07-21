@@ -1,4 +1,10 @@
 # Changelog
+## 2020-07-21
+
+**Fixed bugs:**
+
+- Don't block startup of Home Assistant [\#36](https://github.com/elad-bar/ha-edgeos/pull/36)
+
 ## 2020-07-22
 
 **Implemented enhancements:**
