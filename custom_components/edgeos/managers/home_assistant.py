@@ -147,7 +147,9 @@ class EdgeOSHomeAssistant:
         await self._data_manager.initialize(self.async_update_entry)
 
     async def async_remove(self):
-        _LOGGER.info(f"async_remove called")
+        config_entry = self._config_manager.config_entry
+
+        _LOGGER.info(f"Removing {config_entry.title}")
 
         await self._data_manager.terminate()
 
@@ -155,13 +157,12 @@ class EdgeOSHomeAssistant:
             self.remove_async_track_timer(timer_key)
 
         unload = self._hass.config_entries.async_forward_entry_unload
-
         for domain in SIGNALS:
-            await unload(self._config_manager.config_entry, domain)
+            await unload(config_entry, domain)
 
-        await self._device_manager.async_remove_entry(
-            self._config_manager.config_entry.entry_id
-        )
+        await self._device_manager.async_remove_entry(config_entry.entry_id)
+
+        _LOGGER.info(f"{config_entry.title} removed")
 
     async def async_update_entry(self, entry: ConfigEntry = None):
         is_update = entry is not None
