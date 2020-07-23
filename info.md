@@ -37,13 +37,14 @@ Export (traffic-analysis) configuration is disabled, please enable |
 Deep Packet Inspection (traffic-analysis) configuration is disabled, please enable |
 Incompatible version (Required at least v1.10)
 
-###### Password protection
-In latest version new capability added to encrypt password before saving integration settings to `.storage` </br>
-In order to benefit from that capability, please remove and re-add the integration (after restart of HA between actions) for that capability to work,
-As long as the password will remain in clear text saved in integration setting, the following warning log message will appear during restart:
+###### Encryption key got corrupted
+If a persistent notification popped up with the following message:
 ```
-EdgeOS password is not encrypted, please remove integration and reintegrate
+Encryption key got corrupted, please remove the integration and re-add it
 ```
+
+It means that encryption key was modified from outside the code,
+Please remove the integration and re-add it to make it work again.
 
 #### Options
 *Configuration -> Integrations -> {Integration} -> Options* <br />

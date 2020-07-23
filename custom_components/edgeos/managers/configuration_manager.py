@@ -1,8 +1,12 @@
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 
 from ..helpers.const import *
 from ..models.config_data import ConfigData
 from .password_manager import PasswordManager
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigManager:
@@ -16,11 +20,11 @@ class ConfigManager:
     def set_data(self, data: ConfigData):
         self.data = data
 
-    def update(self, config_entry: ConfigEntry):
+    async def update(self, config_entry: ConfigEntry):
         data = config_entry.data
         options = config_entry.options
 
-        result: ConfigData = self.get_basic_data(data)
+        result: ConfigData = await self.get_basic_data(data)
 
         result.monitored_devices = options.get(CONF_MONITORED_DEVICES, [])
         result.monitored_interfaces = options.get(CONF_MONITORED_INTERFACES, [])
@@ -40,7 +44,7 @@ class ConfigManager:
         self.config_entry = config_entry
         self.data = result
 
-    def get_basic_data(self, data):
+    async def get_basic_data(self, data):
         result = ConfigData()
 
         if data is not None:
@@ -51,7 +55,7 @@ class ConfigManager:
             result.unit = data.get(CONF_UNIT, ATTR_BYTE)
 
             if result.password is not None and len(result.password) > 0:
-                result.password_clear_text = self.password_manager.decrypt(
+                result.password_clear_text = await self.password_manager.decrypt(
                     result.password
                 )
             else:

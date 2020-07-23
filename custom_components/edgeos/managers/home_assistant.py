@@ -7,6 +7,8 @@ import logging
 import sys
 from typing import Optional
 
+from cryptography.fernet import InvalidToken
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -20,6 +22,7 @@ from .data_manager import EdgeOSData
 from .device_manager import DeviceManager
 from .entity_manager import EntityManager
 from .password_manager import PasswordManager
+from .storage_manager import StorageManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +41,7 @@ class EdgeOSHomeAssistant:
         self._data_manager = None
         self._device_manager = None
         self._entity_manager = None
+        self._storage_manager = None
 
         self._config_manager = ConfigManager(password_manager)
 
@@ -126,13 +130,32 @@ class EdgeOSHomeAssistant:
             _LOGGER.warning(f"{key} timer was not found, cannot remove")
 
     async def async_init(self, entry: ConfigEntry):
-        self._config_manager.update(entry)
+        try:
+            self._storage_manager = StorageManager(self._hass)
 
-        self._data_manager = EdgeOSData(self._hass, self._config_manager, self.update)
-        self._device_manager = DeviceManager(self._hass, self)
-        self._entity_manager = EntityManager(self._hass, self)
+            await self._config_manager.update(entry)
 
-        self._hass.loop.create_task(self.initialize())
+            self._data_manager = EdgeOSData(
+                self._hass, self._config_manager, self.update
+            )
+            self._device_manager = DeviceManager(self._hass, self)
+            self._entity_manager = EntityManager(self._hass, self)
+
+            self._hass.loop.create_task(self.initialize())
+        except InvalidToken:
+            error_message = "Encryption key got corrupted, please remove the integration and re-add it"
+
+            _LOGGER.error(error_message)
+
+            data = await self._storage_manager.async_load_from_store()
+            data.key = None
+            await self._storage_manager.async_save_to_store(data)
+
+            await self._hass.services.async_call(
+                "persistent_notification",
+                "create",
+                {"title": DEFAULT_NAME, "message": error_message},
+            )
 
     async def initialize(self):
         self._entity_registry = await async_get_registry(self._hass)
@@ -146,10 +169,8 @@ class EdgeOSHomeAssistant:
 
         await self._data_manager.initialize(self.async_update_entry)
 
-    async def async_remove(self):
-        config_entry = self._config_manager.config_entry
-
-        _LOGGER.info(f"Removing {config_entry.title}")
+    async def async_remove(self, entry: ConfigEntry):
+        _LOGGER.info(f"Removing {entry.title}")
 
         await self._data_manager.terminate()
 
@@ -158,11 +179,11 @@ class EdgeOSHomeAssistant:
 
         unload = self._hass.config_entries.async_forward_entry_unload
         for domain in SIGNALS:
-            await unload(config_entry, domain)
+            await unload(entry, domain)
 
-        await self._device_manager.async_remove_entry(config_entry.entry_id)
+        await self._device_manager.async_remove_entry(entry.entry_id)
 
-        _LOGGER.info(f"{config_entry.title} removed")
+        _LOGGER.info(f"{entry.title} removed")
 
     async def async_update_entry(self, entry: ConfigEntry = None):
         is_update = entry is not None
@@ -172,7 +193,7 @@ class EdgeOSHomeAssistant:
 
         _LOGGER.info(f"Handling ConfigEntry change: {entry.as_dict()}")
 
-        self._config_manager.update(entry)
+        await self._config_manager.update(entry)
 
         await self.async_update_api(datetime.now())
 

@@ -49,7 +49,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     ha = get_ha(hass, entry.entry_id)
 
     if ha is not None:
-        await ha.async_remove()
+        await ha.async_remove(entry)
 
     clear_ha(hass, entry.entry_id)
 

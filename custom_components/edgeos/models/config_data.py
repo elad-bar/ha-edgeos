@@ -1,3 +1,5 @@
+from typing import Optional
+
 from ..helpers.const import *
 
 
@@ -5,9 +7,9 @@ class ConfigData:
     name: str
     host: str
     port: int
-    username: str
-    password: str
-    password_clear_text: str
+    username: Optional[str]
+    password: Optional[str]
+    password_clear_text: Optional[str]
     unit: int
     update_entities_interval: int
     update_api_interval: int
@@ -22,9 +24,9 @@ class ConfigData:
         self.name = DEFAULT_NAME
         self.host = ""
         self.port = 0
-        self.username = ""
-        self.password = ""
-        self.password_clear_text = ""
+        self.username = None
+        self.password = None
+        self.password_clear_text = None
         self.unit = ATTR_BYTE
         self.update_entities_interval = DEFAULT_UPDATE_ENTITIES_INTERVAL
         self.update_api_interval = DEFAULT_UPDATE_API_INTERVAL
