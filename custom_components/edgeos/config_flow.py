@@ -48,6 +48,8 @@ class DomainFlowHandler(config_entries.ConfigFlow):
 
                 return self.async_create_entry(title=title, data=data)
             except LoginError as lex:
+                await self._config_flow.clear_credentials(new_user_input)
+
                 _LOGGER.warning(f"Cannot complete login")
 
                 errors = lex.errors
@@ -109,6 +111,8 @@ class DomainOptionsFlowHandler(config_entries.OptionsFlow):
 
                     return self.async_create_entry(title=title, data=data)
                 except LoginError as lex:
+                    await self._config_flow.clear_credentials(user_input)
+
                     _LOGGER.warning(f"Cannot complete login")
 
                     errors = lex.errors

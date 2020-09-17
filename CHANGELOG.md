@@ -1,5 +1,11 @@
 # Changelog
 
+## 2020-09-17
+
+**Fixed bugs:**
+
+- Integration setup errors caused by invalid credentials (User input malformed / Unknown error occurred)
+
 ## 2020-07-23
 
 **Implemented enhancements:**
