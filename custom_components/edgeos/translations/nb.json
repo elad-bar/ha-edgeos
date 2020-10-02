@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Sett opp EdgeOS Router",
+        "description": "Sett opp EdgeOS-ruteren din, vær oppmerksom på at integrasjon vil kommunisere ved hjelp av HTTPS-tilkobling",
+        "data": {
+          "name": "Navn",
+          "host": "Vert",
+          "username": "Brukernavn",
+          "password": "Passord",
+          "unit": "Enhet"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "EdgeOS-integrasjon ({name}) er allerede konfigurert"
+    },
+    "error": {
+      "invalid_credentials": "Ugyldig legitimasjon til EdgeOS Router",
+      "auth_general_error": "Generell feil, prøv igjen",
+      "not_found": "EdgeOS URL ikke funne",
+      "invalid_export_configuration": "Eksport (trafikkanalyse) konfigurasjon er deaktivert, vennligst aktiver",
+      "invalid_dpi_configuration": "Konfigurasjon av dyp pakkeinspeksjon (trafikkanalyse) er deaktivert, vennligst aktiver",
+      "empty_device_data": "Kunne ikke hente enhetsdata fra EdgeOS Router",
+      "already_configured": "EdgeOS-integrasjon allerede konfigurert med navnet",
+      "incompatible_version": "Inkompatibel versjon (påkrevd minst v1.10)"
+    }
+  },
+  "options": {
+      "step": {
+          "edge_os_additional_settings": {
+              "title": "Alternativer for EdgeOS.",
+              "description": "Sett opp dine overvåkede enheter / grensesnitt og sporede enheter, bruk kommaadskilte verdier, for å fjerne eksisterende verdi, bruk avkrysningsruten.",
+              "data": {
+                  "name": "Navn",
+                  "host": "Vert",
+                  "username": "Brukernavn",
+                  "password": "Passord",
+                  "clear-credentials": "Fjern legitimasjon",
+                  "unit": "Enhet",
+                  "consider_away_interval": "Borteintervall (sekunder)",
+                  "monitored_interfaces": "Overvåkede grensesnitt",
+                  "monitored_devices": "Overvåkede enheter",
+                  "track_devices": "Sporede enheter",
+                  "update_api_interval": "Oppdater API-intervall (sekunder)",
+                  "update_entities_interval": "Oppdater enhetsintervall (sekunder)",
+                  "store_debug_file": "Lagre feilsøkingsfilen",
+                  "log_level": "Loggnivå",
+                  "log_incoming_messages": "Logg innkommende meldinger"
+              }
+          }
+      },
+      "error": {
+        "invalid_credentials": "Ugyldig legitimasjon til EdgeOS Router",
+        "auth_general_error": "Generell feil, vennligst prøv igjen",
+        "not_found": "EdgeOS URL ikke funnet",
+        "invalid_export_configuration": "Eksport (trafikkanalyse) konfigurasjon er deaktivert, vennligst aktiver",
+        "invalid_dpi_configuration": "Konfigurasjon av dyp pakkeinspeksjon (trafikkanalyse) er deaktivert, vennligst aktiver",
+        "empty_device_data": "Kunne ikke hente enhetsdata fra EdgeOS Router",
+        "already_configured": "EdgeOS-integrasjon allerede konfigurert med navnet",
+        "incompatible_version": "Inkompatibel versjon (påkrevd minst v1.10)"
+      }
+  }
+}
