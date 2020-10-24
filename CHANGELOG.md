@@ -1,5 +1,12 @@
 # Changelog
 
+## 2020-10-24
+
+**Fixed bugs:**
+
+- Fixed interface parameter that should indicate whether an interface connected or not (l1up vs. up) [\#34](https://github.com/elad-bar/ha-edgeos/pull/34)
+
+
 ## 2020-09-17
 
 **Fixed bugs:**

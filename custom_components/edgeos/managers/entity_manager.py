@@ -258,7 +258,7 @@ class EntityManager:
             data,
             self.config_data.monitored_interfaces,
             SENSOR_TYPE_INTERFACE,
-            LINK_UP,
+            LINK_CONNECTED,
             self.get_interface_attributes,
         )
 

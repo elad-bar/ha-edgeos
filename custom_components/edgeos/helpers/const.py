@@ -88,7 +88,8 @@ CONF_CONSIDER_AWAY_INTERVAL = "consider_away_interval"
 TRUE_STR = "true"
 FALSE_STR = "false"
 
-LINK_UP = "up"
+LINK_ENABLED = "up"
+LINK_CONNECTED = "l1up"
 
 INTERFACES_STATS = "stats"
 
@@ -170,7 +171,8 @@ DOMAIN_LOGGER = "logger"
 SERVICE_SET_LEVEL = "set_level"
 
 INTERFACES_MAIN_MAP = {
-    LINK_UP: {ATTR_NAME: "Connected", ATTR_UNIT_OF_MEASUREMENT: "Connectivity"},
+    LINK_CONNECTED: {ATTR_NAME: "Connected", ATTR_UNIT_OF_MEASUREMENT: "Connectivity"},
+    LINK_ENABLED: {ATTR_NAME: "Enabled"},
     "speed": {ATTR_NAME: "Link Speed (Mbps)"},
     "duplex": {ATTR_NAME: "Duplex"},
     "mac": {ATTR_NAME: "MAC"},
