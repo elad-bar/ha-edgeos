@@ -18,7 +18,7 @@
 **Implemented enhancements:**
 
 - Moved encryption key of component to .storage directory
-- Removed support for non encrypted password (**Breaking Change**) 
+- Removed support for non encrypted password (**Breaking Change**)
 
 **Fixed bugs:**
 
@@ -75,7 +75,7 @@
 
 - Fix incorrect error message displayed when WebSocket or API request failed
 - Fix retry mechanism of API requests
-- Fix integration's options error when device or interface list is empty 
+- Fix integration's options error when device or interface list is empty
 
 ## 2020-05-14
 
@@ -94,7 +94,7 @@
 
 **Fixed bugs:**
 
-- Fix redundant calculation of bits to bytes as data is already bytes    
+- Fix redundant calculation of bits to bytes as data is already bytes
 
 ## 2020-05-08 #1
 
@@ -104,7 +104,7 @@
 
 **Fixed bugs:**
 
-- Fix default value of unit in integration's options 
+- Fix default value of unit in integration's options
 
 ## 2020-05-06
 
@@ -129,7 +129,7 @@
 
 - More enhancements to options, ability to change setup details
 - Support new translation format of HA 0.109.0
-- Added __main__.py to root directory for debugging 
+- Added __main__.py to root directory for debugging
 
 ## 2020-04-28 #3
 
@@ -165,7 +165,7 @@
 
 **Implemented enhancements:**
 
-- Simplified the way calculating whether device is connected or not, based on report of traffic analysis instead of calculating amount of traffic (bps) over the last 3 minutes [\#24](https://github.com/elad-bar/ha-edgeos/issues/24) 
+- Simplified the way calculating whether device is connected or not, based on report of traffic analysis instead of calculating amount of traffic (bps) over the last 3 minutes [\#24](https://github.com/elad-bar/ha-edgeos/issues/24)
 - Moved service `edgeos.save_debug_data` to Integration -> Options as configuration (that being reset after doing the action once)
 - Moved service `edgeos.log_events` to Integration -> Options as configuration to toggle upon need
 - Added ability to configure the log level of the component from Integration - Options, more details in README
@@ -196,4 +196,4 @@
 
 **Fixed bugs:**
 
-- Login failure initiated reconnect mechanism instead of die gracefully 
+- Login failure initiated reconnect mechanism instead of die gracefully

@@ -12,7 +12,6 @@ from custom_components.edgeos.models.base_entity import (
     async_setup_base_entry,
 )
 from custom_components.edgeos.models.entity_data import EntityData
-
 from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
