@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.2
+
+- Fixed hassfest error (missing iot_class)
+
 ## 2020-10-24
 
 **Fixed bugs:**
