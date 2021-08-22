@@ -76,6 +76,15 @@ In case `Default` option is chosen, flow will skip calling the service, after ch
 ###### Save debug file
 Will store debug data from the component to HA CONFIG path named `edgeos_data.log`
 
+#### Debugging
+To set the log level of the component to DEBUG, please set it from the options of the component if installed, otherwise, set it within configuration YAML of HA:
+```yaml
+logger:
+  default: warning
+  logs:
+    custom_components.edgeos: debug
+```
+
 ## Components
 #### Default
 Name | Type | State | Attributes |

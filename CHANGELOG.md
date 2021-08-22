@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.1.3
+
+- Fixed monitored_devices appear as disconnected [\#32](https://github.com/elad-bar/ha-edgeos/pull/32) by [@shlomki](https://github.com/shlomki)
+- Added documentation of how to set manually log level as debug
+
 ## v1.1.2
 
 - Fixed hassfest error (missing iot_class)
