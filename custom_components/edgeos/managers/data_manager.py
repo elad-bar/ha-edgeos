@@ -515,7 +515,7 @@ class EdgeOSData:
                             if item in service_data and service_data[item] != "":
                                 service_data_item_value = int(service_data[item])
 
-                            if "x_rate" in item and current_value > 0:
+                            if "x_rate" in item and service_data_item_value > 0:
                                 device[LAST_ACTIVITY] = datetime.now()
 
                             traffic_value = current_value + service_data_item_value
