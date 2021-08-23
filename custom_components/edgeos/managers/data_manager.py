@@ -119,8 +119,17 @@ class EdgeOSData:
                 cookies = self._api.cookies_data
                 session_id = self._api.session_id
 
-                _LOGGER.debug(f"Initializing WS using session: {session_id}")
-                await self._ws.initialize(cookies, session_id)
+                if self.version[:2] == "v1":
+                    _LOGGER.error(
+                        f"Unsupported firmware version ({self.version})"
+                    )
+
+                    await self.terminate()
+
+                else:
+                    _LOGGER.debug(f"Initializing WS using session: {session_id}")
+                    await self._ws.initialize(cookies, session_id)
+
         except SessionTerminatedException as stex:
             _LOGGER.info(f"Session terminated ({stex})")
 
@@ -364,8 +373,11 @@ class EdgeOSData:
             return
 
         system_data = devices_data.get("system", {})
+        firmware_version = system_info_data.get("fw-latest", {})
+        version = firmware_version.get("version")
+
         self.hostname = system_data.get("host-name", self.hostname)
-        self.version = system_info_data.get("sw_ver", "N/A")
+        self.version = version
 
     def handle_interfaces(self, data):
         try:

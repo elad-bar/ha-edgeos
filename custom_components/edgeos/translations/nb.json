@@ -24,7 +24,7 @@
       "invalid_dpi_configuration": "Konfigurasjon av dyp pakkeinspeksjon (trafikkanalyse) er deaktivert, vennligst aktiver",
       "empty_device_data": "Kunne ikke hente enhetsdata fra EdgeOS Router",
       "already_configured": "EdgeOS-integrasjon allerede konfigurert med navnet",
-      "incompatible_version": "Inkompatibel versjon (påkrevd minst v1.10)"
+      "incompatible_version": "Inkompatibel versjon (påkrevd minst v2.0)"
     }
   },
   "options": {
@@ -59,7 +59,7 @@
         "invalid_dpi_configuration": "Konfigurasjon av dyp pakkeinspeksjon (trafikkanalyse) er deaktivert, vennligst aktiver",
         "empty_device_data": "Kunne ikke hente enhetsdata fra EdgeOS Router",
         "already_configured": "EdgeOS-integrasjon allerede konfigurert med navnet",
-        "incompatible_version": "Inkompatibel versjon (påkrevd minst v1.10)"
+        "incompatible_version": "Inkompatibel versjon (påkrevd minst v2.0)"
       }
   }
 }

@@ -420,6 +420,19 @@ class ConfigFlowManager:
                         )
                         errors = {"base": "invalid_export_configuration"}
 
+                    system_info_data = await api.get_general_data(SYS_INFO_KEY)
+
+                    if system_info_data is not None:
+                        firmware_version = system_info_data.get("fw-latest", {})
+                        version = firmware_version.get("version")
+
+                        if version[:2] == "v1":
+                            _LOGGER.error(
+                                f"Unsupported firmware version ({version})"
+                            )
+
+                            errors = {"base": "incompatible_version"}
+
             else:
                 _LOGGER.warning(f"Failed to login {name}")
 

@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.1.4
+- Prevent the component to get installed or run with EdgeOS Firmware v1
+
 ## v1.1.3
 
 - Fixed monitored_devices appear as disconnected [\#32](https://github.com/elad-bar/ha-edgeos/pull/32) by [@shlomki](https://github.com/shlomki)

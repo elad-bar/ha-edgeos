@@ -252,6 +252,7 @@ CONNECTED_ICONS = {True: "mdi:lan-connect", False: "mdi:lan-disconnect"}
 SERVICE_LOG_EVENTS_SCHEMA = vol.Schema({vol.Required(ATTR_ENABLED): cv.boolean})
 
 HTTP_ERRORS = {
+    400: "incompatible_version",
     404: "not_found",
     403: "invalid_credentials",
     500: "incompatible_version",

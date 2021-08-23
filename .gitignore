@@ -62,5 +62,5 @@ log.txt
 
 venv/
 
-test_consts.py
+local_consts.py
 edgeos.key
