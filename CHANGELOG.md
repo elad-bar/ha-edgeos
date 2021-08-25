@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.1.5
+- Fixed integration fails to load with EdgeOS version older than 2.0.9 [\#53](https://github.com/elad-bar/ha-edgeos/pull/53)
+
 ## v1.1.4
 - Prevent the component to get installed or run with EdgeOS Firmware v1
 

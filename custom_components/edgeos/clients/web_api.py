@@ -12,9 +12,9 @@ from aiohttp import ClientSession, CookieJar
 
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from . import LoginException, SessionTerminatedException
 from ..helpers.const import *
 from ..managers.configuration_manager import ConfigManager
+from ..models.exceptions import LoginException, SessionTerminatedException
 from .web_socket import EdgeOSWebSocket
 
 REQUIREMENTS = ["aiohttp"]

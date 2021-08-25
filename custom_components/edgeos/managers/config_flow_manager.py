@@ -5,14 +5,15 @@ from cryptography.fernet import InvalidToken
 
 from homeassistant.config_entries import ConfigEntry
 
-from .. import get_ha
-from ..clients import LoginException
 from ..clients.web_api import EdgeOSWebAPI
+from ..helpers import get_ha
 from ..helpers.const import *
 from ..managers.configuration_manager import ConfigManager
 from ..managers.password_manager import PasswordManager
 from ..models import AlreadyExistsError, LoginError
 from ..models.config_data import ConfigData
+from ..models.exceptions import IncompatibleVersion, LoginException
+from .version_check import VersionManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,7 +134,7 @@ class ConfigFlowManager:
             if ha is not None:
                 raise AlreadyExistsError(entry_primary_key)
 
-    def _get_default_fields(self, flow, config_data: Optional[ConfigData] = None):
+    def _get_default_fields(self, flow, config_data: Optional[ConfigData] = None) -> dict:
         if config_data is None:
             config_data = self.config_data
 
@@ -226,9 +227,12 @@ class ConfigFlowManager:
 
     async def _update_entry(self):
         try:
-            entry = ConfigEntry(
-                0, "", "", self._data, "", "", {}, options=self._options
-            )
+            entry = ConfigEntry(version=0,
+                                domain="",
+                                title="",
+                                data=self._data,
+                                source="",
+                                options=self._options)
 
             await self._config_manager.update(entry)
         except InvalidToken:
@@ -236,9 +240,12 @@ class ConfigFlowManager:
 
             del self._data[CONF_PASSWORD]
 
-            entry = ConfigEntry(
-                0, "", "", self._data, "", "", {}, options=self._options
-            )
+            entry = ConfigEntry(version=0,
+                                domain="",
+                                title="",
+                                data=self._data,
+                                source="",
+                                options=self._options)
 
             await self._config_manager.update(entry)
 
@@ -421,17 +428,9 @@ class ConfigFlowManager:
                         errors = {"base": "invalid_export_configuration"}
 
                     system_info_data = await api.get_general_data(SYS_INFO_KEY)
-
-                    if system_info_data is not None:
-                        firmware_version = system_info_data.get("fw-latest", {})
-                        version = firmware_version.get("version")
-
-                        if version[:2] == "v1":
-                            _LOGGER.error(
-                                f"Unsupported firmware version ({version})"
-                            )
-
-                            errors = {"base": "incompatible_version"}
+                    vm = VersionManager()
+                    vm.update(system_info_data)
+                    vm.validate()
 
             else:
                 _LOGGER.warning(f"Failed to login {name}")
@@ -444,6 +443,11 @@ class ConfigFlowManager:
             )
 
             errors = {"base": HTTP_ERRORS.get(ex.status_code, "auth_general_error")}
+
+        except IncompatibleVersion as ivex:
+            _LOGGER.error(str(ivex))
+
+            errors = {"base": "incompatible_version"}
 
         except Exception as ex:
             _LOGGER.warning(f"Failed to login {name} due to general error: {str(ex)}")

@@ -1,40 +1,39 @@
 import logging
+from typing import Optional
+
+from ..helpers.const import *
+from ..models.exceptions import IncompatibleVersion
 
 _LOGGER = logging.getLogger(__name__)
 
-MAX_PARTS = 3
-MINIMUM_EDGEOS_VERSION = "1.10"
 
+class VersionManager:
+    version: Optional[str]
 
-class VersionCheck:
     def __init__(self):
-        self._minimum_version_score = self._get_score(MINIMUM_EDGEOS_VERSION)
+        self.version = None
 
-    @staticmethod
-    def _get_score(version):
-        ver_number_arr = version.split(".")
+    def validate(self):
+        if self.version is None:
+            raise IncompatibleVersion(self.version)
 
-        multiplier = 100000000
-        total_version = 0
+        if self.version == EDGEOS_VERSION_UNKNOWN:
+            raise IncompatibleVersion(self.version)
 
-        max_numbers_to_check = len(ver_number_arr)
-        if max_numbers_to_check > MAX_PARTS:
-            max_numbers_to_check = MAX_PARTS
+        if self.version[:2] == EDGEOS_VERSION_INCOMPATIBLE:
+            raise IncompatibleVersion(self.version)
 
-        for i in range(0, max_numbers_to_check):
-            ver_id = int(ver_number_arr[i]) * multiplier
-            total_version = total_version + ver_id
+    def update(self, system_info_data):
+        firmware_version = system_info_data.get("fw-latest", None)
+        if firmware_version is None:
+            software_version = system_info_data.get("sw_ver", "N/A")
+            software_version_items = software_version.split(".")
 
-            multiplier = multiplier / 10000
+            version_without_build = software_version_items[:-3]
+            version_without_model = version_without_build[2:]
+            version = '.'.join(version_without_model)
 
-        return total_version
+        else:
+            version = firmware_version.get("version", "N/A")
 
-    def is_compatible(self, fw_version):
-        version_parts = fw_version.split("v")
-        version = version_parts[len(version_parts) - 1]
-
-        version_score = self._get_score(version)
-
-        is_compatible = version_score >= self._minimum_version_score
-
-        return is_compatible
+        self.version = version

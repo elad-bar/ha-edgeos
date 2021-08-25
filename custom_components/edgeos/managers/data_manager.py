@@ -8,13 +8,13 @@ import logging
 import sys
 from typing import Optional
 
-from custom_components.edgeos.clients import SessionTerminatedException
-
 from ..clients.web_api import EdgeOSWebAPI
 from ..clients.web_socket import EdgeOSWebSocket
 from ..helpers.const import *
 from ..models.config_data import ConfigData
+from ..models.exceptions import IncompatibleVersion, SessionTerminatedException
 from .configuration_manager import ConfigManager
+from .version_check import VersionManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +24,7 @@ class EdgeOSData:
     version: str
     edgeos_data: dict
     system_data: dict
+    version_manager: VersionManager
 
     def __init__(self, hass, config_manager: ConfigManager, update_home_assistant):
         self._hass = hass
@@ -43,7 +44,6 @@ class EdgeOSData:
         topics = self._ws_handlers.keys()
 
         self.hostname = config_data.host
-        self.version = "N/A"
 
         self._ws = EdgeOSWebSocket(self._hass, config_manager, topics, self.ws_handler)
 
@@ -51,7 +51,13 @@ class EdgeOSData:
             self._hass, config_manager, self.edgeos_disconnection_handler, self._ws
         )
 
+        self.version_manager = VersionManager()
+
         self._is_active = True
+
+    @property
+    def version(self):
+        return self.version_manager.version
 
     @property
     def product(self):
@@ -119,19 +125,18 @@ class EdgeOSData:
                 cookies = self._api.cookies_data
                 session_id = self._api.session_id
 
-                if self.version[:2] == "v1":
-                    _LOGGER.error(
-                        f"Unsupported firmware version ({self.version})"
-                    )
+                self.version_manager.validate()
 
-                    await self.terminate()
-
-                else:
-                    _LOGGER.debug(f"Initializing WS using session: {session_id}")
-                    await self._ws.initialize(cookies, session_id)
+                _LOGGER.debug(f"Initializing WS using session: {session_id}")
+                await self._ws.initialize(cookies, session_id)
 
         except SessionTerminatedException as stex:
             _LOGGER.info(f"Session terminated ({stex})")
+
+            self._is_active = False
+
+        except IncompatibleVersion as ivex:
+            _LOGGER.error(str(ivex))
 
             self._is_active = False
 
@@ -269,7 +274,7 @@ class EdgeOSData:
                 f"Failed to handle WS message, Error: {ex}, Line: {line_number}"
             )
 
-    def get_ws_handlers(self):
+    def get_ws_handlers(self) -> dict:
         ws_handlers = {
             EXPORT_KEY: self.handle_export,
             INTERFACES_KEY: self.handle_interfaces,
@@ -373,11 +378,8 @@ class EdgeOSData:
             return
 
         system_data = devices_data.get("system", {})
-        firmware_version = system_info_data.get("fw-latest", {})
-        version = firmware_version.get("version")
-
         self.hostname = system_data.get("host-name", self.hostname)
-        self.version = version
+        self.version_manager.update(system_info_data)
 
     def handle_interfaces(self, data):
         try:
