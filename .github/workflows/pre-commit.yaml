@@ -39,4 +39,4 @@ jobs:
           key: ${{ steps.cache_key_prefix.outputs.result }}-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: |
             ${{ steps.cache_key_prefix.outputs.result }}-
-      - run: ./.venv/Scripts/pre-commit run --all-files --show-diff-on-failure --color=always
+      - run: pre-commit run --all-files --show-diff-on-failure --color=always
