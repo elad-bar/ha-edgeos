@@ -1,0 +1,4 @@
+aiohttp~=3.7.4.post0
+homeassistant~=2021.11.0
+cryptography~=3.3.2
+voluptuous~=0.12.1

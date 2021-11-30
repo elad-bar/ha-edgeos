@@ -2,10 +2,10 @@ import logging
 import sys
 from typing import Any, Callable, Optional
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from ..helpers import get_ha
 from ..helpers.const import *
@@ -38,7 +38,7 @@ async def async_setup_base_entry(
         _LOGGER.error(f"Failed to load {domain}, error: {ex}, line: {line_number}")
 
 
-class EdgeOSEntity(Entity):
+class EdgeOSEntity(SensorEntity):
     """Representation a binary sensor that is updated by EdgeOS."""
 
     integration_name: str = None

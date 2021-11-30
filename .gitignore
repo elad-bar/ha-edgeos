@@ -60,7 +60,7 @@ target/
 /.idea
 log.txt
 
-venv/
+.venv/
 
 local_consts.py
 edgeos.key

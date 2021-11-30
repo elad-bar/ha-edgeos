@@ -1,13 +1,14 @@
 import asyncio
 import logging
 
+from local_consts import *
+
 from custom_components.edgeos.managers.configuration_manager import ConfigManager
 from custom_components.edgeos.managers.data_manager import EdgeOSData
 from custom_components.edgeos.managers.password_manager import PasswordManager
 from custom_components.edgeos.managers.version_check import VersionCheck
 from custom_components.edgeos.models.config_data import ConfigData
 from homeassistant.core import HomeAssistant
-from local_consts import *
 
 logging.basicConfig(filename="log.txt", filemode="a", level="DEBUG")
 
