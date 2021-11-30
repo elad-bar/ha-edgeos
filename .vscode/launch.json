@@ -5,7 +5,7 @@
         "name": "Pre-commit",
         "request": "launch",
         "type": "python",
-        "program": "${workspaceFolder}/.venv/Scripts/pre-commit.exe",
+        "program": "${workspaceFolder}/venv/Scripts/pre-commit.exe",
         "args" : ["run", "--all-files", "--show-diff-on-failure", "--color=always"]
     }
 ]
