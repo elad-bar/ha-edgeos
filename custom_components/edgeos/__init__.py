@@ -12,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from .helpers import async_set_ha, clear_ha, get_ha, handle_log_level
 from .helpers.const import *
 
-REQUIREMENTS = ["aiohttp"]
-
 _LOGGER = logging.getLogger(__name__)
 
 

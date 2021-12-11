@@ -3,9 +3,12 @@ from datetime import datetime, timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSOR
+from homeassistant.components.binary_sensor import (
+    DOMAIN as DOMAIN_BINARY_SENSOR,
+    BinarySensorDeviceClass,
+)
 from homeassistant.components.device_tracker import DOMAIN as DOMAIN_DEVICE_TRACKER
-from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
+from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR, SensorDeviceClass
 from homeassistant.const import (
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -162,9 +165,7 @@ WS_SESSION_ID = "SESSION_ID"
 ATTR_LAST_CHANGED = "Last Changed"
 ATTR_WEB_SOCKET_LAST_UPDATE = "WS Last Update"
 ATTR_API_LAST_UPDATE = "API Last Update"
-ATTR_DEVICE_CLASS = "device_class"
 ATTR_UNKNOWN_DEVICES = "Unknown Devices"
-DEVICE_CLASS_CONNECTIVITY = "connectivity"
 
 DEFAULT_DATE_FORMAT = "%x %X"
 
@@ -239,6 +240,8 @@ ENTITY_NAME = "name"
 ENTITY_DEVICE_NAME = "device-name"
 ENTITY_UNIQUE_ID = "unique-id"
 ENTITY_DISABLED = "disabled"
+ENTITY_BINARY_SENSOR_DEVICE_CLASS = "binary-sensor-device-class"
+ENTITY_SENSOR_DEVICE_CLASS = "sensor-device-class"
 
 ENTITY_STATUS = "entity-status"
 ENTITY_STATUS_EMPTY = None

@@ -165,21 +165,22 @@ class EdgeOSWebAPI:
             retry_attempt = retry_attempt + 1
 
             try:
-                async with self._session.get(url, ssl=False) as response:
-                    status = response.status
+                if self._session is not None:
+                    async with self._session.get(url, ssl=False) as response:
+                        status = response.status
 
-                    message = (
-                        f"URL: {url}, Status: {response.reason} ({response.status})"
-                    )
+                        message = (
+                            f"URL: {url}, Status: {response.reason} ({response.status})"
+                        )
 
-                    if status < 400:
-                        result = await response.json()
-                        break
-                    elif status == 403:
-                        self._session = None
-                        self._cookies = {}
+                        if status < 400:
+                            result = await response.json()
+                            break
+                        elif status == 403:
+                            self._session = None
+                            self._cookies = {}
 
-                        break
+                            break
 
             except Exception as ex:
                 exc_type, exc_obj, tb = sys.exc_info()

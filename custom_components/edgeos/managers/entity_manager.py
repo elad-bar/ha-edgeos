@@ -282,7 +282,6 @@ class EntityManager:
                 main_entity_details = data.get(main_attribute, FALSE_STR)
 
                 attributes = {
-                    ATTR_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
                     ATTR_FRIENDLY_NAME: entity_name,
                 }
 
@@ -318,7 +317,7 @@ class EntityManager:
                 icon = ICONS[sensor_type]
 
                 self.create_entity(
-                    DOMAIN_BINARY_SENSOR, entity_name, is_on, attributes, icon
+                    DOMAIN_BINARY_SENSOR, entity_name, is_on, attributes, BinarySensorDeviceClass.CONNECTIVITY, icon
                 )
 
         except Exception as ex:
@@ -343,7 +342,7 @@ class EntityManager:
             }
 
             self.create_entity(
-                DOMAIN_SENSOR, entity_name, state, attributes, "mdi:help-rhombus"
+                DOMAIN_SENSOR, entity_name, state, attributes, None, "mdi:help-rhombus"
             )
         except Exception as ex:
             self.log_exception(
@@ -374,7 +373,7 @@ class EntityManager:
                         attributes[key] = system_state[key]
 
             self.create_entity(
-                DOMAIN_SENSOR, entity_name, state, attributes, "mdi:timer-sand"
+                DOMAIN_SENSOR, entity_name, state, attributes, None, "mdi:timer-sand"
             )
         except Exception as ex:
             self.log_exception(ex, "Failed to create system sensor")
@@ -390,7 +389,6 @@ class EntityManager:
 
             if system_state is not None:
                 attributes = {
-                    ATTR_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
                     ATTR_FRIENDLY_NAME: entity_name,
                     ATTR_API_LAST_UPDATE: api_last_update.strftime(DEFAULT_DATE_FORMAT),
                     ATTR_WEB_SOCKET_LAST_UPDATE: web_socket_last_update.strftime(
@@ -407,7 +405,7 @@ class EntityManager:
             icon = CONNECTED_ICONS[is_alive]
 
             self.create_entity(
-                DOMAIN_BINARY_SENSOR, entity_name, is_alive, attributes, icon
+                DOMAIN_BINARY_SENSOR, entity_name, is_alive, attributes, BinarySensorDeviceClass.CONNECTIVITY, icon
             )
         except Exception as ex:
             self.log_exception(ex, "Failed to create system status binary sensor")
@@ -448,6 +446,7 @@ class EntityManager:
         name: str,
         state: int,
         attributes: dict,
+        device_class: Optional[str] = None,
         icon: Optional[str] = None,
     ):
         entity = EntityData()
@@ -457,6 +456,11 @@ class EntityManager:
         entity.attributes = attributes
         entity.device_name = DEFAULT_NAME
         entity.unique_id = f"{DEFAULT_NAME}-{domain}-{name}"
+
+        if domain == DOMAIN_BINARY_SENSOR:
+            entity.binary_sensor_device_class = device_class
+        elif domain == DOMAIN_SENSOR:
+            entity.sensor_device_class = device_class
 
         if icon is not None:
             entity.icon = icon

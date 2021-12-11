@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.6
+
+- Upgraded code to support breaking changes of HA v2012.12.0
+
 ## v1.1.5
 - Fixed integration fails to load with EdgeOS version older than 2.0.9 [\#53](https://github.com/elad-bar/ha-edgeos/pull/53)
 

@@ -5,7 +5,7 @@ https://home-assistant.io/components/binary_sensor.edgeos/
 """
 import logging
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 
 from .helpers.const import *
@@ -37,7 +37,7 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
-class EdgeOSBinarySensor(EdgeOSEntity):
+class EdgeOSBinarySensor(BinarySensorEntity, EdgeOSEntity):
     """Representation a binary sensor that is updated by EdgeOS."""
 
     @property
@@ -46,9 +46,9 @@ class EdgeOSBinarySensor(EdgeOSEntity):
         return bool(self.entity.state)
 
     @property
-    def state(self):
-        """Return the state of the binary sensor."""
-        return STATE_ON if self.is_on else STATE_OFF
+    def device_class(self) -> BinarySensorDeviceClass:
+        """Return the class of this sensor."""
+        return self.entity.binary_sensor_device_class
 
     async def async_added_to_hass_local(self):
         _LOGGER.info(f"Added new {self.name}")
