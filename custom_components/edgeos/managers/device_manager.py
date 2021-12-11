@@ -1,6 +1,7 @@
 import logging
 import sys
 
+from homeassistant.const import ATTR_CONFIGURATION_URL
 from homeassistant.helpers.device_registry import async_get_registry
 
 from ..helpers.const import *
@@ -65,6 +66,7 @@ class DeviceManager:
                 "manufacturer": MANUFACTURER,
                 "model": product,
                 "sw_version": version,
+                ATTR_CONFIGURATION_URL: self.config_manager.data.url
             }
 
             if current_device_info.get("name", "") != device_name:

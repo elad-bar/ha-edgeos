@@ -3,6 +3,8 @@ Support for EdgeOS binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.edgeos/
 """
+from __future__ import annotations
+
 import logging
 
 from custom_components.edgeos.helpers.const import *
@@ -11,6 +13,7 @@ from custom_components.edgeos.models.base_entity import (
     async_setup_base_entry,
 )
 from custom_components.edgeos.models.entity_data import EntityData
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +41,7 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
-class EdgeOSSensor(EdgeOSEntity):
+class EdgeOSSensor(SensorEntity, EdgeOSEntity):
     """Representation a binary sensor that is updated by EdgeOS."""
 
     @property
@@ -50,7 +53,7 @@ class EdgeOSSensor(EdgeOSEntity):
         _LOGGER.info(f"Added new {self.name}")
 
     @property
-    def device_class(self) -> SensorDeviceClass:
+    def device_class(self) -> SensorDeviceClass | str | None:
         """Return the class of this sensor."""
         return self.entity.sensor_device_class
 

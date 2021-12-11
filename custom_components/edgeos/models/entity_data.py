@@ -24,8 +24,8 @@ class EntityData:
         self.device_name = ""
         self.status = ENTITY_STATUS_CREATED
         self.disabled = False
-        self.binary_sensor_device_class: None
-        self.sensor_device_class: None
+        self.binary_sensor_device_class = None
+        self.sensor_device_class = None
 
     def __repr__(self):
         obj = {
