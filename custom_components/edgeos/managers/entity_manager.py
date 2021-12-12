@@ -316,8 +316,8 @@ class EntityManager:
 
                 icon = ICONS[sensor_type]
 
-                self.create_entity(
-                    DOMAIN_BINARY_SENSOR, entity_name, is_on, attributes, BinarySensorDeviceClass.CONNECTIVITY, icon
+                self.create_binary_sensor_entity(
+                    entity_name, is_on, attributes, BinarySensorDeviceClass.CONNECTIVITY, icon
                 )
 
         except Exception as ex:
@@ -341,8 +341,8 @@ class EntityManager:
                 ATTR_UNKNOWN_DEVICES: unknown_devices,
             }
 
-            self.create_entity(
-                DOMAIN_SENSOR, entity_name, state, attributes, None, "mdi:help-rhombus"
+            self.create_sensor_entity(
+                entity_name, state, attributes, None, SensorStateClass.MEASUREMENT, "mdi:help-rhombus"
             )
         except Exception as ex:
             self.log_exception(
@@ -372,8 +372,8 @@ class EntityManager:
                     if key != UPTIME:
                         attributes[key] = system_state[key]
 
-            self.create_entity(
-                DOMAIN_SENSOR, entity_name, state, attributes, None, "mdi:timer-sand"
+            self.create_sensor_entity(
+                entity_name, state, attributes, None, SensorStateClass.TOTAL_INCREASING, "mdi:timer-sand"
             )
         except Exception as ex:
             self.log_exception(ex, "Failed to create system sensor")
@@ -404,8 +404,8 @@ class EntityManager:
 
             icon = CONNECTED_ICONS[is_alive]
 
-            self.create_entity(
-                DOMAIN_BINARY_SENSOR, entity_name, is_alive, attributes, BinarySensorDeviceClass.CONNECTIVITY, icon
+            self.create_binary_sensor_entity(
+                entity_name, is_alive, attributes, BinarySensorDeviceClass.CONNECTIVITY, icon
             )
         except Exception as ex:
             self.log_exception(ex, "Failed to create system status binary sensor")
@@ -430,8 +430,8 @@ class EntityManager:
                     if ATTR_UNIT_OF_MEASUREMENT not in attr:
                         attributes[name] = value
 
-                self.create_entity(
-                    DOMAIN_DEVICE_TRACKER, entity_name, state, attributes
+                self.create_device_tracker_entity(
+                    entity_name, state, attributes
                 )
 
         except Exception as ex:
@@ -440,13 +440,12 @@ class EntityManager:
                 f"Failed to create {host} device tracker with the following data: {data}",
             )
 
-    def create_entity(
-        self,
-        domain: str,
+    @staticmethod
+    def get_basic_entity(
         name: str,
+        domain: str,
         state: int,
         attributes: dict,
-        device_class: Optional[str] = None,
         icon: Optional[str] = None,
     ):
         entity = EntityData()
@@ -457,15 +456,50 @@ class EntityManager:
         entity.device_name = DEFAULT_NAME
         entity.unique_id = f"{DEFAULT_NAME}-{domain}-{name}"
 
-        if domain == DOMAIN_BINARY_SENSOR:
-            entity.binary_sensor_device_class = device_class
-        elif domain == DOMAIN_SENSOR:
-            entity.sensor_device_class = device_class
-
         if icon is not None:
             entity.icon = icon
 
-        self.set_entity(domain, name, entity)
+        return entity
+
+    def create_device_tracker_entity(
+        self,
+        name: str,
+        state: int,
+        attributes: dict
+    ):
+        entity = self.get_basic_entity(name, DOMAIN_DEVICE_TRACKER, state, attributes)
+
+        self.set_entity(DOMAIN_DEVICE_TRACKER, name, entity)
+
+    def create_binary_sensor_entity(
+        self,
+        name: str,
+        state: int,
+        attributes: dict,
+        device_class: Optional[BinarySensorDeviceClass] = None,
+        icon: Optional[str] = None,
+    ):
+        entity = self.get_basic_entity(name, DOMAIN_BINARY_SENSOR, state, attributes, icon)
+
+        entity.binary_sensor_device_class = device_class
+
+        self.set_entity(DOMAIN_BINARY_SENSOR, name, entity)
+
+    def create_sensor_entity(
+        self,
+        name: str,
+        state: int,
+        attributes: dict,
+        device_class: Optional[SensorDeviceClass] = None,
+        state_class: Optional[SensorStateClass] = None,
+        icon: Optional[str] = None,
+    ):
+        entity = self.get_basic_entity(name, DOMAIN_BINARY_SENSOR, state, attributes, icon)
+
+        entity.sensor_device_class = device_class
+        entity.sensor_state_class = state_class
+
+        self.set_entity(DOMAIN_SENSOR, name, entity)
 
     @staticmethod
     def get_device_attributes(key):

@@ -14,6 +14,7 @@ class EntityData:
     disabled: bool
     binary_sensor_device_class: Optional[BinarySensorDeviceClass]
     sensor_device_class: Optional[SensorDeviceClass]
+    sensor_state_class: Optional[SensorStateClass]
 
     def __init__(self):
         self.unique_id = ""
@@ -26,6 +27,7 @@ class EntityData:
         self.disabled = False
         self.binary_sensor_device_class = None
         self.sensor_device_class = None
+        self.sensor_state_class = None
 
     def __repr__(self):
         obj = {
@@ -38,7 +40,8 @@ class EntityData:
             ENTITY_UNIQUE_ID: self.unique_id,
             ENTITY_DISABLED: self.disabled,
             ENTITY_BINARY_SENSOR_DEVICE_CLASS: self.binary_sensor_device_class,
-            ENTITY_SENSOR_DEVICE_CLASS: self.sensor_device_class
+            ENTITY_SENSOR_DEVICE_CLASS: self.sensor_device_class,
+            ENTITY_SENSOR_STATE_CLASS: self.sensor_state_class
         }
 
         to_string = f"{obj}"

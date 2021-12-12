@@ -57,6 +57,11 @@ class EdgeOSSensor(SensorEntity, EdgeOSEntity):
         """Return the class of this sensor."""
         return self.entity.sensor_device_class
 
+    @property
+    def state_class(self) -> SensorDeviceClass | str | None:
+        """Return the class of this sensor."""
+        return self.entity.sensor_state_class
+
     def _immediate_update(self, previous_state: bool):
         if previous_state != self.entity.state:
             _LOGGER.debug(

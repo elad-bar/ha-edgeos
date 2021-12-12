@@ -8,7 +8,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.device_tracker import DOMAIN as DOMAIN_DEVICE_TRACKER
-from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR, SensorDeviceClass
+from homeassistant.components.sensor import (
+    DOMAIN as DOMAIN_SENSOR,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -242,6 +246,7 @@ ENTITY_UNIQUE_ID = "unique-id"
 ENTITY_DISABLED = "disabled"
 ENTITY_BINARY_SENSOR_DEVICE_CLASS = "binary-sensor-device-class"
 ENTITY_SENSOR_DEVICE_CLASS = "sensor-device-class"
+ENTITY_SENSOR_STATE_CLASS = "sensor-state-class"
 
 ENTITY_STATUS = "entity-status"
 ENTITY_STATUS_EMPTY = None
