@@ -1,9 +1,13 @@
 # Changelog
 
+## 1.1.8
+
+- Removed entity / device delete upon restarting HA
+
 ## 1.1.7
 
 - Added support for long term statistics
--
+
 ## 1.1.6
 
 - Upgraded code to support breaking changes of HA v2012.12.0
