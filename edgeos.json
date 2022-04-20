@@ -1,19 +1,19 @@
 {
-    "edgeos": {
-        "version": "2.0.0",
-        "local_location": "/custom_components/edgeos/__init__.py",
-        "remote_location": "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/__init__.py",
-        "visit_repo": "https://github.com/elad-bar/ha-edgeos",
-        "changelog": "https://github.com/elad-bar/ha-edgeos/releases/latest",
-        "resources": [
-            "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/const.py",
-            "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/device_tracker.py",
-            "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/home_assistant.py",
-            "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/services.yaml",
-            "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/web_api.py",
-            "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/web_login.py",
-            "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/web_socket.py",
-            "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/manifest.json"
-        ]
-    }
+  "edgeos": {
+    "version": "2.0.0",
+    "local_location": "/custom_components/edgeos/__init__.py",
+    "remote_location": "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/__init__.py",
+    "visit_repo": "https://github.com/elad-bar/ha-edgeos",
+    "changelog": "https://github.com/elad-bar/ha-edgeos/releases/latest",
+    "resources": [
+      "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/const.py",
+      "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/device_tracker.py",
+      "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/home_assistant.py",
+      "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/services.yaml",
+      "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/web_api.py",
+      "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/web_login.py",
+      "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/web_socket.py",
+      "https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/custom_components/edgeos/manifest.json"
+    ]
+  }
 }

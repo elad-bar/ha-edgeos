@@ -28,37 +28,37 @@
     }
   },
   "options": {
-      "step": {
-          "edge_os_additional_settings": {
-              "title": "Options for EdgeOS.",
-              "description": "Set up your monitored devices / interfaces and tracked devices, use comma separated values, to clear existing value, use the checkbox.",
-              "data": {
-                  "name": "Name",
-                  "host": "Host",
-                  "username": "Username",
-                  "password": "Password",
-                  "clear-credentials": "Clear credentials",
-                  "unit": "Unit",
-                  "consider_away_interval": "Consider away interval (Seconds)",
-                  "monitored_interfaces": "Monitored interfaces",
-                  "monitored_devices": "Monitored devices",
-                  "track_devices": "Tracked devices",
-                  "update_api_interval": "Update API interval (Seconds)",
-                  "update_entities_interval": "Update entities interval (Seconds)",
-                  "log_level": "Log level",
-                  "log_incoming_messages": "Log incoming messages"
-              }
-          }
-      },
-      "error": {
-        "invalid_credentials": "Invalid credentials to EdgeOS Router",
-        "auth_general_error": "General failure, please try again",
-        "not_found": "EdgeOS URL not found",
-        "invalid_export_configuration": "Export (traffic-analysis) configuration is disabled, please enable",
-        "invalid_dpi_configuration": "Deep Packet Inspection (traffic-analysis) configuration is disabled, please enable",
-        "empty_device_data": "Could not retrieve device data from EdgeOS Router",
-        "already_configured": "EdgeOS integration already configured with the name",
-        "incompatible_version": "Unsupported firmware version"
+    "step": {
+      "edge_os_additional_settings": {
+        "title": "Options for EdgeOS.",
+        "description": "Set up your monitored devices / interfaces and tracked devices, use comma separated values, to clear existing value, use the checkbox.",
+        "data": {
+          "name": "Name",
+          "host": "Host",
+          "username": "Username",
+          "password": "Password",
+          "clear-credentials": "Clear credentials",
+          "unit": "Unit",
+          "consider_away_interval": "Consider away interval (Seconds)",
+          "monitored_interfaces": "Monitored interfaces",
+          "monitored_devices": "Monitored devices",
+          "track_devices": "Tracked devices",
+          "update_api_interval": "Update API interval (Seconds)",
+          "update_entities_interval": "Update entities interval (Seconds)",
+          "log_level": "Log level",
+          "log_incoming_messages": "Log incoming messages"
+        }
       }
+    },
+    "error": {
+      "invalid_credentials": "Invalid credentials to EdgeOS Router",
+      "auth_general_error": "General failure, please try again",
+      "not_found": "EdgeOS URL not found",
+      "invalid_export_configuration": "Export (traffic-analysis) configuration is disabled, please enable",
+      "invalid_dpi_configuration": "Deep Packet Inspection (traffic-analysis) configuration is disabled, please enable",
+      "empty_device_data": "Could not retrieve device data from EdgeOS Router",
+      "already_configured": "EdgeOS integration already configured with the name",
+      "incompatible_version": "Unsupported firmware version"
+    }
   }
 }

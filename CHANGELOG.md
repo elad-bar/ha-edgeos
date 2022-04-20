@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.2.0
+
 BREAKING CHANGES!
 
 - Added for each interface multiple statistics sensors instead of attributes under the main binary sensor of the interface
@@ -22,9 +23,11 @@ BREAKING CHANGES!
 - Upgraded code to support breaking changes of HA v2012.12.0
 
 ## v1.1.5
+
 - Fixed integration fails to load with EdgeOS version older than 2.0.9 [\#53](https://github.com/elad-bar/ha-edgeos/pull/53)
 
 ## v1.1.4
+
 - Prevent the component to get installed or run with EdgeOS Firmware v1
 
 ## v1.1.3
@@ -41,7 +44,6 @@ BREAKING CHANGES!
 **Fixed bugs:**
 
 - Fixed interface parameter that should indicate whether an interface connected or not (l1up vs. up) [\#34](https://github.com/elad-bar/ha-edgeos/pull/34)
-
 
 ## 2020-09-17
 
@@ -77,7 +79,7 @@ BREAKING CHANGES!
 
 **Fixed bugs:**
 
-- Fix error message on load due to duplicate entities being created - Entity id already exists - ignoring: *. Platform edgeos does not generate unique IDs
+- Fix error message on load due to duplicate entities being created - Entity id already exists - ignoring: \*. Platform edgeos does not generate unique IDs
 
 ## 2020-06-23
 
@@ -165,7 +167,7 @@ BREAKING CHANGES!
 
 - More enhancements to options, ability to change setup details
 - Support new translation format of HA 0.109.0
-- Added __main__.py to root directory for debugging
+- Added **main**.py to root directory for debugging
 
 ## 2020-04-28 #3
 
@@ -223,7 +225,7 @@ BREAKING CHANGES!
 **Implemented enhancements:**
 
 - Added changelog
-- Added ability to configure update entities interval in seconds (Integrations -> Integration Name -> Options)  [\#19](https://github.com/elad-bar/ha-edgeos/issues/19) [\#15](https://github.com/elad-bar/ha-edgeos/issues)
+- Added ability to configure update entities interval in seconds (Integrations -> Integration Name -> Options) [\#19](https://github.com/elad-bar/ha-edgeos/issues/19) [\#15](https://github.com/elad-bar/ha-edgeos/issues)
 - Added instructions how to install in HACS [\#16](https://github.com/elad-bar/ha-edgeos/issues/16)
 - Added password encryption upon saving the integration settings
 - Improved drop-down logic to choose device trackers, monitored devices and interfaces [\#9](https://github.com/elad-bar/ha-edgeos/issues/9)
