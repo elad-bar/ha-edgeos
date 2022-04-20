@@ -115,7 +115,7 @@ class EntityManager:
         api_last_update = self.system_data.get(ATTR_API_LAST_UPDATE)
         web_socket_last_update = self.system_data.get(ATTR_WEB_SOCKET_LAST_UPDATE)
 
-        self.create_interface_binary_sensors()
+        self.create_interfaces_entities()
         self.create_device_binary_sensors()
         self.create_device_trackers()
         self.create_unknown_devices_sensor()
@@ -224,27 +224,120 @@ class EntityManager:
         except Exception as ex:
             self.log_exception(ex, "Failed to updated devices")
 
-    def create_interface_binary_sensors(self):
-        try:
-            interfaces = self.system_data.get(INTERFACES_KEY)
+    def create_interfaces_entities(self):
+        interfaces = self.system_data.get(INTERFACES_KEY)
 
-            for interface in interfaces:
+        for interface in interfaces:
+            if interface in self.config_data.monitored_interfaces:
                 interface_data = interfaces.get(interface)
+                interface_name = interface_data.get(ATTR_NAME)
 
-                self.create_interface_binary_sensor(interface, interface_data)
+                if interface_name is not None:
+                    self.create_interface_entities(interface, interface_name, interface_data)
+
+    def create_interface_entities(self, interface, name, data):
+        self.create_interface_main_binary_sensor(interface, name, data)
+
+        for stats_key in INTERFACES_STATS_MAP:
+            self.create_interface_stats_sensor(interface, name, data, stats_key)
+
+    def create_interface_main_binary_sensor(self, interface, name, data):
+        try:
+            entity_name = f"{self.integration_title} {SENSOR_TYPE_INTERFACE} {name}"
+
+            main_entity_details = data.get(LINK_CONNECTED, FALSE_STR)
+
+            attributes = {
+                ATTR_FRIENDLY_NAME: entity_name,
+            }
+
+            is_on = str(main_entity_details).lower() == TRUE_STR
+
+            current_entity = self.get_entity(DOMAIN_BINARY_SENSOR, entity_name)
+
+            attributes[ATTR_LAST_CHANGED] = datetime.now().strftime(
+                DEFAULT_DATE_FORMAT
+            )
+
+            if current_entity is not None and current_entity.state == is_on:
+                entity_attributes = current_entity.attributes
+                attributes[ATTR_LAST_CHANGED] = entity_attributes.get(
+                    ATTR_LAST_CHANGED
+                )
+
+            icon = ICONS[SENSOR_TYPE_INTERFACE]
+
+            self.create_binary_sensor_entity(
+                entity_name, is_on, attributes, BinarySensorDeviceClass.CONNECTIVITY, icon
+            )
 
         except Exception as ex:
-            self.log_exception(ex, f"Failed to update {INTERFACES_KEY}")
+            self.log_exception(
+                ex,
+                f"Failed to create interface's main binary sensor for '{interface}', data: {data}",
+            )
 
-    def create_interface_binary_sensor(self, key, data):
-        self.create_binary_sensor(
-            key,
-            data,
-            self.config_data.monitored_interfaces,
-            SENSOR_TYPE_INTERFACE,
-            LINK_CONNECTED,
-            self.get_interface_attributes,
-        )
+    def create_interface_stats_sensor(self, interface, name, data, stats_key):
+        try:
+            stats_name = stats_key.capitalize()
+            unit_of_measurement = UNIT_PACKETS
+            value_factor = 1
+            state_class = INTERFACES_STATS_MAP[stats_key]
+
+            if "_" in stats_key:
+                stats_parts = stats_key.split("_")
+                stats_prefix = stats_parts[0]
+                unit_of_measurement = stats_parts[1]
+                stats_direction = STATS_DIRECTION[stats_prefix]
+
+                if unit_of_measurement == UNIT_DROPPED_PACKETS.lower():
+                    stats_name = f"{UNIT_DROPPED_PACKETS} {UNIT_PACKETS} {stats_direction}"
+                    unit_of_measurement = UNIT_PACKETS
+
+                elif unit_of_measurement == "bps":
+                    stats_name = f"{UNIT_RATE} {stats_direction}"
+                    unit_of_measurement = f"{self.config_data.unit}/ps"
+                    value_factor = self.config_data.unit_size
+
+                elif unit_of_measurement == "bytes":
+                    stats_name = f"{UNIT_TRAFFIC} {stats_direction}"
+                    unit_of_measurement = self.config_data.unit
+                    value_factor = self.config_data.unit_size
+
+                else:
+                    stats_name = f"{unit_of_measurement.capitalize()} {stats_direction}"
+
+            icon = ICONS[SENSOR_TYPE_INTERFACE]
+
+            entity_name = f"{self.integration_title} {SENSOR_TYPE_INTERFACE} {name} {stats_name}"
+            value = int(data.get(stats_key)) / value_factor
+
+            attributes = {
+                ATTR_FRIENDLY_NAME: entity_name,
+                ATTR_UNIT_OF_MEASUREMENT: unit_of_measurement
+            }
+
+            current_entity = self.get_entity(DOMAIN_BINARY_SENSOR, entity_name)
+
+            attributes[ATTR_LAST_CHANGED] = datetime.now().strftime(
+                DEFAULT_DATE_FORMAT
+            )
+
+            if current_entity is not None and current_entity.state == value:
+                entity_attributes = current_entity.attributes
+                attributes[ATTR_LAST_CHANGED] = entity_attributes.get(
+                    ATTR_LAST_CHANGED
+                )
+
+            self.create_sensor_entity(
+                entity_name, value, attributes, None, state_class, icon
+            )
+
+        except Exception as ex:
+            self.log_exception(
+                ex,
+                f"Failed to create interface's '{stats_key}' sensor for '{interface}', data: {data}",
+            )
 
     def create_device_binary_sensor(self, key, data):
         self.create_binary_sensor(

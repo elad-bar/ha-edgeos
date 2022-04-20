@@ -170,6 +170,15 @@ ATTR_LAST_CHANGED = "Last Changed"
 ATTR_WEB_SOCKET_LAST_UPDATE = "WS Last Update"
 ATTR_API_LAST_UPDATE = "API Last Update"
 ATTR_UNKNOWN_DEVICES = "Unknown Devices"
+ATTR_STATE_CLASS = "state-class"
+ATTR_UNIT_TYPE = "unit-type"
+
+UNIT_PACKETS = "Packets"
+UNIT_ERRORS = "Errors"
+UNIT_TRAFFIC = "Traffic"
+UNIT_RATE = "Rate"
+UNIT_DROPPED_PACKETS = "Dropped"
+UNIT_MULTICAST = "Multicast"
 
 DEFAULT_DATE_FORMAT = "%x %X"
 
@@ -186,18 +195,23 @@ INTERFACES_MAIN_MAP = {
     "mac": {ATTR_NAME: "MAC"},
 }
 
+STATS_DIRECTION = {
+    "rx": "Received",
+    "tx": "Sent"
+}
+
 INTERFACES_STATS_MAP = {
-    "rx_packets": {ATTR_NAME: "Packets (Received)"},
-    "tx_packets": {ATTR_NAME: "Packets (Sent)"},
-    "rx_bytes": {ATTR_NAME: "{} (Received)", ATTR_UNIT_OF_MEASUREMENT: "Bytes"},
-    "tx_bytes": {ATTR_NAME: "{} (Sent)", ATTR_UNIT_OF_MEASUREMENT: "Bytes"},
-    "rx_errors": {ATTR_NAME: "Errors (Received)"},
-    "tx_errors": {ATTR_NAME: "Errors (Sent)"},
-    "rx_dropped": {ATTR_NAME: "Dropped Packets (Received)"},
-    "tx_dropped": {ATTR_NAME: "Dropped Packets (Sent)"},
-    "rx_bps": {ATTR_NAME: "{}/ps (Received)", ATTR_UNIT_OF_MEASUREMENT: "Bps"},
-    "tx_bps": {ATTR_NAME: "{}/ps (Sent)", ATTR_UNIT_OF_MEASUREMENT: "Bps"},
-    "multicast": {ATTR_NAME: "Multicast"},
+    "rx_packets": SensorStateClass.TOTAL_INCREASING,
+    "tx_packets": SensorStateClass.TOTAL_INCREASING,
+    "rx_bytes": SensorStateClass.TOTAL_INCREASING,
+    "tx_bytes": SensorStateClass.TOTAL_INCREASING,
+    "rx_errors": SensorStateClass.TOTAL_INCREASING,
+    "tx_errors": SensorStateClass.TOTAL_INCREASING,
+    "rx_dropped": SensorStateClass.TOTAL_INCREASING,
+    "tx_dropped": SensorStateClass.TOTAL_INCREASING,
+    "rx_bps": SensorStateClass.MEASUREMENT,
+    "tx_bps": SensorStateClass.MEASUREMENT,
+    "multicast": SensorStateClass.TOTAL_INCREASING,
 }
 
 DEVICE_SERVICES_STATS_MAP = {

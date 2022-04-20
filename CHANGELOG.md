@@ -1,8 +1,10 @@
 # Changelog
 
 ## 1.1.9
+BREAKING CHANGES!
 
 - Fixed support for store debug file, will store the file under `.storage/edgeos.debug.json`
+- Added for each interface multiple statistics sensors instead of attributes under the main binary sensor of the interface  
 
 ## 1.1.8
 
