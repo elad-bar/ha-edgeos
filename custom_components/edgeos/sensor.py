@@ -47,7 +47,7 @@ class EdgeOSSensor(SensorEntity, EdgeOSEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self.entity.state
+        return self.entity.get_value()
 
     async def async_added_to_hass_local(self):
         _LOGGER.info(f"Added new {self.name}")

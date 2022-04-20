@@ -6,7 +6,7 @@ from ..helpers.const import *
 class EntityData:
     unique_id: str
     name: str
-    state: int
+    state: float
     attributes: dict
     icon: str
     device_name: str
@@ -28,6 +28,15 @@ class EntityData:
         self.binary_sensor_device_class = None
         self.sensor_device_class = None
         self.sensor_state_class = None
+
+    def get_value(self):
+        value = self.state
+        unit = self.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+        if unit is None or unit in INT_UNITS:
+            value = int(value)
+
+        return value
 
     def __repr__(self):
         obj = {
