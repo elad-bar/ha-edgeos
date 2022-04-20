@@ -15,6 +15,7 @@ from ..models.config_data import ConfigData
 from ..models.exceptions import IncompatibleVersion, SessionTerminatedException
 from .configuration_manager import ConfigManager
 from .version_check import VersionManager
+from .storage_manager import StorageManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +55,8 @@ class EdgeOSData:
         self.version_manager = VersionManager()
 
         self._is_active = True
+
+        self._storage_manager = StorageManager(hass)
 
     @property
     def version(self):
@@ -210,7 +213,7 @@ class EdgeOSData:
                 if unknown_devices_data is not None:
                     self.load_unknown_devices(unknown_devices_data)
 
-            self.update()
+            await self.update()
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -220,7 +223,7 @@ class EdgeOSData:
                 f"Failed to load devices data, Error: {ex}, Line: {line_number}"
             )
 
-    def update(self):
+    async def update(self):
         try:
             devices = self.get_devices()
             interfaces = self.get_interfaces()
@@ -244,6 +247,9 @@ class EdgeOSData:
                 ATTR_WEB_SOCKET_LAST_UPDATE: web_socket_last_update,
             }
 
+            if self.config_data.store_debug_files:
+                await self._storage_manager.async_save_debug_to_store(self.system_data)
+
             self._update_home_assistant()
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -251,7 +257,7 @@ class EdgeOSData:
 
             _LOGGER.error(f"Failed to refresh data, Error: {ex}, Line: {line_number}")
 
-    def ws_handler(self, payload=None):
+    async def ws_handler(self, payload=None):
         try:
             if payload is not None:
                 for key in payload:
@@ -265,7 +271,7 @@ class EdgeOSData:
                     else:
                         handler(data)
 
-                        self.update()
+                        await self.update()
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno

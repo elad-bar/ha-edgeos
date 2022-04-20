@@ -37,3 +37,9 @@ class StorageManager:
         store = Store(self._hass, STORAGE_VERSION, self.file_name, encoder=JSONEncoder)
 
         await store.async_save(data.to_dict())
+
+    async def async_save_debug_to_store(self, data):
+        """Generate dynamic data to store and save it to the filesystem."""
+        store = Store(self._hass, STORAGE_VERSION, f"{DOMAIN}.debug.json", encoder=JSONEncoder)
+
+        await store.async_save(data)

@@ -53,10 +53,13 @@ class EntityManager:
         return self.data_manager.system_data
 
     def set_domain_component(self, domain, async_add_entities, component):
-        self.domain_component_manager[domain] = {
-            "async_add_entities": async_add_entities,
-            "component": component,
-        }
+        if domain in self.domain_component_manager:
+            _LOGGER.warning(f'Domain {domain} already set up')
+        else:
+            self.domain_component_manager[domain] = {
+                "async_add_entities": async_add_entities,
+                "component": component,
+            }
 
     def is_device_name_in_use(self, device_name):
         result = False

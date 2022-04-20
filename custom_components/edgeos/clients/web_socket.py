@@ -106,7 +106,7 @@ class EdgeOSWebSocket:
 
         return result
 
-    def parse_message(self, message):
+    async def parse_message(self, message):
         parsed = False
 
         try:
@@ -120,7 +120,7 @@ class EdgeOSWebSocket:
             if len(message) > 0:
                 payload_json = json.loads(message)
 
-                self._edgeos_callback(payload_json)
+                await self._edgeos_callback(payload_json)
                 parsed = True
             else:
                 _LOGGER.debug("Parse message skipped (Empty)")
@@ -151,7 +151,7 @@ class EdgeOSWebSocket:
         _LOGGER.info("Subscribed to WS payloads")
 
         async for msg in self._ws:
-            continue_to_next = self.handle_next_message(msg)
+            continue_to_next = await self.handle_next_message(msg)
 
             if (
                 not continue_to_next
@@ -162,7 +162,7 @@ class EdgeOSWebSocket:
 
         _LOGGER.info(f"Stop listening")
 
-    def handle_next_message(self, msg):
+    async def handle_next_message(self, msg):
         _LOGGER.debug(f"Starting to handle next message")
         result = False
 
@@ -185,7 +185,7 @@ class EdgeOSWebSocket:
             if msg.data == "close":
                 result = False
             else:
-                self.parse_message(msg.data)
+                await self.parse_message(msg.data)
 
                 result = True
 

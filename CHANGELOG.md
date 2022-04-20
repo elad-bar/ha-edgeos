@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.9
+
+- Fixed support for store debug file, will store the file under `.storage/edgeos.debug.json`
+
 ## 1.1.8
 
 - Removed entity / device delete upon restarting HA
