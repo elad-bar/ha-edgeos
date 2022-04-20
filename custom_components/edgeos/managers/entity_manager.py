@@ -229,7 +229,7 @@ class EntityManager:
             data = all_data.get(item)
 
             if data is None:
-                _LOGGER.warning(f"{entity_type} '{item}' was not found, please update the integration's settings")
+                _LOGGER.info(f"{entity_type} '{item}' was not found, please update the integration's settings")
             else:
                 name = data.get(ATTR_NAME, item)
 
