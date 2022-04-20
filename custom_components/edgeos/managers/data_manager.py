@@ -14,8 +14,8 @@ from ..helpers.const import *
 from ..models.config_data import ConfigData
 from ..models.exceptions import IncompatibleVersion, SessionTerminatedException
 from .configuration_manager import ConfigManager
-from .version_check import VersionManager
 from .storage_manager import StorageManager
+from .version_check import VersionManager
 
 _LOGGER = logging.getLogger(__name__)
 
