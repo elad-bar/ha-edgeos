@@ -195,6 +195,12 @@ INTERFACES_MAIN_MAP = {
     "mac": {ATTR_NAME: "MAC"},
 }
 
+DEVICES_MAIN_MAP = {
+    LINK_CONNECTED: {ATTR_NAME: "Connected", ATTR_UNIT_OF_MEASUREMENT: "Connectivity"},
+    "ip": {ATTR_NAME: "Address"},
+    "mac": {ATTR_NAME: "MAC"},
+}
+
 STATS_DIRECTION = {
     "rx": "Received",
     "tx": "Sent"
@@ -215,10 +221,10 @@ INTERFACES_STATS_MAP = {
 }
 
 DEVICE_SERVICES_STATS_MAP = {
-    "rx_bytes": {ATTR_NAME: "{} (Received)", ATTR_UNIT_OF_MEASUREMENT: "Bytes"},
-    "tx_bytes": {ATTR_NAME: "{} (Sent)", ATTR_UNIT_OF_MEASUREMENT: "Bytes"},
-    "rx_rate": {ATTR_NAME: "{}/ps (Received)", ATTR_UNIT_OF_MEASUREMENT: "Bps"},
-    "tx_rate": {ATTR_NAME: "{}/ps (Sent)", ATTR_UNIT_OF_MEASUREMENT: "Bps"},
+    "rx_bytes": SensorStateClass.TOTAL_INCREASING,
+    "tx_bytes": SensorStateClass.TOTAL_INCREASING,
+    "rx_bps": SensorStateClass.MEASUREMENT,
+    "tx_bps": SensorStateClass.MEASUREMENT
 }
 
 HEARTBEAT_INTERVAL_SECONDS = 30

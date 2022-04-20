@@ -98,21 +98,32 @@ logger:
 |-----------------------------------------|---------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | {Integration Name} Device {Device Name} | Binary Sensor | Connected or not | IP<br /> MAC<br /> Name<br /> {Unit}Bytes (Sent)<br /> {Unit}Bytes/ps (Sent)<br />{Unit}Bytes (Received)<br />{Unit}Bytes/ps (Received)<br />Last Activity<br />Last Changed |
 
+
+| Name                                                       | Type          | State                    | Attributes         |
+|------------------------------------------------------------|---------------|--------------------------|--------------------|
+| {Integration Name} Device {Device Name}                    | Binary Sensor | Connected or not         | MAC <br /> Address |
+| {Integration Name} Device {Device Name} Traffic (Received) | Sensor        | Total Increasing - Unit* |                    |
+| {Integration Name} Device {Device Name} Traffic (Sent)     | Sensor        | Total Increasing - Unit* |                    |
+| {Integration Name} Device {Device Name} Rate (Received)    | Sensor        | Measurement - Unit*      |                    |
+| {Integration Name} Device {Device Name} Rate (Sent)        | Sensor        | Measurement - Unit*      |                    |
+
+*Unit of measurement for `Traffic` and `Rate` are according to the unit settings of the integration*
+
 #### Monitored Interfaces
-| Name                                                                     | Type          | State                      | Attributes                                                     |
-|--------------------------------------------------------------------------|---------------|----------------------------|----------------------------------------------------------------|
-| {Integration Name} Interface {Interface Name}                            | Binary Sensor | Connected or not           | Duplex<br /> Link Speed (Mbps)<br /> address<br />Last Changed |
-| {Integration Name} Interface {Interface Name} Packets (Received)         | Sensor        | Total Increasing - Packets |                                                                |
-| {Integration Name} Interface {Interface Name} Packets (Sent)             | Sensor        | Total Increasing - Packets |                                                                |
-| {Integration Name} Interface {Interface Name} Traffic (Received)         | Sensor        | Total Increasing - Unit*   |                                                                |
-| {Integration Name} Interface {Interface Name} Traffic (Sent)             | Sensor        | Total Increasing - Unit*   |                                                                |
-| {Integration Name} Interface {Interface Name} Errors (Received)          | Sensor        | Total Increasing - Errors  |                                                                |
-| {Integration Name} Interface {Interface Name} Errors (Sent)              | Sensor        | Total Increasing - Errors  |                                                                |
-| {Integration Name} Interface {Interface Name} Dropped Packets (Received) | Sensor        | Total Increasing - Packets |                                                                |
-| {Integration Name} Interface {Interface Name} Dropped Packets (Sent)     | Sensor        | Total Increasing - Packets |                                                                |
-| {Integration Name} Interface {Interface Name} Rate (Received)            | Sensor        | Measurement - Unit*        |                                                                |
-| {Integration Name} Interface {Interface Name} Rate (Sent)                | Sensor        | Measurement - Unit*        |                                                                |
-| {Integration Name} Interface {Interface Name} Multicast                  | Sensor        | Total Increasing - Packets |                                                                |
+| Name                                                                     | Type          | State                      | Attributes                                   |
+|--------------------------------------------------------------------------|---------------|----------------------------|----------------------------------------------|
+| {Integration Name} Interface {Interface Name}                            | Binary Sensor | Connected or not           | Duplex<br /> Link Speed (Mbps)<br /> Address |
+| {Integration Name} Interface {Interface Name} Packets (Received)         | Sensor        | Total Increasing - Packets |                                              |
+| {Integration Name} Interface {Interface Name} Packets (Sent)             | Sensor        | Total Increasing - Packets |                                              |
+| {Integration Name} Interface {Interface Name} Traffic (Received)         | Sensor        | Total Increasing - Unit*   |                                              |
+| {Integration Name} Interface {Interface Name} Traffic (Sent)             | Sensor        | Total Increasing - Unit*   |                                              |
+| {Integration Name} Interface {Interface Name} Errors (Received)          | Sensor        | Total Increasing - Errors  |                                              |
+| {Integration Name} Interface {Interface Name} Errors (Sent)              | Sensor        | Total Increasing - Errors  |                                              |
+| {Integration Name} Interface {Interface Name} Dropped Packets (Received) | Sensor        | Total Increasing - Packets |                                              |
+| {Integration Name} Interface {Interface Name} Dropped Packets (Sent)     | Sensor        | Total Increasing - Packets |                                              |
+| {Integration Name} Interface {Interface Name} Rate (Received)            | Sensor        | Measurement - Unit*        |                                              |
+| {Integration Name} Interface {Interface Name} Rate (Sent)                | Sensor        | Measurement - Unit*        |                                              |
+| {Integration Name} Interface {Interface Name} Multicast                  | Sensor        | Total Increasing - Packets |                                              |
 
 *Unit of measurement for `Traffic` and `Rate` are according to the unit settings of the integration*
 

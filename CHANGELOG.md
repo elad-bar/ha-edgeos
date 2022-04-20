@@ -4,7 +4,8 @@
 BREAKING CHANGES!
 
 - Fixed support for store debug file, will store the file under `.storage/edgeos.debug.json`
-- Added for each interface multiple statistics sensors instead of attributes under the main binary sensor of the interface  
+- Added for each interface multiple statistics sensors instead of attributes under the main binary sensor of the interface
+- Added for each device multiple statistics sensors instead of attributes under the main binary sensor of the device
 
 ## 1.1.8
 
