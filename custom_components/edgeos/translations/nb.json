@@ -45,7 +45,6 @@
                   "track_devices": "Sporede enheter",
                   "update_api_interval": "Oppdater API-intervall (sekunder)",
                   "update_entities_interval": "Oppdater enhetsintervall (sekunder)",
-                  "store_debug_file": "Lagre feilsøkingsfilen",
                   "log_level": "Loggnivå",
                   "log_incoming_messages": "Logg innkommende meldinger"
               }

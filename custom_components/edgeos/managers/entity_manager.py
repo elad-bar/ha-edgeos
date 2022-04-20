@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from datetime import date
 import logging
 import sys
 from typing import Dict, List, Optional
@@ -6,6 +9,7 @@ from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SOURCE_TYP
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers.typing import StateType
 
 from ..helpers.const import *
 from ..managers.data_manager import EdgeOSData
@@ -120,7 +124,6 @@ class EntityManager:
 
         self.create_device_trackers()
         self.create_unknown_devices_sensor()
-        self.create_uptime_sensor(system_state, api_last_update, web_socket_last_update)
         self.create_system_status_binary_sensor(
             system_state, api_last_update, web_socket_last_update
         )
@@ -214,8 +217,13 @@ class EntityManager:
             self.log_exception(ex, "Failed to updated device trackers")
 
     def create_entities(self, entity_type):
+        _LOGGER.debug(f"Creating entities for '{entity_type}'")
+
         all_data = self.system_data.get(entity_type)
         monitored_data = self._get_monitored_data(entity_type)
+        stats_keys = STATS_MAPS[entity_type]
+
+        _LOGGER.debug(f"Entities for '{entity_type}' including items: {monitored_data}")
 
         for item in monitored_data:
             data = all_data.get(item)
@@ -223,11 +231,11 @@ class EntityManager:
             if data is None:
                 _LOGGER.warning(f"{entity_type} '{item}' was not found, please update the integration's settings")
             else:
-                name = data.get(ATTR_NAME)
+                name = data.get(ATTR_NAME, item)
 
                 self.create_main_binary_sensor(item, name, data, entity_type)
 
-                for stats_key in INTERFACES_STATS_MAP:
+                for stats_key in stats_keys:
                     self.create_stats_sensor(item, name, data, stats_key, entity_type)
 
     def create_main_binary_sensor(self, item, name, data, data_type):
@@ -289,18 +297,19 @@ class EntityManager:
                 else:
                     stats_name = f"{unit_of_measurement.capitalize()} {stats_direction}"
 
-            if value is not None and value_factor is not None:
-                entity_name = f"{self.integration_title} {sensor_type} {name} {stats_name}"
-                value = (float(value) / float(value_factor))
+            if value is not None and value_factor is not None and value_factor > 1:
+                value = float(float(value) / float(value_factor))
 
-                attributes = {
-                    ATTR_FRIENDLY_NAME: entity_name,
-                    ATTR_UNIT_OF_MEASUREMENT: unit_of_measurement
-                }
+            entity_name = f"{self.integration_title} {sensor_type} {name} {stats_name}"
 
-                self.create_sensor_entity(
-                    entity_name, value, attributes, None, state_class, icon
-                )
+            attributes = {
+                ATTR_FRIENDLY_NAME: entity_name,
+                ATTR_UNIT_OF_MEASUREMENT: unit_of_measurement
+            }
+
+            self.create_sensor_entity(
+                entity_name, value, attributes, state_class, icon
+            )
 
         except Exception as ex:
             self.log_exception(
@@ -324,41 +333,12 @@ class EntityManager:
             }
 
             self.create_sensor_entity(
-                entity_name, state, attributes, None, SensorStateClass.MEASUREMENT, "mdi:help-rhombus"
+                entity_name, state, attributes, SensorStateClass.MEASUREMENT, "mdi:help-rhombus"
             )
         except Exception as ex:
             self.log_exception(
                 ex, f"Failed to create unknown device sensor, Data: {unknown_devices}"
             )
-
-    def create_uptime_sensor(
-        self, system_state, api_last_update, web_socket_last_update
-    ):
-        try:
-            entity_name = f"{self.integration_title} {ATTR_SYSTEM_UPTIME}"
-
-            state = system_state.get(UPTIME, 0)
-            attributes = {}
-
-            if system_state is not None:
-                attributes = {
-                    ATTR_UNIT_OF_MEASUREMENT: ATTR_SECONDS,
-                    ATTR_FRIENDLY_NAME: entity_name,
-                    ATTR_API_LAST_UPDATE: api_last_update.strftime(DEFAULT_DATE_FORMAT),
-                    ATTR_WEB_SOCKET_LAST_UPDATE: web_socket_last_update.strftime(
-                        DEFAULT_DATE_FORMAT
-                    ),
-                }
-
-                for key in system_state:
-                    if key != UPTIME:
-                        attributes[key] = system_state[key]
-
-            self.create_sensor_entity(
-                entity_name, state, attributes, None, SensorStateClass.TOTAL_INCREASING, "mdi:timer-sand"
-            )
-        except Exception as ex:
-            self.log_exception(ex, "Failed to create system sensor")
 
     def create_system_status_binary_sensor(
         self, system_state, api_last_update, web_socket_last_update
@@ -371,6 +351,7 @@ class EntityManager:
 
             if system_state is not None:
                 attributes = {
+                    UPTIME: system_state.get(UPTIME, 0),
                     ATTR_FRIENDLY_NAME: entity_name,
                     ATTR_API_LAST_UPDATE: api_last_update.strftime(DEFAULT_DATE_FORMAT),
                     ATTR_WEB_SOCKET_LAST_UPDATE: web_socket_last_update.strftime(
@@ -461,15 +442,13 @@ class EntityManager:
     def create_sensor_entity(
         self,
         name: str,
-        state: float,
+        state: StateType | date | datetime,
         attributes: dict,
-        device_class: Optional[SensorDeviceClass] = None,
         state_class: Optional[SensorStateClass] = None,
         icon: Optional[str] = None,
     ):
         entity = self.get_basic_entity(name, DOMAIN_BINARY_SENSOR, state, attributes, icon)
 
-        entity.sensor_device_class = device_class
         entity.sensor_state_class = state_class
 
         self.set_entity(DOMAIN_SENSOR, name, entity)

@@ -90,7 +90,6 @@ logger:
 | Name                               | Type          | State                         | Attributes                                                                 |
 |------------------------------------|---------------|-------------------------------|----------------------------------------------------------------------------|
 | {Integration Name} System Status   | Binary Sensor | Connected or not              | CPU<br /> Memory<br /> Up-time<br /> API Last Update<br /> WS Last Update  |
-| {Integration Name} System Uptime   | Sensor        | Time since restart in seconds | CPU<br /> Memory<br /> Is Alive<br /> API Last Update<br /> WS Last Update |
 | {Integration Name} Unknown Devices | Sensor        | Number of unknown devices     | Unknown Devices description                                                |
 
 #### Monitored Devices

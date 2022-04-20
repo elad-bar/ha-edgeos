@@ -44,6 +44,8 @@ SIGNALS = {
 EDGEOS_VERSION_INCOMPATIBLE = "v1"
 EDGEOS_VERSION_UNKNOWN = "N/A"
 
+GENERATE_DEBUG_FILE = "generate_debug_file"
+
 MANUFACTURER = "Ubiquiti"
 
 NOTIFICATION_ID = "edgeos_notification"
@@ -309,8 +311,6 @@ DOMAIN_KEY_FILE = f"{DOMAIN}.key"
 
 CONF_LOG_LEVEL = "log_level"
 CONF_LOG_INCOMING_MESSAGES = "log_incoming_messages"
-
-CONF_STORE_DEBUG_FILE = "store_debug_file"
 
 LOG_LEVEL_DEFAULT = "Default"
 LOG_LEVEL_DEBUG = "Debug"

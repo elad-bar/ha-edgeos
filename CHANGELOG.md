@@ -1,11 +1,13 @@
 # Changelog
 
-## 1.1.9
+## 1.2.0
 BREAKING CHANGES!
 
-- Fixed support for store debug file, will store the file under `.storage/edgeos.debug.json`
 - Added for each interface multiple statistics sensors instead of attributes under the main binary sensor of the interface
 - Added for each device multiple statistics sensors instead of attributes under the main binary sensor of the device
+- Removed: Uptime sensor, uptime in seconds will be part of the status binary sensor
+- Removed: Store debug file from the integration's options
+- New service: Generate Debug File to `.storage/edgeos.debug.json`
 
 ## 1.1.8
 

@@ -1,0 +1,3 @@
+generate_debug_file:
+  name: Generate DEBUG file
+  description: Generate JSON file to '.storage/edgeos.debug.json' with all data collected from EdgeOS unit

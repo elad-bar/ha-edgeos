@@ -35,7 +35,6 @@ class ConfigData:
         self.device_trackers = []
         self.log_level = ""
         self.log_incoming_messages = False
-        self.store_debug_files = False
         self.consider_away_interval = DEFAULT_CONSIDER_AWAY_INTERVAL
 
     @property

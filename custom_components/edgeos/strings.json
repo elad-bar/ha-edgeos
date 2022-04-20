@@ -45,7 +45,6 @@
                   "track_devices": "Tracked devices",
                   "update_api_interval": "Update API interval (Seconds)",
                   "update_entities_interval": "Update entities interval (Seconds)",
-                  "store_debug_file": "Save debug file",
                   "log_level": "Log level",
                   "log_incoming_messages": "Log incoming messages"
               }

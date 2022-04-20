@@ -14,7 +14,6 @@ from ..helpers.const import *
 from ..models.config_data import ConfigData
 from ..models.exceptions import IncompatibleVersion, SessionTerminatedException
 from .configuration_manager import ConfigManager
-from .storage_manager import StorageManager
 from .version_check import VersionManager
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,8 +54,6 @@ class EdgeOSData:
         self.version_manager = VersionManager()
 
         self._is_active = True
-
-        self._storage_manager = StorageManager(hass)
 
     @property
     def version(self):
@@ -246,9 +243,6 @@ class EdgeOSData:
                 ATTR_API_LAST_UPDATE: api_last_update,
                 ATTR_WEB_SOCKET_LAST_UPDATE: web_socket_last_update,
             }
-
-            if self.config_data.store_debug_files:
-                await self._storage_manager.async_save_debug_to_store(self.system_data)
 
             self._update_home_assistant()
         except Exception as ex:

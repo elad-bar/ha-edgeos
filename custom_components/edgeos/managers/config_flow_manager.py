@@ -34,10 +34,6 @@ class ConfigFlowManager:
         self._is_initialized = True
         self._hass = None
 
-        self._available_actions = {
-            CONF_STORE_DEBUG_FILE: self._execute_store_debug_file
-        }
-
     async def initialize(self, hass, config_entry: Optional[ConfigEntry] = None):
         self._config_entry = config_entry
         self._hass = hass
@@ -77,8 +73,6 @@ class ConfigFlowManager:
             validate_login = self._should_validate_login(new_options)
 
             self._move_option_to_data(new_options)
-
-            actions = self._get_actions(new_options)
 
         self._options = new_options
 
@@ -211,7 +205,6 @@ class ConfigFlowManager:
             )
         ] = cv.positive_int
 
-        fields[vol.Optional(CONF_STORE_DEBUG_FILE, default=False)] = bool
         fields[vol.Optional(CONF_LOG_LEVEL, default=config_data.log_level)] = vol.In(
             LOG_LEVELS
         )
@@ -312,26 +305,6 @@ class ConfigFlowManager:
                 break
 
         return validate_login
-
-    def _get_actions(self, options):
-        actions = []
-
-        for action in self._available_actions:
-            if action in options:
-                if options.get(action, False):
-                    execute_action = self._available_actions[action]
-
-                    actions.append(execute_action)
-
-            del options[action]
-
-        return actions
-
-    def _execute_store_debug_file(self):
-        ha = self._get_ha()
-
-        if ha is not None:
-            ha.service_save_debug_data()
 
     def _get_ha(self, key: str = None):
         if key is None:
