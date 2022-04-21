@@ -3,6 +3,8 @@
 ## 1.2.1
 
 - Fixed incorrect lookup value for Rate (Sent / Received) per device
+- Improved message parsing
+- Added web socket messages counters to status binary sensor (Received, Ignored, Handled %)
 
 ## 1.2.0
 

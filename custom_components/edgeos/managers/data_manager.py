@@ -242,6 +242,9 @@ class EdgeOSData:
                 SYSTEM_STATS_KEY: system_state,
                 ATTR_API_LAST_UPDATE: api_last_update,
                 ATTR_WEB_SOCKET_LAST_UPDATE: web_socket_last_update,
+                ATTR_WEB_SOCKET_MESSAGES_RECEIVED: self._ws.messages_received,
+                ATTR_WEB_SOCKET_MESSAGES_IGNORED: self._ws.messages_ignored,
+                ATTR_WEB_SOCKET_MESSAGES_HANDLED_PERCENTAGE: self._ws.messages_handled_percentage,
             }
 
             self._update_home_assistant()

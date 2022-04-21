@@ -115,18 +115,12 @@ class EntityManager:
             )
 
     def create_components(self):
-        system_state = self.system_data.get(SYSTEM_STATS_KEY)
-        api_last_update = self.system_data.get(ATTR_API_LAST_UPDATE)
-        web_socket_last_update = self.system_data.get(ATTR_WEB_SOCKET_LAST_UPDATE)
-
         for entity_type in STATS_MAPS.keys():
             self.create_entities(entity_type)
 
         self.create_device_trackers()
         self.create_unknown_devices_sensor()
-        self.create_system_status_binary_sensor(
-            system_state, api_last_update, web_socket_last_update
-        )
+        self.create_system_status_binary_sensor()
 
     def update(self):
         self.hass.async_create_task(self._async_update())
@@ -341,10 +335,15 @@ class EntityManager:
                 ex, f"Failed to create unknown device sensor, Data: {unknown_devices}"
             )
 
-    def create_system_status_binary_sensor(
-        self, system_state, api_last_update, web_socket_last_update
-    ):
+    def create_system_status_binary_sensor(self):
         try:
+            system_state = self.system_data.get(SYSTEM_STATS_KEY)
+            api_last_update = self.system_data.get(ATTR_API_LAST_UPDATE)
+            web_socket_last_update = self.system_data.get(ATTR_WEB_SOCKET_LAST_UPDATE)
+            messages_received = self.system_data.get(ATTR_WEB_SOCKET_MESSAGES_RECEIVED)
+            messages_ignored = self.system_data.get(ATTR_WEB_SOCKET_MESSAGES_IGNORED)
+            messages_handled_percentage = self.system_data.get(ATTR_WEB_SOCKET_MESSAGES_HANDLED_PERCENTAGE)
+
             entity_name = f"{self.integration_title} {ATTR_SYSTEM_STATUS}"
 
             attributes = {}
@@ -358,6 +357,9 @@ class EntityManager:
                     ATTR_WEB_SOCKET_LAST_UPDATE: web_socket_last_update.strftime(
                         DEFAULT_DATE_FORMAT
                     ),
+                    ATTR_WEB_SOCKET_MESSAGES_RECEIVED: messages_received,
+                    ATTR_WEB_SOCKET_MESSAGES_IGNORED: messages_ignored,
+                    ATTR_WEB_SOCKET_MESSAGES_HANDLED_PERCENTAGE: messages_handled_percentage
                 }
 
                 for key in system_state:
