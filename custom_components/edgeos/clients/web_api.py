@@ -128,7 +128,7 @@ class EdgeOSWebAPI:
                         if "EDGE.DeviceModel" in line:
                             line_parts = line.split(" = ")
                             value = line_parts[len(line_parts) - 1]
-                            self._product = value.replace("'", "")
+                            self._product = value.replace("'", EMPTY_STRING)
                 else:
                     _LOGGER.error(f"Failed to login, Invalid credentials")
 

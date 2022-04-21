@@ -3,10 +3,10 @@ import logging
 
 from local_consts import *
 
+from custom_components.edgeos import EMPTY_STRING
 from custom_components.edgeos.managers.configuration_manager import ConfigManager
 from custom_components.edgeos.managers.data_manager import EdgeOSData
 from custom_components.edgeos.managers.password_manager import PasswordManager
-from custom_components.edgeos.managers.version_check import VersionCheck
 from custom_components.edgeos.models.config_data import ConfigData
 from homeassistant.core import HomeAssistant
 
@@ -24,7 +24,7 @@ class Test:
         self._instance = None
 
         self._hass = HomeAssistant()
-        self._hass.config.config_dir = ""
+        self._hass.config.config_dir = EMPTY_STRING
 
         self._password_manager = PasswordManager(self._hass)
         self._config_manager = ConfigManager(self._password_manager)
@@ -40,8 +40,6 @@ class Test:
 
         self._data_manager = EdgeOSData(self._hass, self._config_manager, self.update)
 
-        self._version_check = VersionCheck()
-
     async def terminate(self):
         await self._data_manager.terminate()
 
@@ -52,12 +50,6 @@ class Test:
 
         if self.messages == 10:
             self._data_manager.disconnect()
-
-        #  print(self._version_check.is_compatible(self._data_manager.version))
-        #  print(self._version_check.is_compatible("1.9"))
-
-        #  _LOGGER.info(self._data_manager.edgeos_data)
-        #  _LOGGER.info(self._data_manager.system_data)
 
     async def initialize(self):
         await self._data_manager.initialize()

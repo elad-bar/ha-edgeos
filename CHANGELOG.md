@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1
+
+- Fixed incorrect lookup value for Rate (Sent / Received) per device
+
 ## 1.2.0
 
 BREAKING CHANGES!

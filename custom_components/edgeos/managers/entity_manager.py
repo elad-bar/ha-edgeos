@@ -119,7 +119,7 @@ class EntityManager:
         api_last_update = self.system_data.get(ATTR_API_LAST_UPDATE)
         web_socket_last_update = self.system_data.get(ATTR_WEB_SOCKET_LAST_UPDATE)
 
-        for entity_type in SENSOR_TYPES.keys():
+        for entity_type in STATS_MAPS.keys():
             self.create_entities(entity_type)
 
         self.create_device_trackers()
@@ -284,7 +284,7 @@ class EntityManager:
                     stats_name = f"{UNIT_DROPPED_PACKETS} {UNIT_PACKETS} {stats_direction}"
                     unit_of_measurement = UNIT_PACKETS
 
-                elif unit_of_measurement.lower() == UNIT_BPS.lower():
+                elif unit_of_measurement.lower() in [UNIT_BPS.lower(), UNIT_RATE.lower()]:
                     stats_name = f"{UNIT_RATE} {stats_direction}"
                     unit_of_measurement = f"{self.config_data.unit}/ps"
                     value_factor = self.config_data.unit_size
@@ -330,6 +330,7 @@ class EntityManager:
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
                 ATTR_UNKNOWN_DEVICES: unknown_devices,
+                ATTR_UNIT_OF_MEASUREMENT: UNIT_DEVICES
             }
 
             self.create_sensor_entity(
@@ -384,46 +385,15 @@ class EntityManager:
 
                 attributes = {ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER, CONF_HOST: host}
 
-                self.create_device_tracker_entity(
-                    entity_name, state, attributes
-                )
+                entity = self.get_basic_entity(entity_name, DOMAIN_DEVICE_TRACKER, state, attributes)
+
+                self.set_entity(DOMAIN_DEVICE_TRACKER, entity_name, entity)
 
         except Exception as ex:
             self.log_exception(
                 ex,
                 f"Failed to create {host} device tracker with the following data: {data}",
             )
-
-    @staticmethod
-    def get_basic_entity(
-        name: str,
-        domain: str,
-        state: float,
-        attributes: dict,
-        icon: Optional[str] = None,
-    ):
-        entity = EntityData()
-
-        entity.name = name
-        entity.state = state
-        entity.attributes = attributes
-        entity.device_name = DEFAULT_NAME
-        entity.unique_id = f"{DEFAULT_NAME}-{domain}-{name}"
-
-        if icon is not None:
-            entity.icon = icon
-
-        return entity
-
-    def create_device_tracker_entity(
-        self,
-        name: str,
-        state: int,
-        attributes: dict
-    ):
-        entity = self.get_basic_entity(name, DOMAIN_DEVICE_TRACKER, state, attributes)
-
-        self.set_entity(DOMAIN_DEVICE_TRACKER, name, entity)
 
     def create_binary_sensor_entity(
         self,
@@ -483,6 +453,27 @@ class EntityManager:
             }
 
         return attributes
+
+    @staticmethod
+    def get_basic_entity(
+        name: str,
+        domain: str,
+        state: float,
+        attributes: dict,
+        icon: Optional[str] = None,
+    ):
+        entity = EntityData()
+
+        entity.name = name
+        entity.state = state
+        entity.attributes = attributes
+        entity.device_name = DEFAULT_NAME
+        entity.unique_id = f"{DEFAULT_NAME}-{domain}-{name}"
+
+        if icon is not None:
+            entity.icon = icon
+
+        return entity
 
     @staticmethod
     def log_exception(ex, message):
