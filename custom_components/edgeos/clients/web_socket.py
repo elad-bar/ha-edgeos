@@ -105,7 +105,10 @@ class EdgeOSWebSocket:
 
     @property
     def messages_handled_percentage(self):
-        percentage = (self.messages_received - self.messages_ignored) / self.messages_received
+        received = self.messages_received
+        ignored = self.messages_ignored
+
+        percentage = 0 if received == 0 else (received - ignored) / received
         result = f"{percentage:.3%}"
 
         return result

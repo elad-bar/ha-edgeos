@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.2
+
+- Hotfix for `Handled %` before first message is being received (division by zero)
+
 ## 1.2.1
 
 - Fixed incorrect lookup value for Rate (Sent / Received) per device
