@@ -18,9 +18,9 @@ class EntityData:
     device_name: str
     status: str
     disabled: bool
-    binary_sensor_device_class: Optional[BinarySensorDeviceClass]
-    sensor_device_class: Optional[SensorDeviceClass]
-    sensor_state_class: Optional[SensorStateClass]
+    binary_sensor_device_class: BinarySensorDeviceClass | None
+    sensor_device_class: SensorDeviceClass | None
+    sensor_state_class: SensorStateClass | None
 
     def __init__(self):
         self.unique_id = ""

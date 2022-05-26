@@ -1,11 +1,15 @@
-import sys
 import asyncio
 import logging
+import sys
 
 from local_consts import *
 
-from custom_components.edgeos import EMPTY_STRING, ATTR_WEB_SOCKET_MESSAGES_HANDLED_PERCENTAGE, \
-    ATTR_WEB_SOCKET_MESSAGES_IGNORED, ATTR_WEB_SOCKET_MESSAGES_RECEIVED
+from custom_components.edgeos import (
+    ATTR_WEB_SOCKET_MESSAGES_HANDLED_PERCENTAGE,
+    ATTR_WEB_SOCKET_MESSAGES_IGNORED,
+    ATTR_WEB_SOCKET_MESSAGES_RECEIVED,
+    EMPTY_STRING,
+)
 from custom_components.edgeos.managers.configuration_manager import ConfigManager
 from custom_components.edgeos.managers.data_manager import EdgeOSData
 from custom_components.edgeos.managers.password_manager import PasswordManager
@@ -19,7 +23,7 @@ root.setLevel(log_level)
 
 stream_handler = logging.StreamHandler(sys.stdout)
 stream_handler.setLevel(log_level)
-formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s %(message)s')
+formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
 stream_handler.setFormatter(formatter)
 root.addHandler(stream_handler)
 
@@ -68,12 +72,14 @@ class Test:
 
         messages_received = system_data.get(ATTR_WEB_SOCKET_MESSAGES_RECEIVED)
         messages_ignored = system_data.get(ATTR_WEB_SOCKET_MESSAGES_IGNORED)
-        messages_handled_percentage = system_data.get(ATTR_WEB_SOCKET_MESSAGES_HANDLED_PERCENTAGE)
+        messages_handled_percentage = system_data.get(
+            ATTR_WEB_SOCKET_MESSAGES_HANDLED_PERCENTAGE
+        )
 
         data = {
             ATTR_WEB_SOCKET_MESSAGES_RECEIVED: messages_received,
             ATTR_WEB_SOCKET_MESSAGES_IGNORED: messages_ignored,
-            ATTR_WEB_SOCKET_MESSAGES_HANDLED_PERCENTAGE: messages_handled_percentage
+            ATTR_WEB_SOCKET_MESSAGES_HANDLED_PERCENTAGE: messages_handled_percentage,
         }
 
         _LOGGER.info(data)

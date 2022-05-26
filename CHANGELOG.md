@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.3
+
+- Device and Entity registry - `async_get_registry` is deprecated, change to `async_get`
+
 ## 1.2.2
 
 - Hotfix for `Handled %` before first message is being received (division by zero)

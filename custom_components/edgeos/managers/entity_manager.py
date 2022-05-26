@@ -75,7 +75,7 @@ class EntityManager:
 
         return result
 
-    def get_all_entities(self) -> List[EntityData]:
+    def get_all_entities(self) -> list[EntityData]:
         entities = []
         for domain in self.entities:
             for name in self.entities[domain]:
@@ -89,12 +89,12 @@ class EntityManager:
         if domain not in self.entities:
             self.entities[domain] = {}
 
-    def get_entities(self, domain) -> Dict[str, EntityData]:
+    def get_entities(self, domain) -> dict[str, EntityData]:
         self.check_domain(domain)
 
         return self.entities[domain]
 
-    def get_entity(self, domain, name) -> Optional[EntityData]:
+    def get_entity(self, domain, name) -> EntityData | None:
         entities = self.get_entities(domain)
         entity = entities.get(name)
 
@@ -402,8 +402,8 @@ class EntityManager:
         name: str,
         state: int,
         attributes: dict,
-        device_class: Optional[BinarySensorDeviceClass] = None,
-        icon: Optional[str] = None,
+        device_class: BinarySensorDeviceClass | None = None,
+        icon: str | None = None,
     ):
         entity = self.get_basic_entity(name, DOMAIN_BINARY_SENSOR, state, attributes, icon)
 
@@ -416,8 +416,8 @@ class EntityManager:
         name: str,
         state: StateType | date | datetime,
         attributes: dict,
-        state_class: Optional[SensorStateClass] = None,
-        icon: Optional[str] = None,
+        state_class: SensorStateClass | None = None,
+        icon: str | None = None,
     ):
         entity = self.get_basic_entity(name, DOMAIN_BINARY_SENSOR, state, attributes, icon)
 
@@ -462,7 +462,7 @@ class EntityManager:
         domain: str,
         state: float,
         attributes: dict,
-        icon: Optional[str] = None,
+        icon: str | None = None,
     ):
         entity = EntityData()
 

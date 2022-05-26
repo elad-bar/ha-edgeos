@@ -2,7 +2,7 @@ import logging
 import sys
 
 from homeassistant.const import ATTR_CONFIGURATION_URL
-from homeassistant.helpers.device_registry import async_get_registry
+from homeassistant.helpers.device_registry import async_get
 
 from ..helpers.const import *
 from .configuration_manager import ConfigManager
@@ -29,7 +29,7 @@ class DeviceManager:
         return self._ha.config_manager
 
     async def async_remove_entry(self, entry_id):
-        dr = await async_get_registry(self._hass)
+        dr = async_get(self._hass)
         dr.async_clear_config_entry(entry_id)
 
     async def async_remove(self):
@@ -90,7 +90,7 @@ class DeviceManager:
         device_identifiers = device.get("identifiers")
         device_connections = device.get("connections", {})
 
-        dr = await async_get_registry(self._hass)
+        dr = async_get(self._hass)
 
         device = dr.async_get_device(device_identifiers, device_connections)
 
