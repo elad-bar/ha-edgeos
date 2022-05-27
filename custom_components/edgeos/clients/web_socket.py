@@ -8,6 +8,7 @@ import json
 import logging
 import numbers
 import re
+import sys
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -70,7 +71,10 @@ class EdgeOSWebSocket:
                 )
 
         except Exception as ex:
-            _LOGGER.warning(f"Failed to create session of EdgeOS WS, Error: {str(ex)}")
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.warning(f"Failed to create session of EdgeOS WS, Error: {str(ex)}, Line: {line_number}")
 
         try:
             async with self._session.ws_connect(
@@ -91,7 +95,10 @@ class EdgeOSWebSocket:
             if self._session is not None and self._session.closed:
                 _LOGGER.info(f"WS Session closed")
             else:
-                _LOGGER.warning(f"Failed to connect EdgeOS WS, Error: {ex}")
+                exc_type, exc_obj, tb = sys.exc_info()
+                line_number = tb.tb_lineno
+
+                _LOGGER.warning(f"Failed to connect EdgeOS WS, Error: {ex}, Line: {line_number}")
 
         self._is_connected = False
 
@@ -187,7 +194,10 @@ class EdgeOSWebSocket:
             _LOGGER.debug(f"Store partial message for later processing")
 
         except Exception as ex:
-            _LOGGER.warning(f"Parse message failed, Data: {message}, Error: {ex}")
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.warning(f"Parse message failed, Data: {message}, Error: {ex}, Line: {line_number}")
 
     async def async_send_heartbeat(self):
         _LOGGER.debug(f"Keep alive message sent")
@@ -198,24 +208,34 @@ class EdgeOSWebSocket:
             await self._ws.send_str(data)
 
     async def listen(self):
-        _LOGGER.info(f"Starting to listen connected")
+        try:
+            _LOGGER.info(f"Starting to listen connected")
 
-        subscription_data = self.get_subscription_data()
-        await self._ws.send_str(subscription_data)
+            subscription_data = self.get_subscription_data()
+            await self._ws.send_str(subscription_data)
 
-        _LOGGER.info("Subscribed to WS payloads")
+            _LOGGER.info("Subscribed to WS payloads")
 
-        async for msg in self._ws:
-            continue_to_next = await self.handle_next_message(msg)
+            async for msg in self._ws:
+                continue_to_next = await self.handle_next_message(msg)
 
-            if (
-                not continue_to_next
-                or not self.is_initialized
-                or not self._is_connected
-            ):
-                break
+                if (
+                    not continue_to_next
+                    or not self.is_initialized
+                    or not self._is_connected
+                ):
+                    break
 
-        _LOGGER.info(f"Stop listening")
+            _LOGGER.info(f"Stop listening")
+
+        except Exception as ex:
+            if self._session is not None and self._session.closed:
+                _LOGGER.info(f"Stopped listen, Error: WS Session closed")
+            else:
+                exc_type, exc_obj, tb = sys.exc_info()
+                line_number = tb.tb_lineno
+
+                _LOGGER.warning(f"Stopped listen, Error: {ex}, Line: {line_number}")
 
     async def handle_next_message(self, msg):
         _LOGGER.debug(f"Starting to handle next message")

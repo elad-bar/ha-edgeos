@@ -185,6 +185,7 @@ class EdgeOSWebAPI:
             except Exception as ex:
                 exc_type, exc_obj, tb = sys.exc_info()
                 line_number = tb.tb_lineno
+
                 message = f"URL: {url}, Error: {ex}, Line: {line_number}"
 
         valid_response = status < 400

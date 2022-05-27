@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.4
+
+- Add line number to WebSocket error log messages
+- Add more log messages for WebSocket
+
 ## 1.2.3
 
 - Device and Entity registry - `async_get_registry` is deprecated, change to `async_get`
