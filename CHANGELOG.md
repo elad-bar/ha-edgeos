@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.5
+
+- Add Brazilian Portuguese Translation [\#66](https://github.com/elad-bar/ha-edgeos/pull/66) by [@LeandroIssa](https://github.com/LeandroIssa)
+
 ## 1.2.4
 
 - Add line number to WebSocket error log messages
