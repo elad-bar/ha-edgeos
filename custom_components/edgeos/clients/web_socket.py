@@ -184,14 +184,20 @@ class EdgeOSWebSocket:
         except ValueError:
             self._messages_ignored += 1
 
-            length = int(re.findall(BEGINS_WITH_SIX_DIGITS, message)[0])
+            previous_messages = re.findall(BEGINS_WITH_SIX_DIGITS, message)
 
-            self._previous_message = {
-                "Length": length,
-                "Content": message
-            }
+            if previous_messages is None or len(previous_messages) == 0:
+                _LOGGER.warning("Failed to store partial message for later processing")
 
-            _LOGGER.debug(f"Store partial message for later processing")
+            else:
+                length = int(previous_messages[0])
+
+                self._previous_message = {
+                    "Length": length,
+                    "Content": message
+                }
+
+                _LOGGER.debug("Store partial message for later processing")
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
