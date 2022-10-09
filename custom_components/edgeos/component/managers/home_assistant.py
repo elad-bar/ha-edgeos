@@ -735,9 +735,9 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         entity_name = f"{device_name} Received Rate"
 
         try:
-            unit_of_measurement = self.storage_api.unit
+            unit_of_measurement = self._get_rate_unit_of_measurement()
 
-            state = device.received.rate
+            state = self._convert_unit(device.received.rate)
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name
@@ -751,7 +751,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=SensorStateClass.MEASUREMENT,
-                unit_of_measurement=unit_of_measurement
+                native_unit_of_measurement=unit_of_measurement
             )
 
             is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
@@ -774,9 +774,9 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         entity_name = f"{device_name} Received Traffic"
 
         try:
-            unit_of_measurement = self.storage_api.unit
+            unit_of_measurement = self._get_unit_of_measurement()
 
-            state = device.received.total
+            state = self._convert_unit(device.received.total)
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name
@@ -790,7 +790,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=SensorStateClass.TOTAL,
-                unit_of_measurement=unit_of_measurement
+                native_unit_of_measurement=unit_of_measurement
             )
 
             is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
@@ -813,9 +813,9 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         entity_name = f"{device_name} Sent Rate"
 
         try:
-            unit_of_measurement = self.storage_api.unit
+            unit_of_measurement = self._get_rate_unit_of_measurement()
 
-            state = device.sent.rate
+            state = self._convert_unit(device.sent.rate)
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name
@@ -829,7 +829,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=SensorStateClass.MEASUREMENT,
-                unit_of_measurement=unit_of_measurement
+                native_unit_of_measurement=unit_of_measurement
             )
 
             is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
@@ -852,9 +852,9 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         entity_name = f"{device_name} Sent Traffic"
 
         try:
-            unit_of_measurement = self.storage_api.unit
+            unit_of_measurement = self._get_unit_of_measurement()
 
-            state = device.sent.total
+            state = self._convert_unit(device.sent.total)
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name
@@ -868,7 +868,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=SensorStateClass.TOTAL,
-                unit_of_measurement=unit_of_measurement
+                native_unit_of_measurement=unit_of_measurement
             )
 
             is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
@@ -966,9 +966,9 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         entity_name = f"{device_name} Received Rate"
 
         try:
-            unit_of_measurement = self.storage_api.unit
+            unit_of_measurement = self._get_rate_unit_of_measurement()
 
-            state = interface.received.rate
+            state = self._convert_unit(interface.received.rate)
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name
@@ -982,7 +982,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=SensorStateClass.MEASUREMENT,
-                unit_of_measurement=unit_of_measurement
+                native_unit_of_measurement=unit_of_measurement
             )
 
             is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
@@ -1005,9 +1005,9 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         entity_name = f"{device_name} Received Traffic"
 
         try:
-            unit_of_measurement = self.storage_api.unit
+            unit_of_measurement = self._get_unit_of_measurement()
 
-            state = interface.received.total
+            state = self._convert_unit(interface.received.total)
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name
@@ -1021,7 +1021,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=SensorStateClass.TOTAL,
-                unit_of_measurement=unit_of_measurement
+                native_unit_of_measurement=unit_of_measurement
             )
 
             is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
@@ -1060,7 +1060,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=SensorStateClass.TOTAL,
-                unit_of_measurement=unit_of_measurement
+                native_unit_of_measurement=unit_of_measurement
             )
 
             is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
@@ -1099,7 +1099,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=SensorStateClass.TOTAL,
-                unit_of_measurement=unit_of_measurement
+                native_unit_of_measurement=unit_of_measurement
             )
 
             is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
@@ -1138,7 +1138,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=SensorStateClass.TOTAL,
-                unit_of_measurement=unit_of_measurement
+                native_unit_of_measurement=unit_of_measurement
             )
 
             is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
@@ -1161,9 +1161,9 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         entity_name = f"{device_name} Sent Rate"
 
         try:
-            unit_of_measurement = self.storage_api.unit
+            unit_of_measurement = self._get_rate_unit_of_measurement()
 
-            state = interface.sent.rate
+            state = self._convert_unit(interface.sent.rate)
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name
@@ -1177,7 +1177,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=SensorStateClass.MEASUREMENT,
-                unit_of_measurement=unit_of_measurement
+                native_unit_of_measurement=unit_of_measurement
             )
 
             is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
@@ -1200,9 +1200,9 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         entity_name = f"{device_name} Sent Traffic"
 
         try:
-            unit_of_measurement = self.storage_api.unit
+            unit_of_measurement = self._get_unit_of_measurement()
 
-            state = interface.sent.total
+            state = self._convert_unit(interface.sent.total)
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name
@@ -1216,7 +1216,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=SensorStateClass.TOTAL,
-                unit_of_measurement=unit_of_measurement
+                native_unit_of_measurement=unit_of_measurement
             )
 
             is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
@@ -1255,7 +1255,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=SensorStateClass.TOTAL,
-                unit_of_measurement=unit_of_measurement
+                native_unit_of_measurement=unit_of_measurement
             )
 
             is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
@@ -1294,7 +1294,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=SensorStateClass.TOTAL,
-                unit_of_measurement=unit_of_measurement
+                native_unit_of_measurement=unit_of_measurement
             )
 
             is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
@@ -1333,7 +1333,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=SensorStateClass.TOTAL,
-                unit_of_measurement=unit_of_measurement
+                native_unit_of_measurement=unit_of_measurement
             )
 
             is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
@@ -1495,3 +1495,23 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         interface_item = self._interfaces.get(unique_id)
 
         return interface_item
+
+    def _convert_unit(self, value: float) -> float:
+        unit_factor = UNIT_MAPPING.get(self.storage_api.unit, BYTE)
+        result = value
+
+        if result > 0:
+            result = result / unit_factor
+
+        return result
+
+    def _get_unit_of_measurement(self) -> str:
+        result = UNIT_OF_MEASUREMENT_MAPPING.get(self.storage_api.unit, "B")
+
+        return result
+
+    def _get_rate_unit_of_measurement(self) -> str:
+        unit_of_measurement = self._get_unit_of_measurement()
+        result = f"{unit_of_measurement}/ps"
+
+        return result
