@@ -8,8 +8,7 @@
           "name": "Name",
           "host": "Host",
           "username": "Username",
-          "password": "Password",
-          "unit": "Unit"
+          "password": "Password"
         }
       }
     },
@@ -33,20 +32,14 @@
         "title": "Options for EdgeOS.",
         "description": "Set up your monitored devices / interfaces and tracked devices, use comma separated values, to clear existing value, use the checkbox.",
         "data": {
-          "name": "Name",
           "host": "Host",
+          "port": "Port",
           "username": "Username",
           "password": "Password",
           "clear-credentials": "Clear credentials",
-          "unit": "Unit",
           "consider_away_interval": "Consider away interval (Seconds)",
-          "monitored_interfaces": "Monitored interfaces",
-          "monitored_devices": "Monitored devices",
-          "track_devices": "Tracked devices",
           "update_api_interval": "Update API interval (Seconds)",
-          "update_entities_interval": "Update entities interval (Seconds)",
-          "log_level": "Log level",
-          "log_incoming_messages": "Log incoming messages"
+          "update_entities_interval": "Update entities interval (Seconds)"
         }
       }
     },

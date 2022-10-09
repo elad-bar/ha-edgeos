@@ -1,5 +1,34 @@
 # Changelog
 
+## 2.0.0
+Configuration UI will hold:
+- Username
+- Password
+
+Device tracker
+- Per device
+
+Binary Sensor
+- Status
+
+Sensor:
+- Unknown devices
+- Per device - Rate Incoming (Measurement)
+- Per device - Rate Outgoing (Measurement)
+- Per device - Total Incoming (Total)
+- Per device - Total Outgoing (Total)
+- Per interface - Rate Incoming (Measurement)
+- Per interface - Rate Outgoing (Measurement)
+- Per interface - Total Incoming (Total)
+- Per interface - Total Outgoing (Total)
+
+Switch
+- Per interface
+- Store incoming messages
+
+Select
+- Unit - Mb, Kb, b
+
 ## 1.2.6
 
 - Restore value exception handling for WebSocket
