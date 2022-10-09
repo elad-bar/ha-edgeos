@@ -118,6 +118,7 @@ ALLOWED_UNITS_LIST = [ATTR_BYTE, ATTR_KILO, ATTR_MEGA]
 
 DEVICE_LIST = "devices"
 ADDRESS_LIST = "addresses"
+FW_LATEST = "addresses"
 ADDRESS_IPV4 = "ipv4"
 ADDRESS_HWADDR = "hwaddr"
 

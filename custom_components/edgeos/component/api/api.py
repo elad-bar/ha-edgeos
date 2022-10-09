@@ -69,7 +69,7 @@ class IntegrationAPI(BaseAPI):
         await self.set_status(ConnectivityStatus.Disconnected)
 
     async def initialize(self, config_data: ConfigData):
-        _LOGGER.info("Initializing Shinobi Video")
+        _LOGGER.info("Initializing API")
 
         try:
             self._config_data = config_data

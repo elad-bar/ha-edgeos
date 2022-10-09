@@ -395,7 +395,7 @@ class IntegrationWS(BaseAPI):
 
                     elif INTERFACES_STATS == item:
                         for stats_item in INTERFACES_STATS_MAP:
-                            interface[stats_item] = item_data.get(stats_item)
+                            interface[stats_item] = float(item_data.get(stats_item))
 
                     else:
                         if item in INTERFACES_MAIN_MAP:
@@ -437,8 +437,7 @@ class IntegrationWS(BaseAPI):
                 return
 
             devices_data = data.get(DEVICE_LIST, [])
-
-            result = self.data.get(DISCOVER_KEY, {})
+            result = {}
 
             for device_data in devices_data:
                 for key in DISCOVER_DEVICE_ITEMS:

@@ -51,7 +51,8 @@ class EdgeOSDeviceData:
             DEVICE_DATA_DOMAIN: self.domain,
             DEVICE_DATA_RECEIVED: self.received.to_dict(),
             DEVICE_DATA_SENT: self.sent.to_dict(),
-            ENTITY_UNIQUE_ID: self.unique_id
+            ENTITY_UNIQUE_ID: self.unique_id,
+            LEASED: self.is_leased
         }
 
         return obj

@@ -86,7 +86,10 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         if self.api.status == ConnectivityStatus.Connected:
             await self._extract_ws_data()
 
+            self.update()
+
     async def _api_status_changed(self, status: ConnectivityStatus):
+        _LOGGER.info(f"API Status changed to {status}, WS Status: {self.ws.status}")
         if status == ConnectivityStatus.Connected:
             if self.ws.status == ConnectivityStatus.NotConnected:
                 log_incoming_messages = self.storage_api.log_incoming_messages
@@ -99,6 +102,8 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 await self.ws.terminate()
 
     async def _ws_status_changed(self, status: ConnectivityStatus):
+        _LOGGER.info(f"WS Status changed to {status}, API Status: {self.api.status}")
+
         if status == ConnectivityStatus.Disconnected:
             if self.api.status == ConnectivityStatus.Connected:
                 await self.ws.initialize(self.config_data)
@@ -227,7 +232,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             await self.storage_api.debug_log_api(self.api.data)
 
             data = self.api.data.get(API_DATA_SYSTEM, {})
-            system_info = data.get(SYS_INFO_KEY, {})
+            system_info = self.api.data.get(SYS_INFO_KEY, {})
 
             self._extract_system(data, system_info)
 
@@ -357,7 +362,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             interface_data.up = str(data.get(INTERFACE_DATA_UP, False)).lower() == str(True).lower()
             interface_data.l1up = str(data.get(INTERFACE_DATA_L1UP, False)).lower() == str(True).lower()
             interface_data.mac = data.get(INTERFACE_DATA_MAC)
-            interface_data.multicast = float(data.get(INTERFACE_DATA_MULTICAST, "0"))
+            interface_data.multicast = data.get(INTERFACE_DATA_MULTICAST, 0)
 
             directions = [interface_data.received, interface_data.sent]
 
@@ -365,7 +370,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 stat_data = {}
                 for stat_key in TRAFFIC_DATA_INTERFACE_ITEMS:
                     key = f"{direction.direction}_{stat_key}"
-                    stat_data_item = TRAFFIC_DATA_INTERFACE_ITEMS.get(key)
+                    stat_data_item = TRAFFIC_DATA_INTERFACE_ITEMS.get(stat_key)
 
                     stat_data[stat_data_item] = float(data.get(key))
 
@@ -391,7 +396,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                     stat_data = {}
                     for stat_key in TRAFFIC_DATA_DEVICE_ITEMS:
                         key = f"{stat.direction}_{stat_key}"
-                        stat_data_item = TRAFFIC_DATA_DEVICE_ITEMS.get(key)
+                        stat_data_item = TRAFFIC_DATA_DEVICE_ITEMS.get(stat_key)
 
                         stat_data[stat_data_item] = data.get(key)
 
@@ -432,8 +437,11 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         try:
             unknown_devices = 0
             data_leases_stats = self.api.data.get(DHCP_STATS_KEY, {})
-            for subnet in data_leases_stats:
-                subnet_data = data_leases_stats.get(subnet, {})
+
+            subnets = data_leases_stats.get(DHCP_SERVER_STATS, {})
+
+            for subnet in subnets:
+                subnet_data = subnets.get(subnet, {})
                 unknown_devices += int(subnet_data.get(LEASED, 0))
 
             self._system.leased_devices = unknown_devices
@@ -442,7 +450,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             data_server_leases = data_leases.get(DHCP_SERVER_LEASES, {})
 
             for subnet in data_server_leases:
-                subnet_data = data_leases.get(subnet, {})
+                subnet_data = data_server_leases.get(subnet, {})
 
                 for ip in subnet_data:
                     device_data = subnet_data.get(ip)
@@ -579,11 +587,12 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             state = self._system.leased_devices
 
             leased_devices = []
+
             for unique_id in self._devices:
                 device = self._devices.get(unique_id)
 
                 if device.is_leased:
-                    leased_devices.append(device.ip)
+                    leased_devices.append(f"{device.hostname} ({device.ip})")
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
@@ -745,7 +754,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 unit_of_measurement=unit_of_measurement
             )
 
-            is_monitored = self.storage_api.monitored_devices.get(unique_id, False)
+            is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
                                            self.entry_id,
@@ -784,7 +793,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 unit_of_measurement=unit_of_measurement
             )
 
-            is_monitored = self.storage_api.monitored_devices.get(unique_id, False)
+            is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
                                            self.entry_id,
@@ -823,7 +832,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 unit_of_measurement=unit_of_measurement
             )
 
-            is_monitored = self.storage_api.monitored_devices.get(unique_id, False)
+            is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
                                            self.entry_id,
@@ -862,7 +871,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 unit_of_measurement=unit_of_measurement
             )
 
-            is_monitored = self.storage_api.monitored_devices.get(unique_id, False)
+            is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
                                            self.entry_id,
@@ -898,7 +907,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
             details = device.to_dict()
 
-            is_monitored = self.storage_api.monitored_devices.get(unique_id, False)
+            is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
 
             self.entity_manager.set_entity(DOMAIN_DEVICE_TRACKER,
                                            self.entry_id,
@@ -976,7 +985,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 unit_of_measurement=unit_of_measurement
             )
 
-            is_monitored = self.storage_api.monitored_interfaces.get(unique_id, False)
+            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
                                            self.entry_id,
@@ -1015,7 +1024,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 unit_of_measurement=unit_of_measurement
             )
 
-            is_monitored = self.storage_api.monitored_interfaces.get(unique_id, False)
+            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
                                            self.entry_id,
@@ -1054,7 +1063,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 unit_of_measurement=unit_of_measurement
             )
 
-            is_monitored = self.storage_api.monitored_interfaces.get(unique_id, False)
+            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
                                            self.entry_id,
@@ -1093,7 +1102,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 unit_of_measurement=unit_of_measurement
             )
 
-            is_monitored = self.storage_api.monitored_interfaces.get(unique_id, False)
+            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
                                            self.entry_id,
@@ -1132,7 +1141,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 unit_of_measurement=unit_of_measurement
             )
 
-            is_monitored = self.storage_api.monitored_interfaces.get(unique_id, False)
+            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
                                            self.entry_id,
@@ -1171,7 +1180,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 unit_of_measurement=unit_of_measurement
             )
 
-            is_monitored = self.storage_api.monitored_interfaces.get(unique_id, False)
+            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
                                            self.entry_id,
@@ -1210,7 +1219,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 unit_of_measurement=unit_of_measurement
             )
 
-            is_monitored = self.storage_api.monitored_interfaces.get(unique_id, False)
+            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
                                            self.entry_id,
@@ -1249,7 +1258,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 unit_of_measurement=unit_of_measurement
             )
 
-            is_monitored = self.storage_api.monitored_interfaces.get(unique_id, False)
+            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
                                            self.entry_id,
@@ -1288,7 +1297,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 unit_of_measurement=unit_of_measurement
             )
 
-            is_monitored = self.storage_api.monitored_interfaces.get(unique_id, False)
+            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
                                            self.entry_id,
@@ -1327,7 +1336,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 unit_of_measurement=unit_of_measurement
             )
 
-            is_monitored = self.storage_api.monitored_interfaces.get(unique_id, False)
+            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
                                            self.entry_id,
