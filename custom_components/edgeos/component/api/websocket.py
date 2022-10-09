@@ -56,7 +56,7 @@ class IntegrationWS(BaseAPI):
         self._messages_ignored = 0
         self._previous_message = None
         self.data = {
-            DEVICE_LIST: {},
+            EXPORT_KEY: {},
             INTERFACES: {},
         }
 

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from asyncio import sleep
-import json
 import logging
 import sys
 from typing import Awaitable, Callable
@@ -23,11 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 class IntegrationAPI(BaseAPI):
     """The Class for handling the data retrieval."""
 
-    session: ClientSession | None
-    hass: HomeAssistant
-    config_data: ConfigData | None
-    base_url: str | None
-    repairing: list[str]
+    _session: ClientSession | None
+    _config_data: ConfigData | None
 
     def __init__(self,
                  hass: HomeAssistant,
@@ -38,17 +34,12 @@ class IntegrationAPI(BaseAPI):
         super().__init__(hass, async_on_data_changed, async_on_status_changed)
 
         try:
-            self.config_data = None
-            self.session = None
-            self.base_url = None
-            self.repairing = []
+            self._config_data = None
+            self._session = None
             self._cookies = {}
             self._last_valid = None
 
-            self.data = {
-                API_DATA_PRODUCT: None,
-                API_DATA_SYSTEM: None
-            }
+            self.data = {}
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -57,39 +48,6 @@ class IntegrationAPI(BaseAPI):
             _LOGGER.error(
                 f"Failed to load Shinobi Video API, error: {ex}, line: {line_number}"
             )
-
-    async def terminate(self):
-        await self.set_status(ConnectivityStatus.Disconnected)
-
-    async def initialize(self, config_data: ConfigData):
-        _LOGGER.info("Initializing Shinobi Video")
-
-        try:
-            self.config_data = config_data
-
-            cookie_jar = CookieJar(unsafe=True)
-
-            if self.hass is None:
-                self.session = ClientSession(cookie_jar=cookie_jar)
-            else:
-                self.session = async_create_clientsession(
-                    hass=self.hass, cookies=self._cookies, cookie_jar=cookie_jar,
-                )
-
-            await self._login()
-
-        except Exception as ex:
-            exc_type, exc_obj, tb = sys.exc_info()
-            line_number = tb.tb_lineno
-
-            _LOGGER.error(
-                f"Failed to initialize Shinobi Video API ({self.base_url}), error: {ex}, line: {line_number}"
-            )
-
-    async def validate(self, data: dict | None = None):
-        config_data = ConfigData.from_dict(data)
-
-        await self.initialize(config_data)
 
     @property
     def session_id(self):
@@ -107,6 +65,39 @@ class IntegrationAPI(BaseAPI):
     def cookies_data(self):
         return self._cookies
 
+    async def terminate(self):
+        await self.set_status(ConnectivityStatus.Disconnected)
+
+    async def initialize(self, config_data: ConfigData):
+        _LOGGER.info("Initializing Shinobi Video")
+
+        try:
+            self._config_data = config_data
+
+            cookie_jar = CookieJar(unsafe=True)
+
+            if self.hass is None:
+                self._session = ClientSession(cookie_jar=cookie_jar)
+            else:
+                self._session = async_create_clientsession(
+                    hass=self.hass, cookies=self._cookies, cookie_jar=cookie_jar,
+                )
+
+            await self._login()
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(
+                f"Failed to initialize API, error: {ex}, line: {line_number}"
+            )
+
+    async def validate(self, data: dict | None = None):
+        config_data = ConfigData.from_dict(data)
+
+        await self.initialize(config_data)
+
     def _get_cookie_data(self, cookie_key):
         cookie_data = None
 
@@ -119,18 +110,18 @@ class IntegrationAPI(BaseAPI):
         await self.set_status(ConnectivityStatus.Connecting)
 
         try:
-            username = self.config_data.username
-            password = self.config_data.password
+            username = self._config_data.username
+            password = self._config_data.password
 
             credentials = {CONF_USERNAME: username, CONF_PASSWORD: password}
 
-            url = self.config_data.url
+            url = self._config_data.url
 
-            if self.session.closed:
+            if self._session.closed:
                 raise SessionTerminatedException()
 
-            async with self.session.post(url, data=credentials, ssl=False) as response:
-                all_cookies = self.session.cookie_jar.filter_cookies(response.url)
+            async with self._session.post(url, data=credentials, ssl=False) as response:
+                all_cookies = self._session.cookie_jar.filter_cookies(response.url)
 
                 for key, cookie in all_cookies.items():
                     self._cookies[cookie.key] = cookie.value
@@ -150,6 +141,8 @@ class IntegrationAPI(BaseAPI):
                             line_parts = line.split(" = ")
                             value = line_parts[len(line_parts) - 1]
                             self.data[API_DATA_PRODUCT] = value.replace("'", EMPTY_STRING)
+                            self.data[API_DATA_SESSION_ID] = self.session_id
+                            self.data[API_DATA_COOKIES] = self._cookies
 
                             await self.set_status(ConnectivityStatus.Connected)
 
@@ -188,8 +181,8 @@ class IntegrationAPI(BaseAPI):
             retry_attempt = retry_attempt + 1
 
             try:
-                if self.session is not None:
-                    async with self.session.get(url, ssl=False) as response:
+                if self._session is not None:
+                    async with self._session.get(url, ssl=False) as response:
                         status = response.status
 
                         message = (
@@ -200,7 +193,7 @@ class IntegrationAPI(BaseAPI):
                             result = await response.json()
                             break
                         elif status == 403:
-                            self.session = None
+                            self._session = None
                             self._cookies = {}
 
                             break
@@ -340,6 +333,6 @@ class IntegrationAPI(BaseAPI):
         _LOGGER.info(f"Set state of interface {name} to {is_enabled}")
 
     def _get_edge_os_api_endpoint(self, endpoint):
-        url = EDGE_OS_API_URL.format(self.config_data.url, endpoint)
+        url = EDGE_OS_API_URL.format(self._config_data.url, endpoint)
 
         return url

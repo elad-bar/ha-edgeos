@@ -227,6 +227,7 @@ class HomeAssistantManager:
 
     def update(self):
         if self._update_lock:
+            _LOGGER.warning("Update in progress, will skip the request")
             return
 
         self._update_lock = True

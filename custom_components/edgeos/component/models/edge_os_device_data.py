@@ -43,22 +43,6 @@ class EdgeOSDeviceData:
 
         return last_activity_in_seconds
 
-    def update_stats(self, data: dict):
-        if not self.is_leased:
-            data_stats = data.get(INTERFACE_DATA_STATS, {})
-
-            stats = [self.received, self.sent]
-
-            for stat in stats:
-                stat_data = {}
-                for stat_key in TRAFFIC_DATA_DEVICE_ITEMS:
-                    key = f"{stat.direction}_{stat_key}"
-                    stat_data_item = TRAFFIC_DATA_DEVICE_ITEMS.get(key)
-
-                    stat_data[stat_data_item] = float(data_stats.get(key))
-
-                stat.update(stat_data)
-
     def to_dict(self):
         obj = {
             DEVICE_DATA_NAME: self.hostname,

@@ -201,19 +201,21 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             system_stats_data = self.ws.data.get(SYSTEM_STATS_KEY, {})
             discovery_data = self.ws.data.get(DISCOVER_KEY, {})
 
-            self._system.update_stats(system_stats_data, discovery_data)
+            self._update_system_stats(system_stats_data, discovery_data)
 
             for device_ip in device_data:
                 device_item = self._get_device_by_ip(device_ip)
                 stats = device_data.get(device_ip)
 
-                device_item.update_stats(stats)
+                if device_item is not None:
+                    self._update_device_stats(device_item, stats)
 
             for name in interfaces_data:
                 interface_item = self._interfaces.get(name)
                 stats = interfaces_data.get(name)
 
-                interface_item.update_stats(stats)
+                if interface_item is not None:
+                    self._update_interface_stats(interface_item, stats)
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -345,6 +347,83 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
             _LOGGER.error(
                 f"Failed to extract interface data for {name}/{interface_type}, "
+                f"Error: {ex}, "
+                f"Line: {line_number}"
+            )
+
+    @staticmethod
+    def _update_interface_stats(interface_data: EdgeOSInterfaceData, data: dict):
+        try:
+            interface_data.up = str(data.get(INTERFACE_DATA_UP, False)).lower() == str(True).lower()
+            interface_data.l1up = str(data.get(INTERFACE_DATA_L1UP, False)).lower() == str(True).lower()
+            interface_data.mac = data.get(INTERFACE_DATA_MAC)
+            interface_data.multicast = float(data.get(INTERFACE_DATA_MULTICAST, "0"))
+
+            directions = [interface_data.received, interface_data.sent]
+
+            for direction in directions:
+                stat_data = {}
+                for stat_key in TRAFFIC_DATA_INTERFACE_ITEMS:
+                    key = f"{direction.direction}_{stat_key}"
+                    stat_data_item = TRAFFIC_DATA_INTERFACE_ITEMS.get(key)
+
+                    stat_data[stat_data_item] = float(data.get(key))
+
+                direction.update(stat_data)
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(
+                f"Failed to update interface statistics for {interface_data.name}, "
+                f"Error: {ex}, "
+                f"Line: {line_number}"
+            )
+
+    @staticmethod
+    def _update_device_stats(device_data: EdgeOSDeviceData, data: dict):
+        try:
+            if not device_data.is_leased:
+                stats = [device_data.received, device_data.sent]
+
+                for stat in stats:
+                    stat_data = {}
+                    for stat_key in TRAFFIC_DATA_DEVICE_ITEMS:
+                        key = f"{stat.direction}_{stat_key}"
+                        stat_data_item = TRAFFIC_DATA_DEVICE_ITEMS.get(key)
+
+                        stat_data[stat_data_item] = data.get(key)
+
+                    stat.update(stat_data)
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(
+                f"Failed to update device statistics for {device_data.hostname}, "
+                f"Error: {ex}, "
+                f"Line: {line_number}"
+            )
+
+    def _update_system_stats(self, system_stats_data: dict, discovery_data: dict):
+        try:
+            system_data = self._system
+
+            system_data.fw_version = discovery_data.get(DISCOVER_DATA_FW_VERSION)
+            system_data.product = discovery_data.get(DISCOVER_DATA_PRODUCT)
+
+            system_data.uptime = float(system_stats_data.get(SYSTEM_STATS_DATA_UPTIME, 0))
+            system_data.cpu = int(system_stats_data.get(SYSTEM_STATS_DATA_CPU, 0))
+            system_data.mem = int(system_stats_data.get(SYSTEM_STATS_DATA_MEM, 0))
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(
+                f"Failed to update system statistics, "
                 f"Error: {ex}, "
                 f"Line: {line_number}"
             )
@@ -821,7 +900,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
             is_monitored = self.storage_api.monitored_devices.get(unique_id, False)
 
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
+            self.entity_manager.set_entity(DOMAIN_DEVICE_TRACKER,
                                            self.entry_id,
                                            state,
                                            attributes,
@@ -1383,7 +1462,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         await self.storage_api.set_log_incoming_messages(True)
 
     async def _disable_log_incoming_messages(self, entity: EntityData):
-        await self.storage_api.set_monitored_device(False)
+        await self.storage_api.set_log_incoming_messages(False)
 
     async def _enable_store_debug_data(self, entity: EntityData):
         await self.storage_api.set_store_debug_data(True)

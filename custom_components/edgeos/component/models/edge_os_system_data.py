@@ -49,14 +49,6 @@ class EdgeOSSystemData:
 
         return is_enabled
 
-    def update_stats(self, system_stats_data: dict, discovery_data: dict):
-        self.fw_version = discovery_data.get(DISCOVER_DATA_FW_VERSION)
-        self.product = discovery_data.get(DISCOVER_DATA_PRODUCT)
-
-        self.uptime = float(system_stats_data.get(SYSTEM_STATS_DATA_UPTIME, 0))
-        self.cpu = int(system_stats_data.get(SYSTEM_STATS_DATA_CPU, 0))
-        self.mem = int(system_stats_data.get(SYSTEM_STATS_DATA_MEM, 0))
-
     def to_dict(self):
         obj = {
             SYSTEM_DATA_HOSTNAME: self.hostname,

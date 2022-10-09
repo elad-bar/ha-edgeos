@@ -53,26 +53,6 @@ class EdgeOSInterfaceData:
     def unique_id(self) -> str:
         return self.name
 
-    def update_stats(self, data: dict):
-        data_stats = data.get(INTERFACE_DATA_STATS, {})
-
-        self.up = str(data.get(INTERFACE_DATA_UP, False)).lower() == str(True).lower()
-        self.l1up = str(data.get(INTERFACE_DATA_L1UP, False)).lower() == str(True).lower()
-        self.mac = data.get(INTERFACE_DATA_MAC)
-        self.multicast = float(data_stats.get(INTERFACE_DATA_MULTICAST, "0"))
-
-        directions = [self.received, self.sent]
-
-        for direction in directions:
-            stat_data = {}
-            for stat_key in TRAFFIC_DATA_INTERFACE_ITEMS:
-                key = f"{direction.direction}_{stat_key}"
-                stat_data_item = TRAFFIC_DATA_INTERFACE_ITEMS.get(key)
-
-                stat_data[stat_data_item] = float(data_stats.get(key))
-
-            direction.update(stat_data)
-
     def to_dict(self):
         obj = {
             INTERFACE_DATA_NAME: self.name,
