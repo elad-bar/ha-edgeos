@@ -10,6 +10,10 @@ import datetime
 import logging
 import sys
 
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntityDescription,
+)
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -183,6 +187,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         for unique_id in self._interfaces:
             interface_item = self._interfaces.get(unique_id)
             self._load_interface_monitor_switch(interface_item)
+            self._load_interface_status_switch(interface_item)
 
             self._load_interface_received_rate_sensor(interface_item)
             self._load_interface_received_traffic_sensor(interface_item)
@@ -640,17 +645,15 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 ATTR_FIRMWARE_UPDATE_VERSION: self._system.upgrade_version
             }
 
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = "mdi:update"
+            unique_id = EntityData.generate_unique_id(DOMAIN_BINARY_SENSOR, entity_name)
 
-            entity_description = SensorEntityDescription(
+            entity_description = BinarySensorEntityDescription(
                 key=unique_id,
                 name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.MEASUREMENT
+                device_class=BinarySensorDeviceClass.UPDATE
             )
 
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
+            self.entity_manager.set_entity(DOMAIN_BINARY_SENSOR,
                                            self.entry_id,
                                            state,
                                            attributes,
@@ -1016,7 +1019,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
     def _load_interface_status_switch(self, interface: EdgeOSInterfaceData):
         interface_name = self._get_interface_name(interface)
-        entity_name = f"{interface_name} Enabled"
+        entity_name = f"{interface_name} Status"
 
         try:
             state = interface.up

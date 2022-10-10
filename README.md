@@ -24,17 +24,16 @@ To add integration use Configuration -> Integrations -> Add `EdgeOS`
 Integration supports **multiple** EdgeOS devices
 
 | Fields name | Type      | Required | Default | Description                                                                                                                                      |
-| ----------- | --------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+|-------------|-----------|----------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------|
 | Name        | Textbox   | +        | -       | Represents the integration name                                                                                                                  |
 | Host        | Textbox   | +        | -       | Hostname or IP address to access EdgeOS device                                                                                                   |
 | Username    | Textbox   | +        | -       | Username of user with `Operator` level access or higher, better to create a dedicated user for that integration for faster issues identification |
 | Password    | Textbox   | +        | -       |                                                                                                                                                  |
-| Unit        | Drop-down | +        | Bytes   | Unit for sensors, available options are: Bytes, KiloBytes, MegaBytes                                                                             |
 
 ###### EdgeOS Device validation errors
 
 | Errors                                                                             |
-| ---------------------------------------------------------------------------------- |
+|------------------------------------------------------------------------------------|
 | Cannot reach device (404)                                                          |
 | Invalid credentials (403)                                                          |
 | General authentication error (when failed to get valid response from device)       |
@@ -59,21 +58,14 @@ Please remove the integration and re-add it to make it work again.
 _Configuration -> Integrations -> {Integration} -> Options_ <br />
 
 | Fields name              | Type      | Required | Default   | Description                                                                                                                                      |
-| ------------------------ | --------- | -------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+|--------------------------|-----------|----------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------|
 | Host                     | Textbox   | +        | -         | Hostname or IP address to access EdgeOS device                                                                                                   |
 | Username                 | Textbox   | +        | -         | Username of user with `Operator` level access or higher, better to create a dedicated user for that integration for faster issues identification |
 | Password                 | Textbox   | +        | -         |                                                                                                                                                  |
 | Clear credentials        | Check-box | +        | Unchecked | Will reset username and password (Not being stored under options)                                                                                |
-| Unit                     | Drop-down | +        | Bytes     | Unit for sensors, available options are: Bytes, KiloBytes, MegaBytes                                                                             |
 | Consider away interval   | Textbox   | +        | 180       | Consider away interval in seconds                                                                                                                |
-| Monitored devices        | Drop-down | +        | NONE      | Devices to monitor using binary_sensor and sensor                                                                                                |
-| Monitored interfaces     | Drop-down | +        | NONE      | Interfaces to monitor using binary_sensor and sensor,                                                                                            |
-| Track                    | Drop-down | +        | NONE      | Devices to track using device_trac                                                                                                               |
 | Update API Interval      | Textbox   | +        | 60        | Number of seconds to update new devices and router settings                                                                                      |
 | Update Entities Interval | Textbox   | +        | 1         | Number of seconds to update entities                                                                                                             |
-| Save debug file          | Check-box | +        | Unchecked | Will store debug file, more details below (Not being stored under options)                                                                       |
-| Log level                | Drop-down | +        | Default   | Changes component's log level (more details below)                                                                                               |
-| Log incoming messages    | Check-box | +        | Unchecked | Whether to log as DEBUG incoming web-socket messages or not                                                                                      |
 
 ###### Log Level's drop-down
 
@@ -100,60 +92,42 @@ logger:
 
 ## Components
 
-#### Default
+### System
+| Entity Name                         | Type          | Description                                                               | Additional information                        |
+|-------------------------------------|---------------|---------------------------------------------------------------------------|-----------------------------------------------|
+| {Router Name} Unit                  | Select        | Sets whether to monitor device and create all the components below or not |                                               |
+| {Router Name} Unknown devices       | Sensor        | Represents number of devices leased by the DHCP server                    | Attributes holds the leased hostname and IPs  |
+| {Router Name} Firmware Updates      | Binary Sensor | New firmware available indication                                         | Attributes holds the url and new release name |
+| {Router Name} Log incoming messages | Switch        | Sets whether to log WebSocket incoming messages for debugging             |                                               |
+| {Router Name} Store Debug Data      | Switch        | Sets whether to store API and WebSocket latest data for debugging         |                                               |
 
-| Name                               | Type          | State                     | Attributes                                                                |
-| ---------------------------------- | ------------- | ------------------------- | ------------------------------------------------------------------------- |
-| {Integration Name} System Status   | Binary Sensor | Connected or not          | CPU<br /> Memory<br /> Up-time<br /> API Last Update<br /> WS Last Update |
-| {Integration Name} Unknown Devices | Sensor        | Number of unknown devices | Unknown Devices description                                               |
 
-#### Monitored Devices
+### Per device
+| Entity Name                                  | Type           | Description                                                                     | Additional information      |
+|----------------------------------------------|----------------|---------------------------------------------------------------------------------|-----------------------------|
+| {Router Name} {Device Name} Monitored        | Sensor         | Sets whether to monitor device and create all the components below or not       |                             |
+| {Router Name} {Device Name} Received Rate    | Sensor         | Received Rate per second                                                        | Statistics: Measurement     |
+| {Router Name} {Device Name} Received Traffic | Sensor         | Received total traffic                                                          | Statistics: Total Increment |
+| {Router Name} {Device Name} Sent Rate        | Sensor         | Sent Rate per second                                                            | Statistics: Measurement     |
+| {Router Name} {Device Name} Sent Traffic     | Sensor         | Sent total traffic                                                              | Statistics: Total Increment |
+| {Router Name} {Device Name}                  | Device Tracker | Indication whether the device is or was connected over the configured timeframe |                             |
 
-| Name                                    | Type          | State            | Attributes                                                                                                                                                                   |
-| --------------------------------------- | ------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| {Integration Name} Device {Device Name} | Binary Sensor | Connected or not | IP<br /> MAC<br /> Name<br /> {Unit}Bytes (Sent)<br /> {Unit}Bytes/ps (Sent)<br />{Unit}Bytes (Received)<br />{Unit}Bytes/ps (Received)<br />Last Activity<br />Last Changed |
 
-| Name                                                       | Type          | State                     | Attributes         |
-| ---------------------------------------------------------- | ------------- | ------------------------- | ------------------ |
-| {Integration Name} Device {Device Name}                    | Binary Sensor | Connected or not          | MAC <br /> Address |
-| {Integration Name} Device {Device Name} Traffic (Received) | Sensor        | Total Increasing - Unit\* |                    |
-| {Integration Name} Device {Device Name} Traffic (Sent)     | Sensor        | Total Increasing - Unit\* |                    |
-| {Integration Name} Device {Device Name} Rate (Received)    | Sensor        | Measurement - Unit\*      |                    |
-| {Integration Name} Device {Device Name} Rate (Sent)        | Sensor        | Measurement - Unit\*      |                    |
+### Per interface
+| Entity Name                                             | Type   | Description                                                                  | Additional information      |
+|---------------------------------------------------------|--------|------------------------------------------------------------------------------|-----------------------------|
+| {Router Name} {Interface Name} Status                   | Switch | Sets whether to interface is active or not                                   |                             |
+| {Router Name} {Interface Name} Monitored                | Switch | Sets whether to monitor interface and create all the components below or not |                             |
+| {Router Name} {Interface Name} Received Rate            | Sensor | Received Rate per second                                                     | Statistics: Measurement     |
+| {Router Name} {Interface Name} Received Traffic         | Sensor | Received total traffic                                                       | Statistics: Total Increment |
+| {Router Name} {Interface Name} Received Dropped Packets | Sensor | Received packets lost                                                        | Statistics: Total Increment |
+| {Router Name} {Interface Name} Received Errors          | Sensor | Received errors                                                              | Statistics: Total Increment |
+| {Router Name} {Interface Name} Received Packets         | Sensor | Received packets                                                             | Statistics: Total Increment |
+| {Router Name} {Interface Name} Sent Rate                | Sensor | Sent Rate per second                                                         | Statistics: Measurement     |
+| {Router Name} {Interface Name} Sent Traffic             | Sensor | Sent total traffic                                                           | Statistics: Total Increment |
+| {Router Name} {Interface Name} Sent Dropped Packets     | Sensor | Sent packets lost                                                            | Statistics: Total Increment |
+| {Router Name} {Interface Name} Sent Errors              | Sensor | Sent errors                                                                  | Statistics: Total Increment |
+| {Router Name} {Interface Name} Sent Packets             | Sensor | Sent packets                                                                 | Statistics: Total Increment |
 
-_Unit of measurement for `Traffic` and `Rate` are according to the unit settings of the integration_
-
-#### Monitored Interfaces
-
-| Name                                                                     | Type          | State                      | Attributes                                   |
-| ------------------------------------------------------------------------ | ------------- | -------------------------- | -------------------------------------------- |
-| {Integration Name} Interface {Interface Name}                            | Binary Sensor | Connected or not           | Duplex<br /> Link Speed (Mbps)<br /> Address |
-| {Integration Name} Interface {Interface Name} Packets (Received)         | Sensor        | Total Increasing - Packets |                                              |
-| {Integration Name} Interface {Interface Name} Packets (Sent)             | Sensor        | Total Increasing - Packets |                                              |
-| {Integration Name} Interface {Interface Name} Traffic (Received)         | Sensor        | Total Increasing - Unit\*  |                                              |
-| {Integration Name} Interface {Interface Name} Traffic (Sent)             | Sensor        | Total Increasing - Unit\*  |                                              |
-| {Integration Name} Interface {Interface Name} Errors (Received)          | Sensor        | Total Increasing - Errors  |                                              |
-| {Integration Name} Interface {Interface Name} Errors (Sent)              | Sensor        | Total Increasing - Errors  |                                              |
-| {Integration Name} Interface {Interface Name} Dropped Packets (Received) | Sensor        | Total Increasing - Packets |                                              |
-| {Integration Name} Interface {Interface Name} Dropped Packets (Sent)     | Sensor        | Total Increasing - Packets |                                              |
-| {Integration Name} Interface {Interface Name} Rate (Received)            | Sensor        | Measurement - Unit\*       |                                              |
-| {Integration Name} Interface {Interface Name} Rate (Sent)                | Sensor        | Measurement - Unit\*       |                                              |
-| {Integration Name} Interface {Interface Name} Multicast                  | Sensor        | Total Increasing - Packets |                                              |
 
 _Unit of measurement for `Traffic` and `Rate` are according to the unit settings of the integration_
-
-#### Tracked Devices
-
-| Name                             | Type           | State        | Attributes                                                             |
-| -------------------------------- | -------------- | ------------ | ---------------------------------------------------------------------- |
-| {Integration Name} {Device Name} | Device Tracker | Home or Away | Host<br /> IP<br /> MAC<br /> Name<br /> Last Activity<br /> Connected |
-
-### Setting up the integration
-
-###### Setup integration
-
-![EdgeOS Setup](https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/docs/images/EdgeOS-Setup.PNG)
-
-###### Edit options
-
-![EdgeOS Setup](https://raw.githubusercontent.com/elad-bar/ha-edgeos/master/docs/images/EdgeOS-Options.PNG)

@@ -1,33 +1,65 @@
 # Changelog
 
 ## 2.0.0
-Configuration UI will hold:
-- Username
-- Password
+Component refactored to allow faster future integration for additional features.
 
-Device tracker
-- Per device
+New features:
+- Enable / Disable interface (Ethernet / Bridge) using a new switch per interface
+- Enable / Disable interface monitoring for received and sent data / rate / errors / packets and dropped packets using a switch per interface
+- Enable / Disable device monitoring for received and sent data and rate (including device tracker) using a switch per interface
+- Enable / Disable store debug data to `./storage` directory of HA for API (`edgeos.debug.api.json`) and WS (`edgeos.debug.ws.json`) data for faster debugging or just to get more ideas for additional features
+- Firmware Update binary sensor including link to the new firmware
+- Warning when prerequisites of traffic analysis (DPI and Export) are not turned on
+- Asynchronous data updates of API and WebSocket to handle disconnection better
 
-Binary Sensor
-- Status
+## Breaking Changes!
+- Most of the configurations moved to be regular components of HA (Log incoming messages, Unit of measurement, Store debug data)
+- Configuration UI will hold EdgeOS URL and credentials only:
+  - Hostname
+  - Port
+  - Username
+  - Password
 
-Sensor:
-- Unknown devices
-- Per device - Rate Incoming (Measurement)
-- Per device - Rate Outgoing (Measurement)
-- Per device - Total Incoming (Total)
-- Per device - Total Outgoing (Total)
-- Per interface - Rate Incoming (Measurement)
-- Per interface - Rate Outgoing (Measurement)
-- Per interface - Total Incoming (Total)
-- Per interface - Total Outgoing (Total)
+**System**
 
-Switch
-- Per interface
-- Store incoming messages
+| Entity Name                         | Type          | Description                                                               | Additional information                        |
+|-------------------------------------|---------------|---------------------------------------------------------------------------|-----------------------------------------------|
+| {Router Name} Unit                  | Select        | Sets whether to monitor device and create all the components below or not |                                               |
+| {Router Name} Unknown devices       | Sensor        | Represents number of devices leased by the DHCP server                    | Attributes holds the leased hostname and IPs  |
+| {Router Name} Firmware Updates      | Binary Sensor | New firmware available indication                                         | Attributes holds the url and new release name |
+| {Router Name} Log incoming messages | Switch        | Sets whether to log WebSocket incoming messages for debugging             |                                               |
+| {Router Name} Store Debug Data      | Switch        | Sets whether to store API and WebSocket latest data for debugging         |                                               |
 
-Select
-- Unit - Mb, Kb, b
+
+**Per device**
+
+| Entity Name                                  | Type           | Description                                                                     | Additional information      |
+|----------------------------------------------|----------------|---------------------------------------------------------------------------------|-----------------------------|
+| {Router Name} {Device Name} Monitored        | Sensor         | Sets whether to monitor device and create all the components below or not       |                             |
+| {Router Name} {Device Name} Received Rate    | Sensor         | Received Rate per second                                                        | Statistics: Measurement     |
+| {Router Name} {Device Name} Received Traffic | Sensor         | Received total traffic                                                          | Statistics: Total Increment |
+| {Router Name} {Device Name} Sent Rate        | Sensor         | Sent Rate per second                                                            | Statistics: Measurement     |
+| {Router Name} {Device Name} Sent Traffic     | Sensor         | Sent total traffic                                                              | Statistics: Total Increment |
+| {Router Name} {Device Name}                  | Device Tracker | Indication whether the device is or was connected over the configured timeframe |                             |
+
+
+**Per interface**
+
+| Entity Name                                             | Type   | Description                                                                  | Additional information      |
+|---------------------------------------------------------|--------|------------------------------------------------------------------------------|-----------------------------|
+| {Router Name} {Interface Name} Status                   | Switch | Sets whether to interface is active or not                                   |                             |
+| {Router Name} {Interface Name} Monitored                | Switch | Sets whether to monitor interface and create all the components below or not |                             |
+| {Router Name} {Interface Name} Received Rate            | Sensor | Received Rate per second                                                     | Statistics: Measurement     |
+| {Router Name} {Interface Name} Received Traffic         | Sensor | Received total traffic                                                       | Statistics: Total Increment |
+| {Router Name} {Interface Name} Received Dropped Packets | Sensor | Received packets lost                                                        | Statistics: Total Increment |
+| {Router Name} {Interface Name} Received Errors          | Sensor | Received errors                                                              | Statistics: Total Increment |
+| {Router Name} {Interface Name} Received Packets         | Sensor | Received packets                                                             | Statistics: Total Increment |
+| {Router Name} {Interface Name} Sent Rate                | Sensor | Sent Rate per second                                                         | Statistics: Measurement     |
+| {Router Name} {Interface Name} Sent Traffic             | Sensor | Sent total traffic                                                           | Statistics: Total Increment |
+| {Router Name} {Interface Name} Sent Dropped Packets     | Sensor | Sent packets lost                                                            | Statistics: Total Increment |
+| {Router Name} {Interface Name} Sent Errors              | Sensor | Sent errors                                                                  | Statistics: Total Increment |
+| {Router Name} {Interface Name} Sent Packets             | Sensor | Sent packets                                                                 | Statistics: Total Increment |
+
 
 ## 1.2.6
 
