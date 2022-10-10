@@ -5,8 +5,8 @@
         "title": "Set up EdgeOS Router",
         "description": "Set up your EdgeOS Router, note that integration will communicate using HTTPS connection",
         "data": {
-          "name": "Name",
           "host": "Host",
+          "port": "Port",
           "username": "Username",
           "password": "Password"
         }

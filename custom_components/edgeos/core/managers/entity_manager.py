@@ -135,10 +135,10 @@ class EntityManager:
 
                     self.entity_registry.async_remove(entity_id)
 
-                delete_entities.append(entity_id)
+                delete_entities.append(unique_id)
 
-        for entity_id in delete_entities:
-            del self.entities[entity_id]
+        for unique_id in delete_entities:
+            self.entities.pop(unique_id, None)
 
         total_delete_entities = len(delete_entities)
         if total_delete_entities > 0:

@@ -35,6 +35,9 @@ ENTITY_DOMAIN = "domain"
 ENTITY_STATUS = "status"
 ENTITY_CONFIG_ENTRY_ID = "entry_id"
 
+HA_NAME = "homeassistant"
+SERVICE_RELOAD = "reload_config_entry"
+
 STORAGE_VERSION = 1
 
 PASSWORD_MANAGER = f"pm_{DOMAIN}"

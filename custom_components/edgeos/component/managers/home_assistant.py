@@ -104,7 +104,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
     async def _ws_status_changed(self, status: ConnectivityStatus):
         _LOGGER.info(f"WS Status changed to {status}, API Status: {self.api.status}")
 
-        if status == ConnectivityStatus.Disconnected:
+        if status == ConnectivityStatus.NotConnected:
             if self.api.status == ConnectivityStatus.Connected:
                 await self.ws.initialize(self.config_data)
 
@@ -144,6 +144,9 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             _LOGGER.error(f"Failed to async_update_data_providers, Error: {ex}, Line: {line_number}")
 
     def load_devices(self):
+        if self._system.product is None:
+            return
+
         self._load_main_device()
 
         for unique_id in self._devices:
@@ -155,6 +158,9 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             self._load_interface_device(interface_item)
 
     def load_entities(self):
+        if self._system.product is None:
+            return
+
         self._load_unit_select()
         self._load_unknown_devices_sensor()
         self._load_firmware_upgrade_binary_sensor()
@@ -534,7 +540,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         if device_details is None or device_details != device_details_data:
             self.device_manager.set(name, device_details_data)
 
-            _LOGGER.info(f"Created HA device {name} [{model}]")
+            _LOGGER.debug(f"Created HA device {name} [{model}]")
 
     def _load_main_device(self):
         self._set_ha_device(self.system_name, self._system.product, self._system.fw_version)
@@ -600,7 +606,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = None
+            icon = "mdi:help-network-outline"
 
             entity_description = SensorEntityDescription(
                 key=unique_id,
@@ -635,7 +641,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = None
+            icon = "mdi:update"
 
             entity_description = SensorEntityDescription(
                 key=unique_id,
@@ -669,7 +675,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SWITCH, entity_name)
 
-            icon = None
+            icon = "mdi:math-log"
 
             entity_description = SwitchEntityDescription(
                 key=unique_id,
@@ -706,7 +712,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SWITCH, entity_name)
 
-            icon = None
+            icon = "mdi:file-download"
 
             entity_description = SwitchEntityDescription(
                 key=unique_id,
@@ -731,160 +737,50 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             )
 
     def _load_device_received_rate_sensor(self, device: EdgeOSDeviceData):
-        device_name = self._get_device_name(device)
-        entity_name = f"{device_name} Received Rate"
+        unit_of_measurement = self._get_rate_unit_of_measurement()
 
-        try:
-            unit_of_measurement = self._get_rate_unit_of_measurement()
+        state = self._convert_unit(device.received.rate)
 
-            state = self._convert_unit(device.received.rate)
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = None
-
-            entity_description = SensorEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.MEASUREMENT,
-                native_unit_of_measurement=unit_of_measurement
-            )
-
-            is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
-
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description,
-                                           destructors=[not is_monitored])
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+        self._load_device_stats_sensor(device,
+                                       "Received Rate",
+                                       state,
+                                       unit_of_measurement,
+                                       "mdi:upload-network-outline",
+                                       SensorStateClass.MEASUREMENT)
 
     def _load_device_received_traffic_sensor(self, device: EdgeOSDeviceData):
-        device_name = self._get_device_name(device)
-        entity_name = f"{device_name} Received Traffic"
+        unit_of_measurement = self._get_unit_of_measurement()
 
-        try:
-            unit_of_measurement = self._get_unit_of_measurement()
+        state = self._convert_unit(device.received.total)
 
-            state = self._convert_unit(device.received.total)
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = None
-
-            entity_description = SensorEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.TOTAL,
-                native_unit_of_measurement=unit_of_measurement
-            )
-
-            is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
-
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description,
-                                           destructors=[not is_monitored])
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+        self._load_device_stats_sensor(device,
+                                       "Received Traffic",
+                                       state,
+                                       unit_of_measurement,
+                                       "mdi:download-network-outline")
 
     def _load_device_sent_rate_sensor(self, device: EdgeOSDeviceData):
-        device_name = self._get_device_name(device)
-        entity_name = f"{device_name} Sent Rate"
+        unit_of_measurement = self._get_rate_unit_of_measurement()
 
-        try:
-            unit_of_measurement = self._get_rate_unit_of_measurement()
+        state = self._convert_unit(device.sent.rate)
 
-            state = self._convert_unit(device.sent.rate)
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = None
-
-            entity_description = SensorEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.MEASUREMENT,
-                native_unit_of_measurement=unit_of_measurement
-            )
-
-            is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
-
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description,
-                                           destructors=[not is_monitored])
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+        self._load_device_stats_sensor(device,
+                                       "Sent Rate",
+                                       state,
+                                       unit_of_measurement,
+                                       "mdi:upload-network-outline",
+                                       SensorStateClass.MEASUREMENT)
 
     def _load_device_sent_traffic_sensor(self, device: EdgeOSDeviceData):
-        device_name = self._get_device_name(device)
-        entity_name = f"{device_name} Sent Traffic"
+        unit_of_measurement = self._get_unit_of_measurement()
 
-        try:
-            unit_of_measurement = self._get_unit_of_measurement()
+        state = self._convert_unit(device.sent.total)
 
-            state = self._convert_unit(device.sent.total)
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = None
-
-            entity_description = SensorEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.TOTAL,
-                native_unit_of_measurement=unit_of_measurement
-            )
-
-            is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
-
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description,
-                                           destructors=[not is_monitored])
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+        self._load_device_stats_sensor(device,
+                                       "Sent Traffic",
+                                       state,
+                                       unit_of_measurement,
+                                       "mdi:upload-network-outline")
 
     def _load_device_tracker(self, device: EdgeOSDeviceData):
         device_name = self._get_device_name(device)
@@ -935,7 +831,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SWITCH, entity_name)
-            icon = None
+            icon = "mdi:monitor-eye"
 
             entity_description = SwitchEntityDescription(
                 key=unique_id,
@@ -962,381 +858,148 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             )
 
     def _load_interface_received_rate_sensor(self, interface: EdgeOSInterfaceData):
-        device_name = self._get_interface_name(interface)
-        entity_name = f"{device_name} Received Rate"
+        unit_of_measurement = self._get_rate_unit_of_measurement()
 
-        try:
-            unit_of_measurement = self._get_rate_unit_of_measurement()
+        state = self._convert_unit(interface.received.rate)
 
-            state = self._convert_unit(interface.received.rate)
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = None
-
-            entity_description = SensorEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.MEASUREMENT,
-                native_unit_of_measurement=unit_of_measurement
-            )
-
-            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
-
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description,
-                                           destructors=[not is_monitored])
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+        self._load_interface_stats_sensor(interface,
+                                          "Received Rate",
+                                          state,
+                                          unit_of_measurement,
+                                          "mdi:download-network-outline",
+                                          SensorStateClass.MEASUREMENT)
 
     def _load_interface_received_traffic_sensor(self, interface: EdgeOSInterfaceData):
-        device_name = self._get_interface_name(interface)
-        entity_name = f"{device_name} Received Traffic"
+        unit_of_measurement = self._get_unit_of_measurement()
 
-        try:
-            unit_of_measurement = self._get_unit_of_measurement()
+        state = self._convert_unit(interface.received.rate)
 
-            state = self._convert_unit(interface.received.total)
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = None
-
-            entity_description = SensorEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.TOTAL,
-                native_unit_of_measurement=unit_of_measurement
-            )
-
-            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
-
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description,
-                                           destructors=[not is_monitored])
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+        self._load_interface_stats_sensor(interface,
+                                          "Received Traffic",
+                                          state,
+                                          unit_of_measurement,
+                                          "mdi:download-network-outline")
 
     def _load_interface_received_dropped_sensor(self, interface: EdgeOSInterfaceData):
-        device_name = self._get_interface_name(interface)
-        entity_name = f"{device_name} Received Dropped"
-
-        try:
-            unit_of_measurement = UNIT_DROPPED_PACKETS
-
-            state = interface.received.dropped
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = None
-
-            entity_description = SensorEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.TOTAL,
-                native_unit_of_measurement=unit_of_measurement
-            )
-
-            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
-
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description,
-                                           destructors=[not is_monitored])
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+        self._load_interface_stats_sensor(interface,
+                                          "Received Dropped",
+                                          interface.received.dropped,
+                                          UNIT_DROPPED_PACKETS,
+                                          "mdi:package-variant-minus")
 
     def _load_interface_received_errors_sensor(self, interface: EdgeOSInterfaceData):
-        device_name = self._get_interface_name(interface)
-        entity_name = f"{device_name} Received Errors"
-
-        try:
-            unit_of_measurement = UNIT_ERRORS
-
-            state = interface.received.errors
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = None
-
-            entity_description = SensorEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.TOTAL,
-                native_unit_of_measurement=unit_of_measurement
-            )
-
-            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
-
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description,
-                                           destructors=[not is_monitored])
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+        self._load_interface_stats_sensor(interface,
+                                          "Received Errors",
+                                          interface.received.errors,
+                                          UNIT_ERRORS,
+                                          "mdi:timeline-alert")
 
     def _load_interface_received_packets_sensor(self, interface: EdgeOSInterfaceData):
-        device_name = self._get_interface_name(interface)
-        entity_name = f"{device_name} Received Packets"
-
-        try:
-            unit_of_measurement = UNIT_PACKETS
-
-            state = interface.received.packets
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = None
-
-            entity_description = SensorEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.TOTAL,
-                native_unit_of_measurement=unit_of_measurement
-            )
-
-            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
-
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description,
-                                           destructors=[not is_monitored])
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+        self._load_interface_stats_sensor(interface,
+                                          "Received Packets",
+                                          interface.received.packets,
+                                          UNIT_PACKETS,
+                                          "mdi:package-up")
 
     def _load_interface_sent_rate_sensor(self, interface: EdgeOSInterfaceData):
-        device_name = self._get_interface_name(interface)
-        entity_name = f"{device_name} Sent Rate"
+        unit_of_measurement = self._get_rate_unit_of_measurement()
 
-        try:
-            unit_of_measurement = self._get_rate_unit_of_measurement()
+        state = self._convert_unit(interface.sent.rate)
 
-            state = self._convert_unit(interface.sent.rate)
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = None
-
-            entity_description = SensorEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.MEASUREMENT,
-                native_unit_of_measurement=unit_of_measurement
-            )
-
-            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
-
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description,
-                                           destructors=[not is_monitored])
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+        self._load_interface_stats_sensor(interface,
+                                          "Sent Rate",
+                                          state,
+                                          unit_of_measurement,
+                                          "mdi:upload-network-outline",
+                                          SensorStateClass.MEASUREMENT)
 
     def _load_interface_sent_traffic_sensor(self, interface: EdgeOSInterfaceData):
-        device_name = self._get_interface_name(interface)
-        entity_name = f"{device_name} Sent Traffic"
+        unit_of_measurement = self._get_unit_of_measurement()
 
-        try:
-            unit_of_measurement = self._get_unit_of_measurement()
+        state = self._convert_unit(interface.sent.total)
 
-            state = self._convert_unit(interface.sent.total)
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = None
-
-            entity_description = SensorEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.TOTAL,
-                native_unit_of_measurement=unit_of_measurement
-            )
-
-            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
-
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description,
-                                           destructors=[not is_monitored])
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+        self._load_interface_stats_sensor(interface,
+                                          "Sent Traffic",
+                                          state,
+                                          unit_of_measurement,
+                                          "mdi:upload-network-outline")
 
     def _load_interface_sent_dropped_sensor(self, interface: EdgeOSInterfaceData):
-        device_name = self._get_interface_name(interface)
-        entity_name = f"{device_name} Sent Dropped"
-
-        try:
-            unit_of_measurement = UNIT_DROPPED_PACKETS
-
-            state = interface.sent.dropped
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = None
-
-            entity_description = SensorEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.TOTAL,
-                native_unit_of_measurement=unit_of_measurement
-            )
-
-            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
-
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description,
-                                           destructors=[not is_monitored])
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+        self._load_interface_stats_sensor(interface,
+                                          "Sent Dropped",
+                                          interface.sent.dropped,
+                                          UNIT_DROPPED_PACKETS,
+                                          "mdi:package-variant-minus")
 
     def _load_interface_sent_errors_sensor(self, interface: EdgeOSInterfaceData):
-        device_name = self._get_interface_name(interface)
-        entity_name = f"{device_name} Sent Errors"
-
-        try:
-            unit_of_measurement = UNIT_ERRORS
-
-            state = interface.sent.errors
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = None
-
-            entity_description = SensorEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.TOTAL,
-                native_unit_of_measurement=unit_of_measurement
-            )
-
-            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
-
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description,
-                                           destructors=[not is_monitored])
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+        self._load_interface_stats_sensor(interface,
+                                          "Sent Errors",
+                                          interface.sent.errors,
+                                          UNIT_ERRORS,
+                                          "mdi:timeline-alert")
 
     def _load_interface_sent_packets_sensor(self, interface: EdgeOSInterfaceData):
+        self._load_interface_stats_sensor(interface,
+                                          "Sent Packets",
+                                          interface.sent.packets,
+                                          UNIT_PACKETS,
+                                          "mdi:package-up")
+
+    def _load_device_stats_sensor(self,
+                                  device: EdgeOSDeviceData,
+                                  entity_suffix: str,
+                                  state: str | int | float | None,
+                                  unit_of_measurement: str,
+                                  icon: str | None,
+                                  state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING):
+
+        device_name = self._get_device_name(device)
+        entity_name = f"{device_name} {entity_suffix}"
+
+        is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
+
+        self._load_stats_sensor(device_name, entity_name, state, unit_of_measurement, icon, state_class, is_monitored)
+
+    def _load_interface_stats_sensor(self,
+                                     interface: EdgeOSInterfaceData,
+                                     entity_suffix: str,
+                                     state: str | int | float | None,
+                                     unit_of_measurement: str,
+                                     icon: str | None,
+                                     state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING):
+
         device_name = self._get_interface_name(interface)
-        entity_name = f"{device_name} Sent Packets"
+        entity_name = f"{device_name} {entity_suffix}"
 
+        is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
+
+        self._load_stats_sensor(device_name, entity_name, state, unit_of_measurement, icon, state_class, is_monitored)
+
+    def _load_stats_sensor(self,
+                           device_name: str,
+                           entity_name: str,
+                           state: str | int | float | None,
+                           unit_of_measurement: str,
+                           icon: str | None,
+                           state_class: SensorStateClass,
+                           is_monitored: bool):
         try:
-            unit_of_measurement = UNIT_PACKETS
-
-            state = interface.sent.packets
-
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = None
 
             entity_description = SensorEntityDescription(
                 key=unique_id,
                 name=entity_name,
                 icon=icon,
-                state_class=SensorStateClass.TOTAL,
+                state_class=state_class,
                 native_unit_of_measurement=unit_of_measurement
             )
 
-            is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
+            if unit_of_measurement in [UNIT_ERRORS, UNIT_PACKETS, UNIT_DROPPED_PACKETS]:
+                state = self._format_number(state)
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
                                            self.entry_id,
@@ -1363,7 +1026,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SWITCH, entity_name)
-            icon = None
+            icon = "mdi:eye-settings"
 
             entity_description = SwitchEntityDescription(
                 key=unique_id,
@@ -1484,6 +1147,8 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
         await self.async_update(datetime.now())
 
+        await self._reload_integration()
+
     def _get_device_from_entity(self, entity: EntityData) -> EdgeOSDeviceData:
         unique_id = entity.details.get(ENTITY_UNIQUE_ID)
         device_item = self._get_device(unique_id)
@@ -1503,6 +1168,17 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         if result > 0:
             result = result / unit_factor
 
+        digits = 0 if unit_factor == BYTE else 3
+
+        result = self._format_number(result, digits)
+
+        return result
+
+    @staticmethod
+    def _format_number(value: int | float, digits: int = 0) -> int | float:
+        value_str = f"{value:.{digits}f}"
+        result = int(value_str) if digits == 0 else float(value_str)
+
         return result
 
     def _get_unit_of_measurement(self) -> str:
@@ -1515,3 +1191,10 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         result = f"{unit_of_measurement}/ps"
 
         return result
+
+    async def _reload_integration(self):
+        data = {
+            ENTITY_CONFIG_ENTRY_ID: self.entry_id
+        }
+
+        await self._hass.services.async_call(HA_NAME, SERVICE_RELOAD, data)

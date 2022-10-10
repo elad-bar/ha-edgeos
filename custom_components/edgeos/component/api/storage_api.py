@@ -38,13 +38,13 @@ class StorageAPI(BaseAPI):
 
     @property
     def _ws_file_name(self):
-        file_name = f"{DOMAIN}.ws.debug.json"
+        file_name = f"{DOMAIN}.debug.ws.json"
 
         return file_name
 
     @property
     def _api_file_name(self):
-        file_name = f"{DOMAIN}.api.debug.json"
+        file_name = f"{DOMAIN}.debug.api.json"
 
         return file_name
 
