@@ -637,7 +637,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         entity_name = f"{device_name} Firmware Upgrade"
 
         try:
-            state = self._system.upgrade_available
+            state = STATE_ON if self._system.upgrade_available else STATE_OFF
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
