@@ -576,17 +576,15 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
         return device
 
-    def _set_ha_device(self, name: str, model: str, manufacturer: str | None = None, version: str | None = None):
+    def _set_ha_device(self, name: str, model: str, manufacturer: str, version: str | None = None):
         device_details = self.device_manager.get(name)
 
         device_details_data = {
             "identifiers": {(DEFAULT_NAME, name)},
             "name": name,
+            "manufacturer": manufacturer,
             "model": model
         }
-
-        if manufacturer is not None:
-            device_details_data["manufacturer"] = manufacturer
 
         if version is not None:
             device_details_data["sw_version"] = version
@@ -601,11 +599,11 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
     def _load_device_device(self, device: EdgeOSDeviceData):
         name = self._get_device_name(device)
-        self._set_ha_device(name, "Device")
+        self._set_ha_device(name, "Device", DEFAULT_NAME)
 
     def _load_interface_device(self, interface: EdgeOSInterfaceData):
         name = self._get_interface_name(interface)
-        self._set_ha_device(name, "Interface")
+        self._set_ha_device(name, "Interface", DEFAULT_NAME)
 
     def _load_unit_select(self):
         try:

@@ -13,10 +13,6 @@ New features:
 - Asynchronous data updates of API and WebSocket to handle disconnection better
 - New service: `Update configuration` allows to edit configuration of unit, store debug data, log incoming messages and consider away interval
 
-**TODO**
-
-- Fix interface enable / disable API request
-
 **Breaking Changes!**
 - Most of the configurations moved to be regular components of HA (Log incoming messages, Unit of measurement, Store debug data)
 - Configuration UI will hold EdgeOS URL and credentials only:

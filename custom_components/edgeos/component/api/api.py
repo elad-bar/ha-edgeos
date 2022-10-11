@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from asyncio import sleep
+import json
 import logging
 import sys
 from typing import Awaitable, Callable
@@ -61,6 +62,12 @@ class IntegrationAPI(BaseAPI):
         beaker_session_id = self._get_cookie_data(COOKIE_BEAKER_SESSION_ID)
 
         return beaker_session_id
+
+    @property
+    def csrf_token(self):
+        csrf_token = self._get_cookie_data(COOKIE_CSRF_TOKEN)
+
+        return csrf_token
 
     @property
     def cookies_data(self):
@@ -215,12 +222,27 @@ class IntegrationAPI(BaseAPI):
 
         return result
 
+    def _get_post_headers(self):
+        headers = {}
+        for header_key in self._session.headers:
+            header = self._session.headers.get(header_key)
+
+            if header is not None:
+                headers[header_key] = header
+
+        headers[HEADER_CSRF_TOKEN] = self.csrf_token
+
+        return headers
+
     async def _async_post(self, url, data):
         result = None
 
         try:
             if self._session is not None:
-                async with self._session.post(url, data=data, ssl=False) as response:
+                headers = self._get_post_headers()
+                data_json = json.dumps(data)
+
+                async with self._session.post(url, headers=headers, data=data_json, ssl=False) as response:
                     response.raise_for_status()
 
                     result = await response.json()
@@ -368,8 +390,6 @@ class IntegrationAPI(BaseAPI):
         get_req_url = self._get_edge_os_api_endpoint(endpoint)
 
         result_json = await self._async_post(get_req_url, data)
-
-        _LOGGER.info(result_json)
 
         if result_json is not None:
             set_response = result_json.get(API_DATA_SAVE.upper(), {})
