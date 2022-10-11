@@ -19,7 +19,6 @@ New features:
 - Migration of previous configuration
 - Removal of `options` step
 - New service to edit interval's configuration (Consider away / API and Entities updates)
-- Store debug / configuration files with the `entry_id`
 
 **Breaking Changes!**
 - Most of the configurations moved to be regular components of HA (Log incoming messages, Unit of measurement, Store debug data)

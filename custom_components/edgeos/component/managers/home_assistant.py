@@ -130,7 +130,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             _LOGGER.error(f"Failed to async_component_initialize, error: {ex}, line: {line_number}")
 
     async def async_initialize_data_providers(self):
-        await self.storage_api.initialize()
+        await self.storage_api.initialize(self.config_data)
         await self.api.initialize(self.config_data)
 
     async def async_stop_data_providers(self):
