@@ -135,25 +135,26 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
         has_legacy_configuration = False
 
-        if self._entry.data is not None:
-            unit = self._entry.data.get(CONF_UNIT)
+        if self._entry is not None:
+            if self._entry.data is not None:
+                unit = self._entry.data.get(CONF_UNIT)
 
-            if unit is not None:
-                await self.storage_api.set_unit(unit)
+                if unit is not None:
+                    await self.storage_api.set_unit(unit)
 
-                has_legacy_configuration = True
+                    has_legacy_configuration = True
 
-        if self._entry.options is not None:
-            consider_away_interval = self._entry.options.get(CONF_LOG_INCOMING_MESSAGES)
-            log_incoming_messages = self._entry.options.get(CONF_CONSIDER_AWAY_INTERVAL)
+            if self._entry.options is not None:
+                consider_away_interval = self._entry.options.get(CONF_LOG_INCOMING_MESSAGES)
+                log_incoming_messages = self._entry.options.get(CONF_CONSIDER_AWAY_INTERVAL)
 
-            has_legacy_configuration = consider_away_interval is not None or log_incoming_messages is not None
+                has_legacy_configuration = consider_away_interval is not None or log_incoming_messages is not None
 
-            if consider_away_interval is not None:
-                await self.storage_api.set_consider_away_interval(consider_away_interval)
+                if consider_away_interval is not None:
+                    await self.storage_api.set_consider_away_interval(consider_away_interval)
 
-            if log_incoming_messages is not None:
-                await self.storage_api.set_log_incoming_messages(log_incoming_messages)
+                if log_incoming_messages is not None:
+                    await self.storage_api.set_log_incoming_messages(log_incoming_messages)
 
         if has_legacy_configuration:
             _LOGGER.info("Starting configuration migration")

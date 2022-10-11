@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.1
+
+- Fix missing validation of entry
+
 ## 2.0.0
 Component refactored to allow faster future integration for additional features.
 
