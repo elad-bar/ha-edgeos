@@ -175,10 +175,16 @@ class StorageAPI(BaseAPI):
         if self.store_debug_data and data is not None:
             await self._storage_ws.async_save(self._get_json_data(data))
 
-    @staticmethod
-    def _get_json_data(data: dict):
-        json_data = json.dumps(data, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    def _get_json_data(self, data: dict):
+        json_data = json.dumps(data, default=self.json_converter, sort_keys=True, indent=4)
 
         result = json.loads(json_data)
 
         return result
+
+    @staticmethod
+    def json_converter(data):
+        if isinstance(data, datetime):
+            return data.__str__()
+        if isinstance(data, dict):
+            return data.__dict__

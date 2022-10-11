@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.3
+
+- Fix wrong parameter for CPU [#70](https://github.com/elad-bar/ha-edgeos/issues/70)
+- Another fix json serialization when saving debug data
+
 ## 2.0.2
 
 - Fix json serialization when saving debug data

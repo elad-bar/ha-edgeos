@@ -483,12 +483,12 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
             uptime = float(system_stats_data.get(SYSTEM_STATS_DATA_UPTIME, 0))
 
+            system_data.cpu = int(system_stats_data.get(SYSTEM_STATS_DATA_CPU, 0))
+            system_data.mem = int(system_stats_data.get(SYSTEM_STATS_DATA_MEM, 0))
+
             if uptime != system_data.uptime:
                 system_data.uptime = uptime
                 system_data.last_reset = self._get_last_reset(uptime)
-
-            system_data.cpu = int(system_stats_data.get(SYSTEM_STATS_DATA_CPU, 0))
-            system_data.mem = int(system_stats_data.get(SYSTEM_STATS_DATA_MEM, 0))
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -693,7 +693,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         entity_name = f"{device_name} CPU Usage"
 
         try:
-            state = self._system.leased_devices
+            state = self._system.cpu
 
             leased_devices = []
 
