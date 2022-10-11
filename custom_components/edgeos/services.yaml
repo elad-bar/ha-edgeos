@@ -1,3 +1,53 @@
-generate_debug_file:
-  name: Generate DEBUG file
-  description: Generate JSON file to '.storage/edgeos.debug.json' with all data collected from EdgeOS unit
+
+update_configuration:
+  name: Update configuration
+  description: Update configuration of EdgeOS integration
+  fields:
+    device_id:
+      name: Main device
+      description: Main EdgeOS device
+      required: true
+      example: "UBNT"
+      selector:
+        device:
+          integration: edgeos
+          manufacturer: Ubiquiti
+    consider_away_interval:
+      name: Consider away interval
+      description: Time to consider a device without activity as AWAY
+      required: false
+      example: "180"
+      selector:
+        number:
+          min: 10
+          max: 1800
+          unit_of_measurement: seconds
+          mode: box
+    log_incoming_messages:
+      name: Log incoming messages
+      description: Enable / Disable logging of incoming WebSocket messages for debug
+      required: false
+      example: "false"
+      selector:
+        boolean:
+    store_debug_data:
+      name: Store debug data
+      description: Enable / Disable store debug data to './storage' directory of HA for API (edgeos.debug.api.json) and WS (edgeos.debug.ws.json) data for faster debugging or just to get more ideas for additional features
+      required: false
+      example: "false"
+      selector:
+        boolean:
+    unit:
+      name: Unit
+      description: Unit of measurement
+      required: false
+      example: "Bytes"
+      selector:
+        select:
+          options:
+            - label: Bytes
+              value: Bytes
+            - label: KBytes
+              value: KBytes
+            - label: MBytes
+              value: MBytes

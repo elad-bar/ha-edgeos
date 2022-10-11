@@ -11,12 +11,11 @@ New features:
 - Firmware Update binary sensor including link to the new firmware
 - Warning when prerequisites of traffic analysis (DPI and Export) are not turned on
 - Asynchronous data updates of API and WebSocket to handle disconnection better
-
+- New service: `Update configuration` allows to edit configuration of unit, store debug data, log incoming messages and consider away interval
 
 **TODO**
 
 - Fix interface enable / disable API request
-- New service to edit interval's configuration (Consider away / API and Entities updates)
 
 **Breaking Changes!**
 - Most of the configurations moved to be regular components of HA (Log incoming messages, Unit of measurement, Store debug data)

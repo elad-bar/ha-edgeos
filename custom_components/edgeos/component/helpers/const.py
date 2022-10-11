@@ -190,6 +190,7 @@ DEFAULT_DATE_FORMAT = "%x %X"
 
 DOMAIN_LOGGER = "logger"
 SERVICE_SET_LEVEL = "set_level"
+SERVICE_UPDATE_CONFIGURATION = "update_configuration"
 
 INTERFACES_MAIN_MAP = {
     LINK_CONNECTED: {ATTR_NAME: "Connected", ATTR_UNIT_OF_MEASUREMENT: "Connectivity"},

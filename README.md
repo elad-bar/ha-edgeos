@@ -63,21 +63,6 @@ _Configuration -> Integrations -> {Integration} -> Options_ <br />
 | Username                 | Textbox   | +        | -         | Username of user with `Operator` level access or higher, better to create a dedicated user for that integration for faster issues identification |
 | Password                 | Textbox   | +        | -         |                                                                                                                                                  |
 | Clear credentials        | Check-box | +        | Unchecked | Will reset username and password (Not being stored under options)                                                                                |
-| Consider away interval   | Textbox   | +        | 180       | Consider away interval in seconds                                                                                                                |
-| Update API Interval      | Textbox   | +        | 60        | Number of seconds to update new devices and router settings                                                                                      |
-| Update Entities Interval | Textbox   | +        | 1         | Number of seconds to update entities                                                                                                             |
-
-###### Log Level's drop-down
-
-New feature to set the log level for the component without need to set log_level in `customization:` and restart or call manually `logger.set_level` and loose it after restart.
-
-Upon startup or integration's option update, based on the value chosen, the component will make a service call to `logger.set_level` for that component with the desired value,
-
-In case `Default` option is chosen, flow will skip calling the service, after changing from any other option to `Default`, it will not take place automatically, only after restart
-
-###### Save debug file
-
-Will store debug data from the component to `.storage/edgeos.debug.json`
 
 #### Debugging
 
@@ -101,6 +86,7 @@ logger:
 | {Router Name} Log incoming messages | Switch        | Sets whether to log WebSocket incoming messages for debugging             |                                               |
 | {Router Name} Store Debug Data      | Switch        | Sets whether to store API and WebSocket latest data for debugging         |                                               |
 
+*Changing the unit will reload the integration*
 
 ### Per device
 | Entity Name                                  | Type           | Description                                                                     | Additional information      |
@@ -131,3 +117,26 @@ logger:
 
 
 _Unit of measurement for `Traffic` and `Rate` are according to the unit settings of the integration_
+
+## Services
+
+### Update configuration
+Allows to set:
+- Consider away interval - Time to consider a device without activity as AWAY (any value between 10 and 1800 in seconds)
+- Log incoming messages - Enable / Disable logging of incoming WebSocket messages for debug
+- Store debug data - Enable / Disable store debug data to './storage' directory of HA for API (edgeos.debug.api.json) and WS (edgeos.debug.ws.json) data for faster debugging or just to get more ideas for additional features
+- Unit of measurement
+
+More details available in `Developer tools` -> `Services` -> `edgeos.update_configuration`
+
+```yaml
+service: edgeos.update_configuration
+data:
+  device_id: {Main device ID}
+  unit: Bytes
+  store_debug_data: true
+  log_incoming_messages: true
+  consider_away_interval: 180
+```
+
+*Changing the unit will reload the integration*

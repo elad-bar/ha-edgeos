@@ -18,8 +18,8 @@ from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import async_get as async_get_device_registry
 from homeassistant.helpers.entity import EntityCategory, EntityDescription
-from homeassistant.helpers.typing import UNDEFINED
 
 from ...configuration.managers.configuration_manager import ConfigurationManager
 from ...configuration.models.config_data import ConfigData
@@ -170,7 +170,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                                                          data=data,
                                                          options=options)
 
-            _LOGGER.info("Configuration migration completed, restarting integration")
+            _LOGGER.info("Configuration migration completed, reloading integration")
 
             await self._reload_integration()
 
@@ -190,6 +190,9 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             line_number = tb.tb_lineno
 
             _LOGGER.error(f"Failed to async_update_data_providers, Error: {ex}, Line: {line_number}")
+
+    def register_services(self, entry: ConfigEntry | None = None):
+        self._hass.services.async_register(DOMAIN, SERVICE_UPDATE_CONFIGURATION, self._update_configuration)
 
     def load_devices(self):
         if self._system.product is None:
@@ -573,15 +576,17 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
         return device
 
-    def _set_ha_device(self, name: str, model: str, version: str | None = None):
+    def _set_ha_device(self, name: str, model: str, manufacturer: str | None = None, version: str | None = None):
         device_details = self.device_manager.get(name)
 
         device_details_data = {
             "identifiers": {(DEFAULT_NAME, name)},
             "name": name,
-            "manufacturer": DEFAULT_NAME,
             "model": model
         }
+
+        if manufacturer is not None:
+            device_details_data["manufacturer"] = manufacturer
 
         if version is not None:
             device_details_data["sw_version"] = version
@@ -592,7 +597,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             _LOGGER.debug(f"Created HA device {name} [{model}]")
 
     def _load_main_device(self):
-        self._set_ha_device(self.system_name, self._system.product, self._system.fw_version)
+        self._set_ha_device(self.system_name, self._system.product, MANUFACTURER, self._system.fw_version)
 
     def _load_device_device(self, device: EdgeOSDeviceData):
         name = self._get_device_name(device)
@@ -1245,3 +1250,47 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         }
 
         await self._hass.services.async_call(HA_NAME, SERVICE_RELOAD, data)
+
+    def _update_configuration(self, service_call):
+        self._hass.async_create_task(self._async_update_configuration(service_call))
+
+    async def _async_update_configuration(self, service_call):
+        data = service_call.data
+        device_id = data.get("device_id")
+        store_debug_data = data.get(STORAGE_DATA_STORE_DEBUG_DATA)
+        unit = data.get(STORAGE_DATA_UNIT)
+        consider_away_interval = data.get(STORAGE_DATA_CONSIDER_AWAY_INTERVAL)
+        log_incoming_messages = data.get(STORAGE_DATA_LOG_INCOMING_MESSAGES)
+
+        _LOGGER.info(f"Update configuration called with data: {data}")
+
+        if device_id is None:
+            _LOGGER.error("Operation cannot be performed, missing device information")
+
+        else:
+            dr = async_get_device_registry(self._hass)
+            device = dr.devices.get(device_id)
+            can_handle_device = self.entry_id in device.config_entries
+            should_reload_integration = False
+
+            if can_handle_device:
+                if store_debug_data is not None and self.storage_api.store_debug_data != store_debug_data:
+                    await self.storage_api.set_store_debug_data(store_debug_data)
+
+                if unit is not None and self.storage_api.unit != unit:
+                    await self.storage_api.set_unit(unit)
+
+                    should_reload_integration = True
+
+                if consider_away_interval is not None and \
+                        self.storage_api.consider_away_interval != consider_away_interval:
+
+                    await self.storage_api.set_consider_away_interval(consider_away_interval)
+
+                    should_reload_integration = True
+
+                if log_incoming_messages is not None and self.storage_api.log_incoming_messages != log_incoming_messages:
+                    await self.storage_api.set_log_incoming_messages(log_incoming_messages)
+
+            if should_reload_integration:
+                await self._reload_integration()
