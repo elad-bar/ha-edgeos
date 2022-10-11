@@ -8,15 +8,15 @@ Provides an integration between EdgeOS (Ubiquiti) routers to Home Assistant.
 
 ## How to
 
-#### Installation
-
-Look for "Integration with EdgeOS (Ubiquiti)" and install
-
 #### Requirements
 
 - EdgeRouter with at least firmware version 2.0
 - EdgeRouter User with 'Operator' level access or higher
 - Traffic Analysis set to 'Enabled' (both `dpi` and `export` enabled under `system/traffic-analysis`)
+
+#### Installations via HACS
+- In HACS, look for "Ubiquiti EdgeOS Routers" and install and restart
+- In Settings  --> Devices & Services - (Lower Right) "Add Integration"
 
 #### Setup
 
