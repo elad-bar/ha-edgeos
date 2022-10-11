@@ -22,6 +22,7 @@ class EdgeOSSystemData:
     uptime: float | None
     cpu: int | None
     mem: int | None
+    last_reset: datetime | None
 
     def __init__(self):
         self.hostname = None
@@ -36,6 +37,7 @@ class EdgeOSSystemData:
         self.sw_version = None
         self.product = None
         self.uptime = None
+        self.last_reset = None
         self.cpu = None
         self.mem = None
         self.upgrade_available = False

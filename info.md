@@ -81,6 +81,9 @@ logger:
 | Entity Name                         | Type          | Description                                                               | Additional information                        |
 |-------------------------------------|---------------|---------------------------------------------------------------------------|-----------------------------------------------|
 | {Router Name} Unit                  | Select        | Sets whether to monitor device and create all the components below or not |                                               |
+| {Router Name} CPU                   | Sensor        | Represents CPU usage                                                      | Attributes holds the leased hostname and IPs  |
+| {Router Name} RAM                   | Sensor        | Represents RAM usage                                                      | Attributes holds the leased hostname and IPs  |
+| {Router Name} Uptime                | Sensor        | Represents last time the EdgeOS was restarted                             | Attributes holds the leased hostname and IPs  |
 | {Router Name} Unknown devices       | Sensor        | Represents number of devices leased by the DHCP server                    | Attributes holds the leased hostname and IPs  |
 | {Router Name} Firmware Updates      | Binary Sensor | New firmware available indication                                         | Attributes holds the url and new release name |
 | {Router Name} Log incoming messages | Switch        | Sets whether to log WebSocket incoming messages for debugging             |                                               |

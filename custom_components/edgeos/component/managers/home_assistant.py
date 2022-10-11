@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
 )
-from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -214,6 +214,9 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
         self._load_unit_select()
         self._load_unknown_devices_sensor()
+        self._load_cpu_sensor()
+        self._load_ram_sensor()
+        self._load_uptime_sensor()
         self._load_firmware_upgrade_binary_sensor()
         self._load_log_incoming_messages_switch()
         self._load_store_debug_data_switch()
@@ -477,7 +480,12 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             system_data.fw_version = discovery_data.get(DISCOVER_DATA_FW_VERSION)
             system_data.product = discovery_data.get(DISCOVER_DATA_PRODUCT)
 
-            system_data.uptime = float(system_stats_data.get(SYSTEM_STATS_DATA_UPTIME, 0))
+            uptime = float(system_stats_data.get(SYSTEM_STATS_DATA_UPTIME, 0))
+
+            if uptime != system_data.uptime:
+                system_data.uptime = uptime
+                system_data.last_reset = self._get_last_reset(uptime)
+
             system_data.cpu = int(system_stats_data.get(SYSTEM_STATS_DATA_CPU, 0))
             system_data.mem = int(system_stats_data.get(SYSTEM_STATS_DATA_MEM, 0))
 
@@ -665,6 +673,133 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=SensorStateClass.MEASUREMENT
+            )
+
+            self.entity_manager.set_entity(DOMAIN_SENSOR,
+                                           self.entry_id,
+                                           state,
+                                           attributes,
+                                           device_name,
+                                           entity_description)
+
+        except Exception as ex:
+            self.log_exception(
+                ex, f"Failed to load sensor for {entity_name}"
+            )
+
+    def _load_cpu_sensor(self):
+        device_name = self.system_name
+        entity_name = f"{device_name} CPU Usage"
+
+        try:
+            state = self._system.leased_devices
+
+            leased_devices = []
+
+            for unique_id in self._devices:
+                device = self._devices.get(unique_id)
+
+                if device.is_leased:
+                    leased_devices.append(f"{device.hostname} ({device.ip})")
+
+            attributes = {
+                ATTR_FRIENDLY_NAME: entity_name,
+                LEASED: leased_devices
+            }
+
+            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
+            icon = "mdi:chip"
+
+            entity_description = SensorEntityDescription(
+                key=unique_id,
+                name=entity_name,
+                icon=icon,
+                state_class=SensorStateClass.MEASUREMENT,
+                native_unit_of_measurement="%",
+            )
+
+            self.entity_manager.set_entity(DOMAIN_SENSOR,
+                                           self.entry_id,
+                                           state,
+                                           attributes,
+                                           device_name,
+                                           entity_description)
+
+        except Exception as ex:
+            self.log_exception(
+                ex, f"Failed to load sensor for {entity_name}"
+            )
+
+    def _load_ram_sensor(self):
+        device_name = self.system_name
+        entity_name = f"{device_name} RAM Usage"
+
+        try:
+            state = self._system.mem
+
+            leased_devices = []
+
+            for unique_id in self._devices:
+                device = self._devices.get(unique_id)
+
+                if device.is_leased:
+                    leased_devices.append(f"{device.hostname} ({device.ip})")
+
+            attributes = {
+                ATTR_FRIENDLY_NAME: entity_name,
+                LEASED: leased_devices
+            }
+
+            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
+            icon = "mdi:memory"
+
+            entity_description = SensorEntityDescription(
+                key=unique_id,
+                name=entity_name,
+                icon=icon,
+                state_class=SensorStateClass.MEASUREMENT,
+                native_unit_of_measurement="%",
+            )
+
+            self.entity_manager.set_entity(DOMAIN_SENSOR,
+                                           self.entry_id,
+                                           state,
+                                           attributes,
+                                           device_name,
+                                           entity_description)
+
+        except Exception as ex:
+            self.log_exception(
+                ex, f"Failed to load sensor for {entity_name}"
+            )
+
+    def _load_uptime_sensor(self):
+        device_name = self.system_name
+        entity_name = f"{device_name} Last Restart"
+
+        try:
+            state = self._system.last_reset
+
+            leased_devices = []
+
+            for unique_id in self._devices:
+                device = self._devices.get(unique_id)
+
+                if device.is_leased:
+                    leased_devices.append(f"{device.hostname} ({device.ip})")
+
+            attributes = {
+                ATTR_FRIENDLY_NAME: entity_name
+            }
+
+            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
+            icon = "mdi:credit-card-clock"
+
+            entity_description = SensorEntityDescription(
+                key=unique_id,
+                name=entity_name,
+                icon=icon,
+                state_class=SensorStateClass.TOTAL_INCREASING
             )
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
@@ -1045,7 +1180,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=state_class,
-                native_unit_of_measurement=unit_of_measurement
+                native_unit_of_measurement=unit_of_measurement,
             )
 
             if unit_of_measurement in [UNIT_ERRORS, UNIT_PACKETS, UNIT_DROPPED_PACKETS]:
@@ -1292,3 +1427,12 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
             if should_reload_integration:
                 await self._reload_integration()
+
+    @staticmethod
+    def _get_last_reset(uptime):
+        now = datetime.now().timestamp()
+        last_reset = int(now) - uptime
+
+        result = datetime.fromtimestamp(last_reset)
+
+        return result
