@@ -14,6 +14,7 @@ from ...configuration.models.config_data import ConfigData
 from ...core.api.base_api import BaseAPI
 from ...core.helpers.enums import ConnectivityStatus
 from ..helpers.const import *
+from ..models.edge_os_interface_data import EdgeOSInterfaceData
 from ..models.exceptions import SessionTerminatedException
 
 _LOGGER = logging.getLogger(__name__)
@@ -214,6 +215,25 @@ class IntegrationAPI(BaseAPI):
 
         return result
 
+    async def _async_post(self, url, data):
+        result = None
+
+        try:
+            if self._session is not None:
+                async with self._session.post(url, data=data, ssl=False) as response:
+                    response.raise_for_status()
+
+                    result = await response.json()
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            message = f"URL: {url}, Error: {ex}, Line: {line_number}"
+            _LOGGER.warning(f"Request failed, {message}")
+
+        return result
+
     async def async_send_heartbeat(self, max_age=HEARTBEAT_MAX_AGE):
         ts = None
 
@@ -329,8 +349,40 @@ class IntegrationAPI(BaseAPI):
 
             _LOGGER.error(f"Failed to load {key}, Error: {ex}, Line: {line_number}")
 
-    async def set_interface_state(self, name: str, is_enabled: bool):
-        _LOGGER.info(f"Set state of interface {name} to {is_enabled}")
+    async def set_interface_state(self, interface: EdgeOSInterfaceData, is_enabled: bool):
+        _LOGGER.info(f"Set state of interface {interface.name} to {is_enabled}")
+
+        modified = False
+        endpoint = EDGE_OS_API_DELETE if is_enabled else EDGE_OS_API_SET
+
+        data = {
+            API_DATA_INTERFACES: {
+                interface.interface_type: {
+                    interface.name: {
+                        SYSTEM_DATA_DISABLE: None
+                    }
+                }
+            }
+        }
+
+        get_req_url = self._get_edge_os_api_endpoint(endpoint)
+
+        result_json = await self._async_post(get_req_url, data)
+
+        _LOGGER.info(result_json)
+
+        if result_json is not None:
+            set_response = result_json.get(API_DATA_SAVE.upper(), {})
+
+            if RESPONSE_SUCCESS_KEY in set_response:
+                success_key = str(
+                    set_response.get(RESPONSE_SUCCESS_KEY, RESPONSE_FAILURE_CODE)
+                ).lower()
+
+                modified = success_key != RESPONSE_FAILURE_CODE
+
+        if not modified:
+            _LOGGER.error(f"Failed to set state of interface {interface.name} to {is_enabled}")
 
     def _get_edge_os_api_endpoint(self, endpoint):
         url = EDGE_OS_API_URL.format(self._config_data.url, endpoint)

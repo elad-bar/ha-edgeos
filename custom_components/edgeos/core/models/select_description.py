@@ -7,4 +7,4 @@ from homeassistant.components.select import SelectEntityDescription
 class SelectDescription(SelectEntityDescription):
     """A class that describes select entities."""
 
-    options: tuple = ()
+    attr_options: tuple = ()

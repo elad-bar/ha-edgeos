@@ -12,7 +12,16 @@ New features:
 - Warning when prerequisites of traffic analysis (DPI and Export) are not turned on
 - Asynchronous data updates of API and WebSocket to handle disconnection better
 
-## Breaking Changes!
+
+**TODO**
+
+- Fix interface enable / disable API request
+- Migration of previous configuration
+- Removal of `options` step
+- New service to edit interval's configuration (Consider away / API and Entities updates)
+- Store debug / configuration files with the `entry_id`
+
+**Breaking Changes!**
 - Most of the configurations moved to be regular components of HA (Log incoming messages, Unit of measurement, Store debug data)
 - Configuration UI will hold EdgeOS URL and credentials only:
   - Hostname

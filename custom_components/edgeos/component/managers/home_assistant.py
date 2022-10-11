@@ -574,7 +574,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 key=unique_id,
                 name=entity_name,
                 device_class=f"{DOMAIN}__{CONF_UNIT}",
-                options=tuple(ALLOWED_UNITS_LIST),
+                attr_options=tuple(ALLOWED_UNITS_LIST),
                 entity_category=EntityCategory.CONFIG
             )
 
@@ -1098,12 +1098,12 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
     async def _set_interface_enabled(self, entity: EntityData):
         interface_item = self._get_interface_from_entity(entity)
 
-        await self.api.set_interface_state(interface_item.name, True)
+        await self.api.set_interface_state(interface_item, True)
 
     async def _set_interface_disabled(self, entity: EntityData):
         interface_item = self._get_interface_from_entity(entity)
 
-        await self.api.set_interface_state(interface_item.name, False)
+        await self.api.set_interface_state(interface_item, False)
 
     async def _set_interface_monitored(self, entity: EntityData):
         interface_item = self._get_interface_from_entity(entity)

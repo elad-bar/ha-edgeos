@@ -39,6 +39,8 @@ API_DATA_GENERAL_DATA = "general-data"
 API_DATA_SESSION_ID = "session-id"
 API_DATA_COOKIES = "cookies"
 
+API_DATA_SAVE = "SAVE"
+
 API_URL_DATA_TEMPLATE = "{}?data={}"
 API_URL_HEARTBEAT_TEMPLATE = "{}?_={}"
 
@@ -46,6 +48,8 @@ EDGE_OS_VERSION_INCOMPATIBLE = "v1"
 EDGE_OS_VERSION_UNKNOWN = "N/A"
 EDGE_OS_API_URL = "{}/api/edge/{}.json"
 EDGE_OS_API_GET = "get"
+EDGE_OS_API_SET = "set"
+EDGE_OS_API_DELETE = "delete"
 EDGE_OS_API_DATA = "data"
 EDGE_OS_API_HEARTBREAT = "heartbeat"
 
@@ -263,8 +267,8 @@ FW_LATEST_STATE_CAN_UPGRADE = "can-upgrade"
 
 SYSTEM_INFO_DATA_SW_VER = "sw_ver"
 
-SYSTEM_DATA_ENABLED = "enable"
-SYSTEM_DATA_DISABLED = "disabled"
+SYSTEM_DATA_ENABLE = "enable"
+SYSTEM_DATA_DISABLE = "disable"
 
 INTERFACE_DATA_NAME = "name"
 INTERFACE_DATA_DESCRIPTION = "description"

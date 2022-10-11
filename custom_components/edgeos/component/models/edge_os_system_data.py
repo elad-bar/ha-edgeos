@@ -44,8 +44,8 @@ class EdgeOSSystemData:
 
     @staticmethod
     def is_enabled(data: dict, key: str) -> bool:
-        value = data.get(key, SYSTEM_DATA_DISABLED)
-        is_enabled = value == SYSTEM_DATA_ENABLED
+        value = data.get(key, SYSTEM_DATA_DISABLE)
+        is_enabled = value == SYSTEM_DATA_ENABLE
 
         return is_enabled
 

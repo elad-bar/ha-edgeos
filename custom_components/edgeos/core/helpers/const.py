@@ -45,7 +45,7 @@ DATA = f"data_{DOMAIN}"
 
 DOMAIN_KEY_FILE = f"{DOMAIN}.key"
 
-ATTR_OPTIONS = "options"
+ATTR_OPTIONS = "attr_options"
 
 CONF_CONTENT_TYPE = "content_type"
 CONF_LIMIT_REFETCH_TO_URL_CHANGE = "limit_refetch_to_url_change"
