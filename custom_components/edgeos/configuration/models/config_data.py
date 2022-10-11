@@ -14,18 +14,11 @@ class ConfigData:
     password: str | None
     entry: ConfigEntry | None
 
-    update_entities_interval: int
-    update_api_interval: int
-    consider_away_interval: int
-
     def __init__(self):
-        self.host = ""
-        self.port = 0
+        self.host = None
+        self.port = DEFAULT_PORT
         self.username = None
         self.password = None
-        self.update_entities_interval = DEFAULT_UPDATE_ENTITIES_INTERVAL
-        self.update_api_interval = DEFAULT_UPDATE_API_INTERVAL
-        self.consider_away_interval = DEFAULT_CONSIDER_AWAY_INTERVAL
         self.entry = None
 
     @property
@@ -43,9 +36,6 @@ class ConfigData:
             result.port = data.get(CONF_PORT, DEFAULT_PORT)
             result.username = data.get(CONF_USERNAME)
             result.password = data.get(CONF_PASSWORD)
-            result.update_api_interval = data.get(CONF_UPDATE_API_INTERVAL, DEFAULT_UPDATE_API_INTERVAL)
-            result.update_entities_interval = data.get(CONF_UPDATE_ENTITIES_INTERVAL, DEFAULT_UPDATE_ENTITIES_INTERVAL)
-            result.consider_away_interval = data.get(CONF_CONSIDER_AWAY_INTERVAL, DEFAULT_CONSIDER_AWAY_INTERVAL)
 
         return result
 
@@ -54,10 +44,7 @@ class ConfigData:
             CONF_HOST: self.host,
             CONF_PORT: self.port,
             CONF_USERNAME: self.username,
-            CONF_PASSWORD: self.password,
-            CONF_UPDATE_API_INTERVAL: self.update_api_interval,
-            CONF_UPDATE_ENTITIES_INTERVAL: self.update_entities_interval,
-            CONF_CONSIDER_AWAY_INTERVAL: self.consider_away_interval,
+            CONF_PASSWORD: self.password
         }
 
         return obj

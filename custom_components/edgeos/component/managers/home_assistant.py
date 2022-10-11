@@ -19,6 +19,7 @@ from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory, EntityDescription
+from homeassistant.helpers.typing import UNDEFINED
 
 from ...configuration.managers.configuration_manager import ConfigurationManager
 from ...configuration.models.config_data import ConfigData
@@ -131,7 +132,50 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
     async def async_initialize_data_providers(self):
         await self.storage_api.initialize(self.config_data)
-        await self.api.initialize(self.config_data)
+
+        has_legacy_configuration = False
+
+        if self._entry.data is not None:
+            unit = self._entry.data.get(CONF_UNIT)
+
+            if unit is not None:
+                await self.storage_api.set_unit(unit)
+
+                has_legacy_configuration = True
+
+        if self._entry.options is not None:
+            consider_away_interval = self._entry.options.get(CONF_LOG_INCOMING_MESSAGES)
+            log_incoming_messages = self._entry.options.get(CONF_CONSIDER_AWAY_INTERVAL)
+
+            has_legacy_configuration = consider_away_interval is not None or log_incoming_messages is not None
+
+            if consider_away_interval is not None:
+                await self.storage_api.set_consider_away_interval(consider_away_interval)
+
+            if log_incoming_messages is not None:
+                await self.storage_api.set_log_incoming_messages(log_incoming_messages)
+
+        if has_legacy_configuration:
+            _LOGGER.info("Starting configuration migration")
+
+            data = {}
+            for key in self._entry.data.keys():
+                if key != CONF_UNIT:
+                    value = self._entry.data.get(key)
+                    data[key] = value
+
+            options = {}
+
+            self._hass.config_entries.async_update_entry(self._entry,
+                                                         data=data,
+                                                         options=options)
+
+            _LOGGER.info("Configuration migration completed, restarting integration")
+
+            await self._reload_integration()
+
+        else:
+            await self.api.initialize(self.config_data)
 
     async def async_stop_data_providers(self):
         await self.api.terminate()
@@ -790,7 +834,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         entity_name = f"{device_name}"
 
         try:
-            state = device.last_activity_in_seconds <= self.config_data.consider_away_interval
+            state = device.last_activity_in_seconds <= self.storage_api.consider_away_interval
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,

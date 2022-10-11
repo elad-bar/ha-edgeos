@@ -16,8 +16,6 @@ New features:
 **TODO**
 
 - Fix interface enable / disable API request
-- Migration of previous configuration
-- Removal of `options` step
 - New service to edit interval's configuration (Consider away / API and Entities updates)
 
 **Breaking Changes!**

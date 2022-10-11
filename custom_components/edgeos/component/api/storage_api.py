@@ -77,6 +77,12 @@ class StorageAPI(BaseAPI):
 
         return result
 
+    @property
+    def consider_away_interval(self):
+        result = self.data.get(STORAGE_DATA_CONSIDER_AWAY_INTERVAL, DEFAULT_CONSIDER_AWAY_INTERVAL)
+
+        return result
+
     async def initialize(self, config_data: ConfigData):
         storages = {}
         entry_id = config_data.entry.entry_id
@@ -150,6 +156,13 @@ class StorageAPI(BaseAPI):
         _LOGGER.debug(f"Set store debug data to {enabled}")
 
         self.data[STORAGE_DATA_STORE_DEBUG_DATA] = enabled
+
+        await self._async_save()
+
+    async def set_consider_away_interval(self, interval: int):
+        _LOGGER.debug(f"Changing {STORAGE_DATA_CONSIDER_AWAY_INTERVAL}: {interval}")
+
+        self.data[STORAGE_DATA_CONSIDER_AWAY_INTERVAL] = interval
 
         await self._async_save()
 

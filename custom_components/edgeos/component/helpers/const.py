@@ -40,6 +40,8 @@ STORAGE_DATA_MONITORED_DEVICES = "monitored-devices"
 STORAGE_DATA_UNIT = "unit"
 STORAGE_DATA_LOG_INCOMING_MESSAGES = "log-incoming-messages"
 STORAGE_DATA_STORE_DEBUG_DATA = "store-debug-data"
+STORAGE_DATA_CONSIDER_AWAY_INTERVAL = "consider-away-interval"
+
 DATA_LAST_UPDATE = "lastUpdate"
 
 API_DATA_PRODUCT = "product"

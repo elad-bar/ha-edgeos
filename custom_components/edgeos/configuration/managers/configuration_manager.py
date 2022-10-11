@@ -125,21 +125,7 @@ class ConfigurationManager:
 
             data[CONF_PASSWORD] = self.password_manager.get(encrypted_password)
 
-        fields = {
-            vol.Required(CONF_HOST, default=data.get(CONF_HOST)): str,
-            vol.Required(CONF_PORT, default=data.get(CONF_PORT, DEFAULT_PORT)): int,
-            vol.Required(CONF_USERNAME, default=data.get(CONF_USERNAME)): str,
-            vol.Required(CONF_PASSWORD, default=data.get(CONF_PASSWORD)): str,
-
-            vol.Required(CONF_UPDATE_API_INTERVAL,
-                         default=data.get(CONF_UPDATE_API_INTERVAL, DEFAULT_UPDATE_API_INTERVAL)): int,
-
-            vol.Required(CONF_UPDATE_ENTITIES_INTERVAL,
-                         default=data.get(CONF_UPDATE_ENTITIES_INTERVAL, DEFAULT_UPDATE_ENTITIES_INTERVAL)): int,
-
-            vol.Required(CONF_CONSIDER_AWAY_INTERVAL,
-                         default=data.get(CONF_CONSIDER_AWAY_INTERVAL, DEFAULT_CONSIDER_AWAY_INTERVAL)): int
-        }
+        fields = self.get_data_fields(data)
 
         return fields
 
