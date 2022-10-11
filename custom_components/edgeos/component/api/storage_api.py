@@ -1,6 +1,7 @@
 """Storage handlers."""
 from __future__ import annotations
 
+import json
 import logging
 from typing import Awaitable, Callable
 
@@ -167,9 +168,17 @@ class StorageAPI(BaseAPI):
         await self._async_save()
 
     async def debug_log_api(self, data: dict):
-        if self.store_debug_data:
-            await self._storage_api.async_save(data)
+        if self.store_debug_data and data is not None:
+            await self._storage_api.async_save(self._get_json_data(data))
 
     async def debug_log_ws(self, data: dict):
-        if self.store_debug_data:
-            await self._storage_ws.async_save(data)
+        if self.store_debug_data and data is not None:
+            await self._storage_ws.async_save(self._get_json_data(data))
+
+    @staticmethod
+    def _get_json_data(data: dict):
+        json_data = json.dumps(data, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
+        result = json.loads(json_data)
+
+        return result

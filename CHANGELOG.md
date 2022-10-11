@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.2
+
+- Fix json serialization when saving debug data
+
 ## 2.0.1
 
 - Fix missing validation of entry
