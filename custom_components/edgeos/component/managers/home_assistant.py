@@ -1040,7 +1040,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
     def _load_interface_received_traffic_sensor(self, interface: EdgeOSInterfaceData):
         unit_of_measurement = self._get_unit_of_measurement()
 
-        state = self._convert_unit(interface.received.rate)
+        state = self._convert_unit(interface.received.total)
 
         self._load_interface_stats_sensor(interface,
                                           "Received Traffic",
