@@ -240,7 +240,7 @@ class HomeAssistantManager:
 
         _LOGGER.info(f"Current integration ({entry.title}) removed")
 
-    def _update_entities(self):
+    def _update_entities(self, now):
         if self._update_lock:
             _LOGGER.warning("Update in progress, will skip the request")
             return

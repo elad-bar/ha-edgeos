@@ -7,6 +7,7 @@ import asyncio
 from datetime import datetime
 import logging
 import sys
+from typing import Awaitable, Callable
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -50,6 +51,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         self._devices_ip_mapping: dict[str, str] = {}
         self._interfaces: dict[str, EdgeOSInterfaceData] = {}
         self._unknown_devices: int | None = None
+        self._can_load_components: bool = False
 
     @property
     def api(self) -> IntegrationAPI:
@@ -85,12 +87,14 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             await self._extract_api_data()
 
     async def _ws_data_changed(self):
-        if self.api.status == ConnectivityStatus.Connected:
+        if self.ws.status == ConnectivityStatus.Connected:
             await self._extract_ws_data()
 
     async def _api_status_changed(self, status: ConnectivityStatus):
         _LOGGER.info(f"API Status changed to {status}, WS Status: {self.ws.status}")
         if status == ConnectivityStatus.Connected:
+            await self.api.async_update()
+
             if self.ws.status == ConnectivityStatus.NotConnected:
                 log_incoming_messages = self.storage_api.log_incoming_messages
                 await self.ws.update_api_data(self.api.data, log_incoming_messages)
@@ -104,6 +108,9 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
     async def _ws_status_changed(self, status: ConnectivityStatus):
         _LOGGER.info(f"WS Status changed to {status}, API Status: {self.api.status}")
 
+        if status == ConnectivityStatus.Connected:
+            self._can_load_components = True
+
         if status == ConnectivityStatus.NotConnected:
             if self.api.status == ConnectivityStatus.Connected:
                 await self.ws.initialize(self.config_data)
@@ -116,7 +123,10 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             self._config_manager = ConfigurationManager(self._hass, self.api)
             await self._config_manager.load(entry)
 
-            self.update_intervals(self.storage_api.update_entities_interval, self.storage_api.update_api_interval)
+            update_entities_interval = timedelta(seconds=self.storage_api.update_entities_interval)
+            update_api_interval = timedelta(seconds=self.storage_api.update_api_interval)
+
+            self.update_intervals(update_entities_interval, update_api_interval)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -131,7 +141,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
         if self._entry is not None:
             if self._entry.data is not None:
-                unit = self._entry.data.get(CONF_UNIT)
+                unit = self._entry.data.get(STORAGE_DATA_UNIT)
 
                 if unit is not None:
                     await self.storage_api.set_unit(unit)
@@ -139,23 +149,30 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                     has_legacy_configuration = True
 
             if self._entry.options is not None:
-                consider_away_interval = self._entry.options.get(CONF_LOG_INCOMING_MESSAGES)
-                log_incoming_messages = self._entry.options.get(CONF_CONSIDER_AWAY_INTERVAL)
+                storage_data_import_keys: dict[str, Callable[[int | bool], Awaitable[None]]]  = {
+                    STORAGE_DATA_CONSIDER_AWAY_INTERVAL: self.storage_api.set_consider_away_interval,
+                    STORAGE_DATA_UPDATE_ENTITIES_INTERVAL: self.storage_api.set_update_entities_interval,
+                    STORAGE_DATA_UPDATE_API_INTERVAL: self.storage_api.set_update_api_interval,
+                    STORAGE_DATA_LOG_INCOMING_MESSAGES: self.storage_api.set_log_incoming_messages
+                }
 
-                has_legacy_configuration = consider_away_interval is not None or log_incoming_messages is not None
+                for key in storage_data_import_keys:
+                    if key in self._entry.options:
+                        if not has_legacy_configuration:
+                            has_legacy_configuration = True
 
-                if consider_away_interval is not None:
-                    await self.storage_api.set_consider_away_interval(consider_away_interval)
+                        data_key = key.replace(STRING_DASH, STRING_UNDERSCORE)
+                        data = self._entry.options.get(data_key)
+                        set_func = storage_data_import_keys.get(key)
 
-                if log_incoming_messages is not None:
-                    await self.storage_api.set_log_incoming_messages(log_incoming_messages)
+                        await set_func(data)
 
         if has_legacy_configuration:
             _LOGGER.info("Starting configuration migration")
 
             data = {}
             for key in self._entry.data.keys():
-                if key != CONF_UNIT:
+                if key != STORAGE_DATA_UNIT:
                     value = self._entry.data.get(key)
                     data[key] = value
 
@@ -190,7 +207,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         self._hass.services.async_register(DOMAIN, SERVICE_UPDATE_CONFIGURATION, self._update_configuration)
 
     def load_devices(self):
-        if self._system.product is None:
+        if not self._can_load_components:
             return
 
         self._load_main_device()
@@ -204,7 +221,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             self._load_interface_device(interface_item)
 
     def load_entities(self):
-        if self._system.product is None:
+        if not self._can_load_components:
             return
 
         self._load_unit_select()
@@ -277,6 +294,9 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
                 if interface_item is not None:
                     self._update_interface_stats(interface_item, stats)
+
+            await self._log_ha_data()
+
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -285,6 +305,8 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
     async def _extract_api_data(self):
         try:
+            _LOGGER.debug("Extracting API Data")
+
             await self.storage_api.debug_log_api(self.api.data)
 
             data = self.api.data.get(API_DATA_SYSTEM, {})
@@ -310,17 +332,27 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
                 _LOGGER.warning(f"Integration will not work correctly since {warning_message}")
 
+            await self._log_ha_data()
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
             _LOGGER.error(f"Failed to extract API data, Error: {ex}, Line: {line_number}")
 
+    async def _log_ha_data(self):
+        data = {
+            API_DATA_SYSTEM: self._system,
+            DEVICE_LIST: self._devices,
+            API_DATA_INTERFACES: self._interfaces
+        }
+
+        await self.storage_api.debug_log_ha(data)
+
     def _extract_system(self, data: dict, system_info: dict):
         try:
             system_details = data.get(API_DATA_SYSTEM, {})
 
-            system_data = EdgeOSSystemData()
+            system_data = EdgeOSSystemData() if self._system is None else self._system
 
             system_data.hostname = system_details.get(SYSTEM_DATA_HOSTNAME)
             system_data.timezone = system_details.get(SYSTEM_DATA_TIME_ZONE)
@@ -382,7 +414,13 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
     def _extract_interface(self, name: str, interface_type: str, data: dict):
         try:
-            interface = EdgeOSInterfaceData(name, interface_type)
+            existing_interface_data = self._interfaces.get(name)
+
+            if existing_interface_data is None:
+                interface = EdgeOSInterfaceData(name, interface_type)
+
+            else:
+                interface = existing_interface_data
 
             interface.description = data.get(INTERFACE_DATA_DESCRIPTION)
             interface.duplex = data.get(INTERFACE_DATA_DUPLEX)
@@ -397,10 +435,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             interface.promiscuous = data.get(INTERFACE_DATA_PROMISCUOUS)
             interface.stp = data.get(INTERFACE_DATA_STP, FALSE_STR).lower() == TRUE_STR
 
-            existing_interface_data = self._interfaces.get(interface.unique_id)
-
-            if existing_interface_data is None or existing_interface_data != interface:
-                self._interfaces[interface.unique_id] = interface
+            self._interfaces[interface.unique_id] = interface
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -561,12 +596,16 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         ip_address = static_mapping_data.get(DHCP_SERVER_IP_ADDRESS)
         mac_address = static_mapping_data.get(DHCP_SERVER_MAC_ADDRESS)
 
-        device_data = EdgeOSDeviceData(hostname, ip_address, mac_address, domain_name, is_leased)
-        existing_device_data = self._devices.get(device_data.unique_id)
+        existing_device_data = self._devices.get(mac_address)
 
-        if existing_device_data is None or existing_device_data != device_data:
-            self._devices[device_data.unique_id] = device_data
-            self._devices_ip_mapping[device_data.ip] = device_data.unique_id
+        if existing_device_data is None:
+            device_data = EdgeOSDeviceData(hostname, ip_address, mac_address, domain_name, is_leased)
+
+        else:
+            device_data = existing_device_data
+
+        self._devices[device_data.unique_id] = device_data
+        self._devices_ip_mapping[device_data.ip] = device_data.unique_id
 
     def _get_device(self, unique_id: str) -> EdgeOSDeviceData | None:
         device = self._devices.get(unique_id)
@@ -624,7 +663,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             entity_description = SelectDescription(
                 key=unique_id,
                 name=entity_name,
-                device_class=f"{DOMAIN}__{CONF_UNIT}",
+                device_class=f"{DOMAIN}__{STORAGE_DATA_UNIT}",
                 attr_options=tuple(UNIT_OF_MEASUREMENT_MAPPING.keys()),
                 entity_category=EntityCategory.CONFIG
             )
@@ -1329,7 +1368,10 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         return result
 
     @staticmethod
-    def _format_number(value: int | float, digits: int = 0) -> int | float:
+    def _format_number(value: int | float | None, digits: int = 0) -> int | float:
+        if value is None:
+            value = 0
+
         value_str = f"{value:.{digits}f}"
         result = int(value_str) if digits == 0 else float(value_str)
 
@@ -1359,12 +1401,6 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
     async def _async_update_configuration(self, service_call):
         data = service_call.data
         device_id = data.get("device_id")
-        store_debug_data = data.get(STORAGE_DATA_STORE_DEBUG_DATA)
-        unit = data.get(STORAGE_DATA_UNIT)
-        log_incoming_messages = data.get(STORAGE_DATA_LOG_INCOMING_MESSAGES)
-        consider_away_interval = data.get(STORAGE_DATA_CONSIDER_AWAY_INTERVAL)
-        update_api_interval = data.get(STORAGE_DATA_UPDATE_API_INTERVAL)
-        update_entities_interval = data.get(STORAGE_DATA_UPDATE_ENTITIES_INTERVAL)
 
         _LOGGER.info(f"Update configuration called with data: {data}")
 
@@ -1378,38 +1414,28 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             should_reload_integration = False
 
             if can_handle_device:
-                if store_debug_data is not None and self.storage_api.store_debug_data != store_debug_data:
-                    await self.storage_api.set_store_debug_data(store_debug_data)
+                storage_data_import_keys: dict[str, Callable[[int | bool | str], Awaitable[None]]] = {
+                    STORAGE_DATA_CONSIDER_AWAY_INTERVAL: self.storage_api.set_consider_away_interval,
+                    STORAGE_DATA_UPDATE_ENTITIES_INTERVAL: self.storage_api.set_update_entities_interval,
+                    STORAGE_DATA_UPDATE_API_INTERVAL: self.storage_api.set_update_api_interval,
+                    STORAGE_DATA_LOG_INCOMING_MESSAGES: self.storage_api.set_log_incoming_messages,
+                    STORAGE_DATA_UNIT: self.storage_api.set_unit
+                }
 
-                if unit is not None and self.storage_api.unit != unit:
-                    await self.storage_api.set_unit(unit)
+                for key in storage_data_import_keys:
+                    data_item = data.get(key)
+                    existing_data = self.storage_api.data.get(key)
 
-                    should_reload_integration = True
+                    if data_item is not None and data_item != existing_data:
+                        if not should_reload_integration and key != STORAGE_DATA_UNIT:
+                            should_reload_integration = True
 
-                current_consider_away_interval = self.storage_api.consider_away_interval
-                if consider_away_interval is not None and current_consider_away_interval != consider_away_interval:
-                    await self.storage_api.set_consider_away_interval(consider_away_interval)
+                        set_func = storage_data_import_keys.get(key)
 
-                    should_reload_integration = True
+                        await set_func(data_item)
 
-                current_update_api_interval = self.storage_api.update_api_interval
-                if update_api_interval is not None and current_update_api_interval != update_api_interval:
-                    await self.storage_api.set_update_api_interval(update_api_interval)
-
-                    should_reload_integration = True
-
-                current_update_entities_interval = self.storage_api.update_entities_interval
-                if update_entities_interval is not None and current_update_entities_interval != update_entities_interval:
-                    await self.storage_api.set_update_entities_interval(update_entities_interval)
-
-                    should_reload_integration = True
-
-                current_log_incoming_messages = self.storage_api.log_incoming_messages
-                if log_incoming_messages is not None and current_log_incoming_messages != log_incoming_messages:
-                    await self.storage_api.set_log_incoming_messages(log_incoming_messages)
-
-            if should_reload_integration:
-                await self._reload_integration()
+                if should_reload_integration:
+                    await self._reload_integration()
 
     @staticmethod
     def _get_last_reset(uptime):

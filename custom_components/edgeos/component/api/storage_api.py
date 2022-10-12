@@ -50,6 +50,12 @@ class StorageAPI(BaseAPI):
         return storage
 
     @property
+    def _storage_ha(self) -> Store:
+        storage = self._storages.get(STORAGE_DATA_FILE_HA_DEBUG)
+
+        return storage
+
+    @property
     def monitored_interfaces(self):
         result = self.data.get(STORAGE_DATA_MONITORED_INTERFACES, {})
 
@@ -204,6 +210,26 @@ class StorageAPI(BaseAPI):
     async def debug_log_ws(self, data: dict):
         if self.store_debug_data and data is not None:
             await self._storage_ws.async_save(self._get_json_data(data))
+
+    async def debug_log_ha(self, data: dict):
+        if self.store_debug_data and data is not None:
+            clean_data = {}
+            for key in data:
+                if key in [DEVICE_LIST, API_DATA_INTERFACES]:
+                    new_item = {}
+                    items = data.get(key, {})
+
+                    for item_key in items:
+                        item = items.get(item_key)
+                        new_item[item_key] = item.to_dict()
+
+                    clean_data[key] = new_item
+
+                elif key in [API_DATA_SYSTEM]:
+                    item = data.get(key)
+                    clean_data[key] = item.to_dict()
+
+            await self._storage_ha.async_save(self._get_json_data(clean_data))
 
     def _get_json_data(self, data: dict):
         json_data = json.dumps(data, default=self.json_converter, sort_keys=True, indent=4)

@@ -36,7 +36,7 @@ class EdgeOSTrafficData:
 
     def to_dict(self):
         now = datetime.now().timestamp()
-        diff = "N/A" if self.last_activity == 0 else timedelta(seconds=(now - self.last_activity)).total_seconds()
+        diff = "N/A" if self.last_activity == 0 else timedelta(seconds=(int(now) - self.last_activity)).total_seconds()
 
         obj = {
             TRAFFIC_DATA_DIRECTION: self.direction,
