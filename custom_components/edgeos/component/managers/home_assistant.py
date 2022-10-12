@@ -249,7 +249,12 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         for unique_id in self._interfaces:
             interface_item = self._interfaces.get(unique_id)
             self._load_interface_monitor_switch(interface_item)
-            self._load_interface_status_switch(interface_item)
+
+            if self._system.user_level == USER_LEVEL_ADMIN:
+                self._load_interface_status_switch(interface_item)
+
+            else:
+                self._load_interface_status_binary_sensor(interface_item)
 
             self._load_interface_received_rate_sensor(interface_item)
             self._load_interface_received_traffic_sensor(interface_item)
@@ -388,7 +393,19 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
             system_data.sw_version = sw_latest
 
+            login_details = system_details.get(SYSTEM_DATA_LOGIN, {})
+            users = login_details.get(SYSTEM_DATA_LOGIN_USER, {})
+            current_user = users.get(self.config_data.username, {})
+            system_data.user_level = current_user.get(SYSTEM_DATA_LOGIN_USER_LEVEL)
+
             self._system = system_data
+
+            if system_data.user_level != USER_LEVEL_ADMIN:
+                _LOGGER.info(
+                    f"User {self.config_data.username} level is {self._system.user_level}, "
+                    f"Interface status switch will not be created as it requires admin role"
+                )
+
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -1254,6 +1271,38 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         except Exception as ex:
             self.log_exception(
                 ex, f"Failed to load switch for {entity_name}"
+            )
+
+    def _load_interface_status_binary_sensor(self, interface: EdgeOSInterfaceData):
+        interface_name = self._get_interface_name(interface)
+        entity_name = f"{interface_name} Status"
+
+        try:
+            state = interface.up
+
+            attributes = {
+                ATTR_FRIENDLY_NAME: entity_name,
+                ADDRESS_LIST: interface.address
+            }
+
+            unique_id = EntityData.generate_unique_id(DOMAIN_BINARY_SENSOR, entity_name)
+
+            entity_description = BinarySensorEntityDescription(
+                key=unique_id,
+                name=entity_name,
+                device_class=BinarySensorDeviceClass.CONNECTIVITY
+            )
+
+            self.entity_manager.set_entity(DOMAIN_BINARY_SENSOR,
+                                           self.entry_id,
+                                           state,
+                                           attributes,
+                                           interface_name,
+                                           entity_description)
+
+        except Exception as ex:
+            self.log_exception(
+                ex, f"Failed to load binary sensor for {entity_name}"
             )
 
     def _load_interface_monitor_switch(self, interface: EdgeOSInterfaceData):

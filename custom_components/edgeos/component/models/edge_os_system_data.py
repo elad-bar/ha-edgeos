@@ -25,6 +25,7 @@ class EdgeOSSystemData:
     cpu: int | None
     mem: int | None
     last_reset: datetime | None
+    user_level: str | None
 
     def __init__(self):
         self.hostname = None
@@ -45,6 +46,7 @@ class EdgeOSSystemData:
         self.upgrade_available = False
         self.upgrade_url = None
         self.upgrade_version = None
+        self.user_level = None
 
     @staticmethod
     def is_enabled(data: dict, key: str) -> bool:
@@ -61,7 +63,8 @@ class EdgeOSSystemData:
             SYSTEM_DATA_OFFLOAD_HW_NAT: self.hardware_offload,
             SYSTEM_DATA_TRAFFIC_ANALYSIS_DPI: self.deep_packet_inspection,
             SYSTEM_DATA_TRAFFIC_ANALYSIS_EXPORT: self.traffic_analysis_export,
-            DHCP_SERVER_LEASES: self.leased_devices
+            DHCP_SERVER_LEASES: self.leased_devices,
+            SYSTEM_DATA_LOGIN_USER_LEVEL: self.user_level
         }
 
         return obj

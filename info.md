@@ -13,6 +13,7 @@ Provides an integration between EdgeOS (Ubiquiti) routers to Home Assistant.
 - EdgeRouter with at least firmware version 2.0
 - EdgeRouter User with 'Operator' level access or higher
 - Traffic Analysis set to 'Enabled' (both `dpi` and `export` enabled under `system/traffic-analysis`)
+- To enable / disable interfaces an `admin` role is a required
 
 #### Installations via HACS
 - In HACS, look for "Ubiquiti EdgeOS Routers" and install and restart
@@ -129,6 +130,8 @@ Allows to set:
 - Log incoming messages - Enable / Disable logging of incoming WebSocket messages for debug
 - Store debug data - Enable / Disable store debug data to './storage' directory of HA for API (edgeos.debug.api.json) and WS (edgeos.debug.ws.json) data for faster debugging or just to get more ideas for additional features
 - Unit of measurement
+- Update API interval - Interval in seconds to update API data
+- Update Entities interval - Interval in seconds to update entities
 
 More details available in `Developer tools` -> `Services` -> `edgeos.update_configuration`
 
@@ -140,6 +143,8 @@ data:
   store_debug_data: true
   log_incoming_messages: true
   consider_away_interval: 180
+  update_api_interval: 30
+  update_entities_interval: 1
 ```
 
 *Changing the unit will reload the integration*
