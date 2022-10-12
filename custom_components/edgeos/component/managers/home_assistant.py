@@ -39,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class ShinobiHomeAssistantManager(HomeAssistantManager):
     def __init__(self, hass: HomeAssistant):
-        super().__init__(hass, SCAN_INTERVAL, HEARTBEAT_INTERVAL_SECONDS)
+        super().__init__(hass, DEFAULT_UPDATE_API_INTERVAL, DEFAULT_HEARTBEAT_INTERVAL)
 
         self._storage_api: StorageAPI = StorageAPI(self._hass)
         self._api: IntegrationAPI = IntegrationAPI(self._hass, self._api_data_changed, self._api_status_changed)
@@ -84,13 +84,9 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         if self.api.status == ConnectivityStatus.Connected:
             await self._extract_api_data()
 
-            self.update()
-
     async def _ws_data_changed(self):
         if self.api.status == ConnectivityStatus.Connected:
             await self._extract_ws_data()
-
-            self.update()
 
     async def _api_status_changed(self, status: ConnectivityStatus):
         _LOGGER.info(f"API Status changed to {status}, WS Status: {self.ws.status}")
@@ -115,13 +111,12 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 if not self.ws.status == ConnectivityStatus.NotConnected:
                     await asyncio.sleep(WS_RECONNECT_INTERVAL.total_seconds())
 
-        if status == ConnectivityStatus.Connected:
-            await self.async_update(datetime.now())
-
     async def async_component_initialize(self, entry: ConfigEntry):
         try:
             self._config_manager = ConfigurationManager(self._hass, self.api)
             await self._config_manager.load(entry)
+
+            self.update_intervals(self.storage_api.update_entities_interval, self.storage_api.update_api_interval)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -1276,28 +1271,20 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
         await self.storage_api.set_monitored_interface(interface_item.unique_id, True)
 
-        await self.async_update(datetime.now())
-
     async def _set_interface_unmonitored(self, entity: EntityData):
         interface_item = self._get_interface_from_entity(entity)
 
         await self.storage_api.set_monitored_interface(interface_item.unique_id, False)
-
-        await self.async_update(datetime.now())
 
     async def _set_device_monitored(self, entity: EntityData):
         device_item = self._get_device_from_entity(entity)
 
         await self.storage_api.set_monitored_device(device_item.unique_id, True)
 
-        await self.async_update(datetime.now())
-
     async def _set_device_unmonitored(self, entity: EntityData):
         device_item = self._get_device_from_entity(entity)
 
         await self.storage_api.set_monitored_device(device_item.unique_id, False)
-
-        await self.async_update(datetime.now())
 
     async def _enable_log_incoming_messages(self, entity: EntityData):
         await self.storage_api.set_log_incoming_messages(True)
@@ -1313,8 +1300,6 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
     async def _set_unit(self, entity: EntityData, option: str):
         await self.storage_api.set_unit(option)
-
-        await self.async_update(datetime.now())
 
         await self._reload_integration()
 
@@ -1376,8 +1361,10 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         device_id = data.get("device_id")
         store_debug_data = data.get(STORAGE_DATA_STORE_DEBUG_DATA)
         unit = data.get(STORAGE_DATA_UNIT)
-        consider_away_interval = data.get(STORAGE_DATA_CONSIDER_AWAY_INTERVAL)
         log_incoming_messages = data.get(STORAGE_DATA_LOG_INCOMING_MESSAGES)
+        consider_away_interval = data.get(STORAGE_DATA_CONSIDER_AWAY_INTERVAL)
+        update_api_interval = data.get(STORAGE_DATA_UPDATE_API_INTERVAL)
+        update_entities_interval = data.get(STORAGE_DATA_UPDATE_ENTITIES_INTERVAL)
 
         _LOGGER.info(f"Update configuration called with data: {data}")
 
@@ -1399,10 +1386,21 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
                     should_reload_integration = True
 
-                if consider_away_interval is not None and \
-                        self.storage_api.consider_away_interval != consider_away_interval:
-
+                current_consider_away_interval = self.storage_api.consider_away_interval
+                if consider_away_interval is not None and current_consider_away_interval != consider_away_interval:
                     await self.storage_api.set_consider_away_interval(consider_away_interval)
+
+                    should_reload_integration = True
+
+                current_update_api_interval = self.storage_api.update_api_interval
+                if update_api_interval is not None and current_update_api_interval != update_api_interval:
+                    await self.storage_api.set_update_api_interval(update_api_interval)
+
+                    should_reload_integration = True
+
+                current_update_entities_interval = self.storage_api.update_entities_interval
+                if update_entities_interval is not None and current_update_entities_interval != update_entities_interval:
+                    await self.storage_api.set_update_entities_interval(update_entities_interval)
 
                     should_reload_integration = True
 

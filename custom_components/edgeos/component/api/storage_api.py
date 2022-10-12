@@ -81,7 +81,19 @@ class StorageAPI(BaseAPI):
 
     @property
     def consider_away_interval(self):
-        result = self.data.get(STORAGE_DATA_CONSIDER_AWAY_INTERVAL, DEFAULT_CONSIDER_AWAY_INTERVAL)
+        result = self.data.get(STORAGE_DATA_CONSIDER_AWAY_INTERVAL, DEFAULT_CONSIDER_AWAY_INTERVAL.total_seconds())
+
+        return result
+
+    @property
+    def update_entities_interval(self):
+        result = self.data.get(STORAGE_DATA_UPDATE_ENTITIES_INTERVAL, DEFAULT_UPDATE_ENTITIES_INTERVAL.total_seconds())
+
+        return result
+
+    @property
+    def update_api_interval(self):
+        result = self.data.get(STORAGE_DATA_UPDATE_API_INTERVAL, DEFAULT_UPDATE_API_INTERVAL.total_seconds())
 
         return result
 
@@ -108,7 +120,10 @@ class StorageAPI(BaseAPI):
                 STORAGE_DATA_MONITORED_DEVICES: {},
                 STORAGE_DATA_UNIT: ATTR_BYTE,
                 STORAGE_DATA_LOG_INCOMING_MESSAGES: False,
-                STORAGE_DATA_STORE_DEBUG_DATA: False
+                STORAGE_DATA_STORE_DEBUG_DATA: False,
+                STORAGE_DATA_CONSIDER_AWAY_INTERVAL: DEFAULT_CONSIDER_AWAY_INTERVAL.total_seconds(),
+                STORAGE_DATA_UPDATE_ENTITIES_INTERVAL: DEFAULT_UPDATE_ENTITIES_INTERVAL.total_seconds(),
+                STORAGE_DATA_UPDATE_API_INTERVAL: DEFAULT_UPDATE_API_INTERVAL.total_seconds()
             }
 
             await self._async_save()
@@ -165,6 +180,20 @@ class StorageAPI(BaseAPI):
         _LOGGER.debug(f"Changing {STORAGE_DATA_CONSIDER_AWAY_INTERVAL}: {interval}")
 
         self.data[STORAGE_DATA_CONSIDER_AWAY_INTERVAL] = interval
+
+        await self._async_save()
+
+    async def set_update_entities_interval(self, interval: int):
+        _LOGGER.debug(f"Changing {STORAGE_DATA_UPDATE_ENTITIES_INTERVAL}: {interval}")
+
+        self.data[STORAGE_DATA_UPDATE_ENTITIES_INTERVAL] = interval
+
+        await self._async_save()
+
+    async def set_update_api_interval(self, interval: int):
+        _LOGGER.debug(f"Changing {STORAGE_DATA_UPDATE_API_INTERVAL}: {interval}")
+
+        self.data[STORAGE_DATA_UPDATE_API_INTERVAL] = interval
 
         await self._async_save()
 

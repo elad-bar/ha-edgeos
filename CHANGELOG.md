@@ -4,6 +4,7 @@
 
 - Add IP address to status switch of its interface [#71](https://github.com/elad-bar/ha-edgeos/issues/71)
 - Constants clean up
+- Add ability to set the interval to update data and entities separately, to update use the `edgeos.update_configuration` service and set the number of seconds per `update_api_interval` and/or `update_entities_interval` parameters, defaults are API: 30 seconds, Entities: 1 second
 
 ## 2.0.3
 

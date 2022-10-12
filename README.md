@@ -129,6 +129,8 @@ Allows to set:
 - Log incoming messages - Enable / Disable logging of incoming WebSocket messages for debug
 - Store debug data - Enable / Disable store debug data to './storage' directory of HA for API (edgeos.debug.api.json) and WS (edgeos.debug.ws.json) data for faster debugging or just to get more ideas for additional features
 - Unit of measurement
+- Update API interval - Interval in seconds to update API data
+- Update Entities interval - Interval in seconds to update entities
 
 More details available in `Developer tools` -> `Services` -> `edgeos.update_configuration`
 
@@ -140,6 +142,8 @@ data:
   store_debug_data: true
   log_incoming_messages: true
   consider_away_interval: 180
+  update_api_interval: 30
+  update_entities_interval: 1
 ```
 
 *Changing the unit will reload the integration*

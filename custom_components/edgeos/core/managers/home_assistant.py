@@ -36,7 +36,8 @@ class HomeAssistantManager:
 
         self._is_initialized = False
         self._is_updating = False
-        self._scan_interval = scan_interval
+        self._update_entities_interval = scan_interval
+        self._update_data_providers_interval = scan_interval
         self._heartbeat_interval = heartbeat_interval
 
         self._entity_registry = None
@@ -89,6 +90,14 @@ class HomeAssistantManager:
     @property
     def entry_title(self) -> str:
         return self._entry.title
+
+    def update_intervals(self,
+                         entities_interval: datetime.timedelta,
+                         data_interval: datetime.timedelta
+                         ):
+
+        self._update_entities_interval = entities_interval
+        self._update_data_providers_interval = data_interval
 
     async def async_component_initialize(self, entry: ConfigEntry):
         """ Component initialization """
@@ -162,8 +171,8 @@ class HomeAssistantManager:
 
         await self.async_update_entry()
 
-    def _update_entities(self, now):
-        self._hass.async_create_task(self.async_update(now))
+    def _update_data_providers(self, now):
+        self._hass.async_create_task(self.async_update_data_providers())
 
     async def async_update_entry(self, entry: ConfigEntry | None = None):
         entry_changed = entry is not None
@@ -176,18 +185,24 @@ class HomeAssistantManager:
         else:
             entry = self._entry
 
-            remove_async_track_time = async_track_time_interval(
-                self._hass, self._update_entities, self._scan_interval
+            track_time_update_data_providers = async_track_time_interval(
+                self._hass, self._update_data_providers, self._update_data_providers_interval
             )
 
-            self._async_track_time_handlers.append(remove_async_track_time)
+            self._async_track_time_handlers.append(track_time_update_data_providers)
+
+            track_time_update_entities = async_track_time_interval(
+                self._hass, self._update_entities, self._update_entities_interval
+            )
+
+            self._async_track_time_handlers.append(track_time_update_entities)
 
             if self._heartbeat_interval is not None:
-                remove_async_heartbeat_track_time = async_track_time_interval(
+                track_time_send_heartbeat = async_track_time_interval(
                     self._hass, self._send_heartbeat, self._heartbeat_interval
                 )
 
-                self._async_track_time_handlers.append(remove_async_heartbeat_track_time)
+                self._async_track_time_handlers.append(track_time_send_heartbeat)
 
             _LOGGER.info(f"Handling ConfigEntry change: {entry.as_dict()}")
 
@@ -225,7 +240,7 @@ class HomeAssistantManager:
 
         _LOGGER.info(f"Current integration ({entry.title}) removed")
 
-    def update(self):
+    def _update_entities(self):
         if self._update_lock:
             _LOGGER.warning("Update in progress, will skip the request")
             return
@@ -240,31 +255,6 @@ class HomeAssistantManager:
         self._hass.async_create_task(self.dispatch_all())
 
         self._update_lock = False
-
-    async def async_update(self, event_time):
-        if not self._is_initialized:
-            _LOGGER.info(f"NOT INITIALIZED - Failed updating @{event_time}")
-            return
-
-        try:
-            if self._is_updating:
-                _LOGGER.debug(f"Skip updating @{event_time}")
-                return
-
-            _LOGGER.debug(f"Updating @{event_time}")
-
-            self._is_updating = True
-
-            await self.async_update_data_providers()
-
-            self.update()
-        except Exception as ex:
-            exc_type, exc_obj, tb = sys.exc_info()
-            line_number = tb.tb_lineno
-
-            _LOGGER.error(f"Failed to async_update, Error: {ex}, Line: {line_number}")
-
-        self._is_updating = False
 
     async def dispatch_all(self):
         if not self._is_initialized:

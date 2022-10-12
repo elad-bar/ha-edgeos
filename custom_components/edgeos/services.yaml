@@ -23,6 +23,28 @@ update_configuration:
           max: 1800
           unit_of_measurement: seconds
           mode: box
+    update_api_interval:
+      name: Update API interval
+      description: Interval in seconds to update API data
+      required: false
+      example: "30"
+      selector:
+        number:
+          min: 30
+          max: 180
+          unit_of_measurement: seconds
+          mode: box
+    update_entities_interval:
+      name: Update Entities interval
+      description: Interval in seconds to update entities
+      required: false
+      example: "1"
+      selector:
+        number:
+          min: 1
+          max: 60
+          unit_of_measurement: seconds
+          mode: box
     log_incoming_messages:
       name: Log incoming messages
       description: Enable / Disable logging of incoming WebSocket messages for debug

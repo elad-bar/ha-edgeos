@@ -11,8 +11,10 @@ WS_MAX_MSG_SIZE = 0
 WS_RECONNECT_INTERVAL = timedelta(seconds=30)
 WS_TIMEOUT = timedelta(seconds=60)
 
-SCAN_INTERVAL = timedelta(seconds=60)
-HEARTBEAT_INTERVAL_SECONDS = timedelta(seconds=25)
+DEFAULT_UPDATE_API_INTERVAL = timedelta(seconds=60)
+DEFAULT_UPDATE_ENTITIES_INTERVAL = timedelta(seconds=1)
+DEFAULT_HEARTBEAT_INTERVAL = timedelta(seconds=25)
+DEFAULT_CONSIDER_AWAY_INTERVAL = timedelta(seconds=180)
 
 STORAGE_DATA_FILE_CONFIG = "config"
 STORAGE_DATA_FILE_API_DEBUG = "debug.api"
@@ -30,6 +32,8 @@ STORAGE_DATA_UNIT = "unit"
 STORAGE_DATA_LOG_INCOMING_MESSAGES = "log-incoming-messages"
 STORAGE_DATA_STORE_DEBUG_DATA = "store-debug-data"
 STORAGE_DATA_CONSIDER_AWAY_INTERVAL = "consider-away-interval"
+STORAGE_DATA_UPDATE_ENTITIES_INTERVAL = "update-entities-interval"
+STORAGE_DATA_UPDATE_API_INTERVAL = "update-api-interval"
 
 API_DATA_LAST_UPDATE = "lastUpdate"
 
