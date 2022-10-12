@@ -120,30 +120,41 @@ class EntityManager:
             )
 
     async def _async_delete_components(self):
-        delete_entities = []
-        for unique_id in self.entities:
-            entity = self.entities.get(unique_id)
+        try:
+            delete_entities = []
+            for unique_id in self.entities:
+                entity = self.entities.get(unique_id)
 
-            if entity.status == EntityStatus.DELETED:
-                entity_id = self.entity_registry.async_get_entity_id(
-                    entity.domain, DOMAIN, unique_id
-                )
+                if entity.status == EntityStatus.DELETED:
+                    entity_id = self.entity_registry.async_get_entity_id(
+                        entity.domain, DOMAIN, unique_id
+                    )
 
-                entity_item = self.entity_registry.async_get(entity_id)
+                    entity_item = self.entity_registry.async_get(entity_id)
 
-                if entity_item is not None:
-                    _LOGGER.info(f"Removed {entity_id} ({entity.name})")
+                    if entity_item is not None:
+                        _LOGGER.info(f"Removed {entity_id} ({entity.name})")
 
-                    self.entity_registry.async_remove(entity_id)
+                        self.entity_registry.async_remove(entity_id)
 
-                delete_entities.append(unique_id)
+                    delete_entities.append(unique_id)
 
-        for unique_id in delete_entities:
-            self.entities.pop(unique_id, None)
+            for unique_id in delete_entities:
+                self.entities.pop(unique_id, None)
 
-        total_delete_entities = len(delete_entities)
-        if total_delete_entities > 0:
-            _LOGGER.info(f"{total_delete_entities} components deleted")
+            total_delete_entities = len(delete_entities)
+            if total_delete_entities > 0:
+                _LOGGER.info(f"{total_delete_entities} components deleted")
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(
+                f"Failed to delete components, "
+                f"Error: {str(ex)}, "
+                f"Line: {line_number}"
+            )
 
     async def _async_update(self):
         _LOGGER.debug("Starting to update entities")
