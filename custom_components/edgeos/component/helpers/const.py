@@ -6,24 +6,17 @@ https://home-assistant.io/components/switch.shinobi/
 from datetime import datetime, timedelta
 
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import ATTR_NAME, ATTR_UNIT_OF_MEASUREMENT
 
 from ...core.helpers.const import *
 
-ENTRY_PRIMARY_KEY = CONF_NAME
-
-SCAN_INTERVAL_WS_TIMEOUT = timedelta(seconds=60)
-
-DEFAULT_ICON = "mdi:alarm-light"
 ATTR_FRIENDLY_NAME = "friendly_name"
+
+WS_MAX_MSG_SIZE = 0
+WS_RECONNECT_INTERVAL = timedelta(seconds=30)
+WS_TIMEOUT = timedelta(seconds=60)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 HEARTBEAT_INTERVAL_SECONDS = timedelta(seconds=25)
-TRIGGER_INTERVAL = timedelta(seconds=1)
-
-MAX_MSG_SIZE = 0
-DISCONNECT_INTERVAL = 5
-RECONNECT_INTERVAL = 30
 
 STORAGE_DATA_FILE_CONFIG = "config"
 STORAGE_DATA_FILE_API_DEBUG = "debug.api"
@@ -42,12 +35,11 @@ STORAGE_DATA_LOG_INCOMING_MESSAGES = "log-incoming-messages"
 STORAGE_DATA_STORE_DEBUG_DATA = "store-debug-data"
 STORAGE_DATA_CONSIDER_AWAY_INTERVAL = "consider-away-interval"
 
-DATA_LAST_UPDATE = "lastUpdate"
+API_DATA_LAST_UPDATE = "lastUpdate"
 
 API_DATA_PRODUCT = "product"
 API_DATA_SYSTEM = "system"
 API_DATA_INTERFACES = "interfaces"
-API_DATA_GENERAL_DATA = "general-data"
 API_DATA_SESSION_ID = "session-id"
 API_DATA_COOKIES = "cookies"
 
@@ -56,14 +48,12 @@ API_DATA_SAVE = "SAVE"
 API_URL_DATA_TEMPLATE = "{}?data={}"
 API_URL_HEARTBEAT_TEMPLATE = "{}?_={}"
 
-EDGE_OS_VERSION_INCOMPATIBLE = "v1"
-EDGE_OS_VERSION_UNKNOWN = "N/A"
-EDGE_OS_API_URL = "{}/api/edge/{}.json"
-EDGE_OS_API_GET = "get"
-EDGE_OS_API_SET = "set"
-EDGE_OS_API_DELETE = "delete"
-EDGE_OS_API_DATA = "data"
-EDGE_OS_API_HEARTBREAT = "heartbeat"
+API_URL = "{}/api/edge/{}.json"
+API_GET = "get"
+API_SET = "set"
+API_DELETE = "delete"
+API_DATA = "data"
+API_HEARTBEAT = "heartbeat"
 
 TRUE_STR = "true"
 FALSE_STR = "false"
@@ -77,26 +67,27 @@ BYTE = 1
 KILO_BYTE = BYTE * 1024
 MEGA_BYTE = KILO_BYTE * 1024
 
-INTERFACES_KEY = "interfaces"
-SYSTEM_STATS_KEY = "system-stats"
-EXPORT_KEY = "export"
-STATIC_DEVICES_KEY = "static-devices"
+# CHANGE TO API DATA
 DHCP_STATS_KEY = "dhcp_stats"
 SYS_INFO_KEY = "sys_info"
-DISCOVER_KEY = "discover"
-UNKNOWN_DEVICES_KEY = "unknown-devices"
-
 DHCP_LEASES_KEY = "dhcp-leases"
 DHCP_SERVER_LEASES = "dhcp-server-leases"
 DHCP_SERVER_STATS = "dhcp-server-stats"
 LEASED = "leased"
 DHCP_SERVER_LEASES_CLIENT_HOSTNAME = "client-hostname"
 ROUTES_KEY = "routes"
-NUM_ROUTES_KEY = "num-routes"
-USERS_KEY = "users"
+SERVICE = "service"
+DHCP_SERVER = "dhcp-server"
+SHARED_NETWORK_NAME = "shared-network-name"
+SUBNET = "subnet"
+STATIC_MAPPING = "static-mapping"
+IP_ADDRESS = "ip-address"
+MAC_ADDRESS = "mac-address"
 
-UPTIME = "uptime"
-IS_ALIVE = "is_alive"
+WS_INTERFACES_KEY = "interfaces"
+WS_SYSTEM_STATS_KEY = "system-stats"
+WS_EXPORT_KEY = "export"
+WS_DISCOVER_KEY = "discover"
 
 UPDATE_DATE_ENDPOINTS = [
     SYS_INFO_KEY,
@@ -112,22 +103,9 @@ SYSTEM_STATS_DATA_UPTIME = "uptime"
 SYSTEM_STATS_DATA_CPU = "cpu"
 SYSTEM_STATS_DATA_MEM = "mem"
 
-DISCOVER_DEVICE_ITEMS = ["hostname", "product", "uptime", "fwversion", "system_status"]
-
-
 ATTR_KILO = "KBytes"
 ATTR_MEGA = "MBytes"
 ATTR_BYTE = "Bytes"
-ATTR_WEB_SOCKET_LAST_UPDATE = "WS Last Update"
-ATTR_WEB_SOCKET_MESSAGES_RECEIVED = "Messages Received"
-ATTR_WEB_SOCKET_MESSAGES_IGNORED = "Messages Ignored"
-ATTR_WEB_SOCKET_MESSAGES_HANDLED_PERCENTAGE = "Messages Handled"
-ATTR_API_LAST_UPDATE = "API Last Update"
-ATTR_UNKNOWN_DEVICES = "Unknown Devices"
-ATTR_SYSTEM_STATUS = "System Status"
-ATTR_ENABLED = "enabled"
-ATTR_FIRMWARE_UPDATE_URL = "url"
-ATTR_FIRMWARE_UPDATE_VERSION = "version"
 
 UNIT_MAPPING = {
     ATTR_BYTE: BYTE,
@@ -141,27 +119,11 @@ UNIT_OF_MEASUREMENT_MAPPING = {
     ATTR_MEGA: "MB"
 }
 
-ALLOWED_UNITS_LIST = [ATTR_BYTE, ATTR_KILO, ATTR_MEGA]
-
 DEVICE_LIST = "devices"
 ADDRESS_LIST = "addresses"
 FW_LATEST = "addresses"
 ADDRESS_IPV4 = "ipv4"
 ADDRESS_HWADDR = "hwaddr"
-
-INTERFACES = "interfaces"
-SYSTEM = "system"
-SERVICE = "service"
-DHCP_SERVER = "dhcp-server"
-SHARED_NETWORK_NAME = "shared-network-name"
-SUBNET = "subnet"
-DOMAIN_NAME = "domain-name"
-STATIC_MAPPING = "static-mapping"
-IP_ADDRESS = "ip-address"
-MAC_ADDRESS = "mac-address"
-IP = "ip"
-MAC = "mac"
-CONNECTED = "Connected"
 LAST_ACTIVITY = "Last Activity"
 
 RESPONSE_SUCCESS_KEY = "success"
@@ -175,89 +137,16 @@ WS_TOPIC_NAME = "name"
 WS_TOPIC_UNSUBSCRIBE = "UNSUBSCRIBE"
 WS_TOPIC_SUBSCRIBE = "SUBSCRIBE"
 WS_SESSION_ID = "SESSION_ID"
-WS_MESSAGE_COMPRESSION = 15
 
-UNIT_ERRORS = "Errors"
-UNIT_PACKETS = "Packets"
-UNIT_TRAFFIC = "Traffic"
-UNIT_RATE = "Rate"
-UNIT_BPS = "bps"
-UNIT_BYTES = "bytes"
-UNIT_DROPPED_PACKETS = "Dropped"
-UNIT_DEVICES = "Devices"
-
-DEFAULT_DATE_FORMAT = "%x %X"
-
-DOMAIN_LOGGER = "logger"
-SERVICE_SET_LEVEL = "set_level"
 SERVICE_UPDATE_CONFIGURATION = "update_configuration"
 
-INTERFACES_MAIN_MAP = {
-    LINK_CONNECTED: {ATTR_NAME: "Connected", ATTR_UNIT_OF_MEASUREMENT: "Connectivity"},
-    LINK_ENABLED: {ATTR_NAME: "Enabled"},
-    "speed": {ATTR_NAME: "Link Speed (Mbps)"},
-    "duplex": {ATTR_NAME: "Duplex"},
-    "mac": {ATTR_NAME: "MAC"},
-}
-
-DEVICES_MAIN_MAP = {
-    LINK_CONNECTED: {ATTR_NAME: "Connected", ATTR_UNIT_OF_MEASUREMENT: "Connectivity"},
-    "ip": {ATTR_NAME: "Address"},
-    "mac": {ATTR_NAME: "MAC"},
-}
-
-STATS_DIRECTION = {
-    "rx": "Received",
-    "tx": "Sent"
-}
-
-INTERFACES_STATS_MAP = {
-    "rx_packets": SensorStateClass.TOTAL_INCREASING,
-    "tx_packets": SensorStateClass.TOTAL_INCREASING,
-    "rx_bytes": SensorStateClass.TOTAL_INCREASING,
-    "tx_bytes": SensorStateClass.TOTAL_INCREASING,
-    "rx_errors": SensorStateClass.TOTAL_INCREASING,
-    "tx_errors": SensorStateClass.TOTAL_INCREASING,
-    "rx_dropped": SensorStateClass.TOTAL_INCREASING,
-    "tx_dropped": SensorStateClass.TOTAL_INCREASING,
-    "rx_bps": SensorStateClass.MEASUREMENT,
-    "tx_bps": SensorStateClass.MEASUREMENT,
-    "multicast": SensorStateClass.TOTAL_INCREASING,
-}
-
-DEVICE_SERVICES_STATS_MAP = {
-    "rx_bytes": SensorStateClass.TOTAL_INCREASING,
-    "tx_bytes": SensorStateClass.TOTAL_INCREASING,
-    "rx_rate": SensorStateClass.MEASUREMENT,
-    "tx_rate": SensorStateClass.MEASUREMENT
-}
-
-STATS_MAPS = {
-    INTERFACES_KEY: INTERFACES_STATS_MAP,
-    STATIC_DEVICES_KEY: DEVICE_SERVICES_STATS_MAP
-}
-
-EMPTY_LAST_VALID = datetime.fromtimestamp(100000)
-
-MAX_PENDING_PAYLOADS = 3
-
 EMPTY_STRING = ""
-NEW_LINE = "\n"
 BEGINS_WITH_SIX_DIGITS = "^([0-9]{1,6})"
-
-SENSOR_TYPE_INTERFACE = "Interface"
-SENSOR_TYPE_DEVICE = "Device"
-SENSOR_TYPES = {
-    INTERFACES_KEY: SENSOR_TYPE_INTERFACE,
-    STATIC_DEVICES_KEY: SENSOR_TYPE_DEVICE
-}
 
 STRING_DASH = "-"
 STRING_UNDERSCORE = "_"
 STRING_COMMA = ","
 STRING_COLON = ":"
-
-ERROR_SHUTDOWN = "Connector is closed."
 
 SYSTEM_DATA_HOSTNAME = "host-name"
 SYSTEM_DATA_DOMAIN_NAME = "domain-name"
@@ -302,8 +191,11 @@ INTERFACE_DATA_SENT = "sent"
 INTERFACE_DATA_MULTICAST = "multicast"
 INTERFACE_DATA_STATS = "stats"
 INTERFACE_DATA_UP = "up"
-INTERFACE_DATA_L1UP = "l1up"
+INTERFACE_DATA_LINK_UP = "l1up"
 INTERFACE_DATA_MAC = "mac"
+
+INTERFACE_TYPE_BRIDGE = "bridge"
+INTERFACE_TYPE_ETHERNET = "ethernet"
 
 DEVICE_DATA_NAME = "hostname"
 DEVICE_DATA_DOMAIN = "domain"
@@ -321,6 +213,9 @@ TRAFFIC_DATA_DROPPED = "dropped"
 TRAFFIC_DATA_LAST_ACTIVITY = "last_activity"
 TRAFFIC_DATA_LAST_ACTIVITY_IN_SECONDS = "last_activity_in_seconds"
 
+TRAFFIC_STATS_BPS_KEY = "bps"
+TRAFFIC_STATS_BYTES = "bytes"
+
 TRAFFIC_DATA_DIRECTION_SENT = "tx"
 TRAFFIC_DATA_DIRECTION_RECEIVED = "rx"
 
@@ -328,9 +223,6 @@ TRAFFIC_DATA_DIRECTIONS = [
     TRAFFIC_DATA_DIRECTION_SENT,
     TRAFFIC_DATA_DIRECTION_RECEIVED
 ]
-
-TRAFFIC_STATS_BPS_KEY = "bps"
-TRAFFIC_STATS_BYTES = "bytes"
 
 TRAFFIC_DATA_INTERFACE_ITEMS = {
     TRAFFIC_STATS_BPS_KEY: TRAFFIC_DATA_RATE,
@@ -345,10 +237,24 @@ TRAFFIC_DATA_DEVICE_ITEMS = {
     TRAFFIC_STATS_BYTES: TRAFFIC_DATA_TOTAL
 }
 
-INTERFACE_TYPE_BRIDGE = "bridge"
-INTERFACE_TYPE_ETHERNET = "ethernet"
-
 MONITORED_INTERFACE_TYPES = [
     INTERFACE_TYPE_BRIDGE,
     INTERFACE_TYPE_ETHERNET
+]
+
+INTERFACES_MAIN_MAP = [
+    INTERFACE_DATA_UP,
+    INTERFACE_DATA_LINK_UP,
+    INTERFACE_DATA_SPEED,
+    INTERFACE_DATA_DUPLEX,
+    INTERFACE_DATA_MAC,
+]
+
+
+DISCOVER_DEVICE_ITEMS = [
+    DEVICE_DATA_NAME,
+    DISCOVER_DATA_PRODUCT,
+    SYSTEM_STATS_DATA_UPTIME,
+    DISCOVER_DATA_FW_VERSION,
+    "system_status"
 ]

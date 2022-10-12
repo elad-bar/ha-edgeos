@@ -56,8 +56,8 @@ class IntegrationWS(BaseAPI):
         self._messages_ignored = 0
         self._previous_message = None
         self.data = {
-            EXPORT_KEY: {},
-            INTERFACES: {},
+            WS_EXPORT_KEY: {},
+            WS_INTERFACES_KEY: {},
         }
 
     @property
@@ -110,8 +110,8 @@ class IntegrationWS(BaseAPI):
                 url,
                 ssl=False,
                 autoclose=True,
-                max_msg_size=MAX_MSG_SIZE,
-                timeout=SCAN_INTERVAL_WS_TIMEOUT,
+                max_msg_size=WS_MAX_MSG_SIZE,
+                timeout=WS_TIMEOUT,
             ) as ws:
 
                 await self.set_status(ConnectivityStatus.Connected)
@@ -136,7 +136,7 @@ class IntegrationWS(BaseAPI):
 
         else:
             if previous_status == ConnectivityStatus.NotConnected:
-                await asyncio.sleep(RECONNECT_INTERVAL)
+                await asyncio.sleep(WS_RECONNECT_INTERVAL.total_seconds())
 
                 await self.fire_status_changed_event()
 
@@ -303,10 +303,10 @@ class IntegrationWS(BaseAPI):
 
     def _get_ws_handlers(self) -> dict:
         ws_handlers = {
-            EXPORT_KEY: self._handle_export,
-            INTERFACES_KEY: self._handle_interfaces,
-            SYSTEM_STATS_KEY: self._handle_system_stats,
-            DISCOVER_KEY: self._handle_discover,
+            WS_EXPORT_KEY: self._handle_export,
+            WS_INTERFACES_KEY: self._handle_interfaces,
+            WS_SYSTEM_STATS_KEY: self._handle_system_stats,
+            WS_DISCOVER_KEY: self._handle_discover,
         }
 
         return ws_handlers
@@ -336,10 +336,10 @@ class IntegrationWS(BaseAPI):
 
     def _handle_export(self, data):
         try:
-            _LOGGER.debug(f"Handle {EXPORT_KEY} data")
+            _LOGGER.debug(f"Handle {WS_EXPORT_KEY} data")
 
             if data is None or data == "":
-                _LOGGER.debug(f"{EXPORT_KEY} is empty")
+                _LOGGER.debug(f"{WS_EXPORT_KEY} is empty")
                 return
 
             for device_ip in data:
@@ -348,8 +348,10 @@ class IntegrationWS(BaseAPI):
                 if device_data is not None:
                     traffic: dict = {}
 
-                    for item in DEVICE_SERVICES_STATS_MAP:
-                        traffic[item] = float(0)
+                    for direction in TRAFFIC_DATA_DIRECTIONS:
+                        for key in TRAFFIC_DATA_DEVICE_ITEMS:
+                            stats_key = f"{direction}_{key}"
+                            traffic[stats_key] = float(0)
 
                     for service in device_data:
                         service_data = device_data.get(service, {})
@@ -364,22 +366,22 @@ class IntegrationWS(BaseAPI):
 
                             traffic[item] = traffic_value
 
-                    self.data[EXPORT_KEY][device_ip] = traffic
+                    self.data[WS_EXPORT_KEY][device_ip] = traffic
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
             _LOGGER.error(
-                f"Failed to load {EXPORT_KEY}, Error: {ex}, Line: {line_number}"
+                f"Failed to load {WS_EXPORT_KEY}, Error: {ex}, Line: {line_number}"
             )
 
     def _handle_interfaces(self, data):
         try:
-            _LOGGER.debug(f"Handle {INTERFACES_KEY} data")
+            _LOGGER.debug(f"Handle {WS_INTERFACES_KEY} data")
 
             if data is None or data == "":
-                _LOGGER.debug(f"{INTERFACES_KEY} is empty")
+                _LOGGER.debug(f"{WS_INTERFACES_KEY} is empty")
                 return
 
             for name in data:
@@ -394,46 +396,51 @@ class IntegrationWS(BaseAPI):
                         interface[item] = item_data
 
                     elif INTERFACES_STATS == item:
-                        for stats_item in INTERFACES_STATS_MAP:
-                            interface[stats_item] = float(item_data.get(stats_item))
+                        interface[INTERFACE_DATA_MULTICAST] = float(item_data.get(INTERFACE_DATA_MULTICAST))
+
+                        for direction in TRAFFIC_DATA_DIRECTIONS:
+                            for key in TRAFFIC_DATA_INTERFACE_ITEMS:
+                                stats_key = f"{direction}_{key}"
+
+                                interface[stats_key] = float(item_data.get(stats_key))
 
                     else:
                         if item in INTERFACES_MAIN_MAP:
                             interface[item] = item_data
 
-                self.data[INTERFACES_KEY][name] = interface
+                self.data[WS_INTERFACES_KEY][name] = interface
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
             _LOGGER.error(
-                f"Failed to load {INTERFACES_KEY}, Error: {ex}, Line: {line_number}"
+                f"Failed to load {WS_INTERFACES_KEY}, Error: {ex}, Line: {line_number}"
             )
 
     def _handle_system_stats(self, data):
         try:
-            _LOGGER.debug(f"Handle {SYSTEM_STATS_KEY} data")
+            _LOGGER.debug(f"Handle {WS_SYSTEM_STATS_KEY} data")
 
             if data is None or data == "":
-                _LOGGER.debug(f"{SYSTEM_STATS_KEY} is empty")
+                _LOGGER.debug(f"{WS_SYSTEM_STATS_KEY} is empty")
                 return
 
-            self.data[SYSTEM_STATS_KEY] = data
+            self.data[WS_SYSTEM_STATS_KEY] = data
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
             _LOGGER.error(
-                f"Failed to load {SYSTEM_STATS_KEY}, Error: {ex}, Line: {line_number}"
+                f"Failed to load {WS_SYSTEM_STATS_KEY}, Error: {ex}, Line: {line_number}"
             )
 
     def _handle_discover(self, data):
         try:
-            _LOGGER.debug(f"Handle {DISCOVER_KEY} data")
+            _LOGGER.debug(f"Handle {WS_DISCOVER_KEY} data")
 
             if data is None or data == "":
-                _LOGGER.debug(f"{DISCOVER_KEY} is empty")
+                _LOGGER.debug(f"{WS_DISCOVER_KEY} is empty")
                 return
 
             devices_data = data.get(DEVICE_LIST, [])
@@ -456,11 +463,11 @@ class IntegrationWS(BaseAPI):
                     else:
                         result[key] = device_data_item
 
-            self.data[DISCOVER_KEY] = result
+            self.data[WS_DISCOVER_KEY] = result
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
             _LOGGER.error(
-                f"Failed to load {DISCOVER_KEY}, Original Message: {data}, Error: {ex}, Line: {line_number}"
+                f"Failed to load {WS_DISCOVER_KEY}, Original Message: {data}, Error: {ex}, Line: {line_number}"
             )

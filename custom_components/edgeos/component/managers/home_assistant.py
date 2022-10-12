@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
 )
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -114,7 +114,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 await self.ws.initialize(self.config_data)
 
                 if not self.ws.status == ConnectivityStatus.NotConnected:
-                    await asyncio.sleep(RECONNECT_INTERVAL)
+                    await asyncio.sleep(WS_RECONNECT_INTERVAL.total_seconds())
 
         if status == ConnectivityStatus.Connected:
             await self.async_update(datetime.now())
@@ -262,11 +262,11 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         try:
             await self.storage_api.debug_log_ws(self.ws.data)
 
-            interfaces_data = self.ws.data.get(INTERFACES_KEY, {})
-            device_data = self.ws.data.get(EXPORT_KEY, {})
+            interfaces_data = self.ws.data.get(WS_INTERFACES_KEY, {})
+            device_data = self.ws.data.get(WS_EXPORT_KEY, {})
 
-            system_stats_data = self.ws.data.get(SYSTEM_STATS_KEY, {})
-            discovery_data = self.ws.data.get(DISCOVER_KEY, {})
+            system_stats_data = self.ws.data.get(WS_SYSTEM_STATS_KEY, {})
+            discovery_data = self.ws.data.get(WS_DISCOVER_KEY, {})
 
             self._update_system_stats(system_stats_data, discovery_data)
 
@@ -371,7 +371,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
     def _extract_interfaces(self, data: dict):
         try:
-            interface_types = data.get(INTERFACES_KEY, {})
+            interface_types = data.get(API_DATA_INTERFACES, {})
 
             for interface_type_name in interface_types:
                 if interface_type_name in MONITORED_INTERFACE_TYPES:
@@ -401,7 +401,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             interface.max_age = data.get(INTERFACE_DATA_MAX_AGE)
             interface.priority = data.get(INTERFACE_DATA_PRIORITY)
             interface.promiscuous = data.get(INTERFACE_DATA_PROMISCUOUS)
-            interface.stp = data.get(INTERFACE_DATA_STP, FALSE_STR).lower() == str(True).lower()
+            interface.stp = data.get(INTERFACE_DATA_STP, FALSE_STR).lower() == TRUE_STR
 
             existing_interface_data = self._interfaces.get(interface.unique_id)
 
@@ -421,10 +421,11 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
     @staticmethod
     def _update_interface_stats(interface_data: EdgeOSInterfaceData, data: dict):
         try:
-            interface_data.up = str(data.get(INTERFACE_DATA_UP, False)).lower() == str(True).lower()
-            interface_data.l1up = str(data.get(INTERFACE_DATA_L1UP, False)).lower() == str(True).lower()
+            interface_data.up = str(data.get(INTERFACE_DATA_UP, False)).lower() == TRUE_STR
+            interface_data.l1up = str(data.get(INTERFACE_DATA_LINK_UP, False)).lower() == TRUE_STR
             interface_data.mac = data.get(INTERFACE_DATA_MAC)
             interface_data.multicast = data.get(INTERFACE_DATA_MULTICAST, 0)
+            interface_data.address = data.get(ADDRESS_LIST, [])
 
             directions = [interface_data.received, interface_data.sent]
 
@@ -526,7 +527,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
                     static_mapping_data = {
                         IP_ADDRESS: ip,
-                        MAC_ADDRESS: device_data.get(MAC)
+                        MAC_ADDRESS: device_data.get(DEVICE_DATA_MAC)
                     }
 
                     self._set_device(hostname, None, static_mapping_data, True)
@@ -549,7 +550,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 for subnet in subnets:
                     subnet_data = subnets.get(subnet, {})
 
-                    domain_name = subnet_data.get(DOMAIN_NAME)
+                    domain_name = subnet_data.get(SYSTEM_DATA_DOMAIN_NAME)
                     static_mappings = subnet_data.get(STATIC_MAPPING, {})
 
                     for hostname in static_mappings:
@@ -630,7 +631,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 key=unique_id,
                 name=entity_name,
                 device_class=f"{DOMAIN}__{CONF_UNIT}",
-                attr_options=tuple(ALLOWED_UNITS_LIST),
+                attr_options=tuple(UNIT_OF_MEASUREMENT_MAPPING.keys()),
                 entity_category=EntityCategory.CONFIG
             )
 
@@ -824,8 +825,8 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
-                ATTR_FIRMWARE_UPDATE_URL: self._system.upgrade_url,
-                ATTR_FIRMWARE_UPDATE_VERSION: self._system.upgrade_version
+                SYSTEM_INFO_DATA_FW_LATEST_URL: self._system.upgrade_url,
+                SYSTEM_INFO_DATA_FW_LATEST_VERSION: self._system.upgrade_version
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_BINARY_SENSOR, entity_name)
@@ -1070,21 +1071,21 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         self._load_interface_stats_sensor(interface,
                                           "Received Dropped",
                                           interface.received.dropped,
-                                          UNIT_DROPPED_PACKETS,
+                                          TRAFFIC_DATA_DROPPED.capitalize(),
                                           "mdi:package-variant-minus")
 
     def _load_interface_received_errors_sensor(self, interface: EdgeOSInterfaceData):
         self._load_interface_stats_sensor(interface,
                                           "Received Errors",
                                           interface.received.errors,
-                                          UNIT_ERRORS,
+                                          TRAFFIC_DATA_ERRORS.capitalize(),
                                           "mdi:timeline-alert")
 
     def _load_interface_received_packets_sensor(self, interface: EdgeOSInterfaceData):
         self._load_interface_stats_sensor(interface,
                                           "Received Packets",
                                           interface.received.packets,
-                                          UNIT_PACKETS,
+                                          TRAFFIC_DATA_PACKETS.capitalize(),
                                           "mdi:package-up")
 
     def _load_interface_sent_rate_sensor(self, interface: EdgeOSInterfaceData):
@@ -1114,21 +1115,21 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         self._load_interface_stats_sensor(interface,
                                           "Sent Dropped",
                                           interface.sent.dropped,
-                                          UNIT_DROPPED_PACKETS,
+                                          TRAFFIC_DATA_DROPPED.capitalize(),
                                           "mdi:package-variant-minus")
 
     def _load_interface_sent_errors_sensor(self, interface: EdgeOSInterfaceData):
         self._load_interface_stats_sensor(interface,
                                           "Sent Errors",
                                           interface.sent.errors,
-                                          UNIT_ERRORS,
+                                          TRAFFIC_DATA_ERRORS.capitalize(),
                                           "mdi:timeline-alert")
 
     def _load_interface_sent_packets_sensor(self, interface: EdgeOSInterfaceData):
         self._load_interface_stats_sensor(interface,
                                           "Sent Packets",
                                           interface.sent.packets,
-                                          UNIT_PACKETS,
+                                          TRAFFIC_DATA_PACKETS.capitalize(),
                                           "mdi:package-up")
 
     def _load_device_stats_sensor(self,
@@ -1184,7 +1185,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 native_unit_of_measurement=unit_of_measurement,
             )
 
-            if unit_of_measurement in [UNIT_ERRORS, UNIT_PACKETS, UNIT_DROPPED_PACKETS]:
+            if unit_of_measurement.lower() in [TRAFFIC_DATA_ERRORS, TRAFFIC_DATA_PACKETS, TRAFFIC_DATA_DROPPED]:
                 state = self._format_number(state)
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
@@ -1208,7 +1209,8 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             state = interface.up
 
             attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
+                ATTR_FRIENDLY_NAME: entity_name,
+                ADDRESS_LIST: interface.address
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SWITCH, entity_name)
@@ -1423,7 +1425,8 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
                     should_reload_integration = True
 
-                if log_incoming_messages is not None and self.storage_api.log_incoming_messages != log_incoming_messages:
+                current_log_incoming_messages = self.storage_api.log_incoming_messages
+                if log_incoming_messages is not None and current_log_incoming_messages != log_incoming_messages:
                     await self.storage_api.set_log_incoming_messages(log_incoming_messages)
 
             if should_reload_integration:

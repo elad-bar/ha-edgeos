@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import slugify
 
@@ -8,7 +10,7 @@ from ..helpers.enums import EntityStatus
 
 
 class EntityData:
-    state: str | int | float | bool | None
+    state: str | int | float | bool | datetime | None
     attributes: dict
     details: dict
     device_name: str | None

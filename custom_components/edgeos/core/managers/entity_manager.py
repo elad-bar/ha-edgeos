@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 import json
 import logging
 import sys
@@ -219,7 +220,7 @@ class EntityManager:
     def set_entity(self,
                    domain: str,
                    entry_id: str,
-                   state: str | int | float | bool,
+                   state: str | int | float | bool | datetime,
                    attributes: dict,
                    device_name: str,
                    entity_description: EntityDescription | None,

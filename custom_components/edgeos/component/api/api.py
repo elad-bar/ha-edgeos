@@ -267,7 +267,7 @@ class IntegrationAPI(BaseAPI):
                     current_ts = str(int(ts.timestamp()))
 
                     heartbeat_req_url = self._get_edge_os_api_endpoint(
-                        EDGE_OS_API_HEARTBREAT
+                        API_HEARTBEAT
                     )
                     heartbeat_req_full_url = API_URL_HEARTBEAT_TEMPLATE.format(
                         heartbeat_req_url, current_ts
@@ -301,7 +301,7 @@ class IntegrationAPI(BaseAPI):
             for endpoint in UPDATE_DATE_ENDPOINTS:
                 await self._load_general_data(endpoint)
 
-            self.data[DATA_LAST_UPDATE] = datetime.now().isoformat()
+            self.data[API_DATA_LAST_UPDATE] = datetime.now().isoformat()
 
             await self.fire_data_changed_event()
         except Exception as ex:
@@ -313,7 +313,7 @@ class IntegrationAPI(BaseAPI):
     async def _load_system_data(self):
         try:
             if self.status == ConnectivityStatus.Connected:
-                get_req_url = self._get_edge_os_api_endpoint(EDGE_OS_API_GET)
+                get_req_url = self._get_edge_os_api_endpoint(API_GET)
 
                 result_json = await self._async_get(get_req_url)
 
@@ -324,8 +324,8 @@ class IntegrationAPI(BaseAPI):
                         ).lower()
 
                         if success_key == TRUE_STR:
-                            if EDGE_OS_API_GET.upper() in result_json:
-                                self.data[API_DATA_SYSTEM] = result_json.get(EDGE_OS_API_GET.upper(), {})
+                            if API_GET.upper() in result_json:
+                                self.data[API_DATA_SYSTEM] = result_json.get(API_GET.upper(), {})
                         else:
                             error_message = result_json[RESPONSE_ERROR_KEY]
                             _LOGGER.error(f"Failed, Error: {error_message}")
@@ -347,7 +347,7 @@ class IntegrationAPI(BaseAPI):
                 _LOGGER.debug(f"Loading {key} data")
 
                 clean_item = key.replace(STRING_DASH, STRING_UNDERSCORE)
-                data_req_url = self._get_edge_os_api_endpoint(EDGE_OS_API_DATA)
+                data_req_url = self._get_edge_os_api_endpoint(API_DATA)
                 data_req_full_url = API_URL_DATA_TEMPLATE.format(
                     data_req_url, clean_item
                 )
@@ -375,7 +375,7 @@ class IntegrationAPI(BaseAPI):
         _LOGGER.info(f"Set state of interface {interface.name} to {is_enabled}")
 
         modified = False
-        endpoint = EDGE_OS_API_DELETE if is_enabled else EDGE_OS_API_SET
+        endpoint = API_DELETE if is_enabled else API_SET
 
         data = {
             API_DATA_INTERFACES: {
@@ -405,6 +405,6 @@ class IntegrationAPI(BaseAPI):
             _LOGGER.error(f"Failed to set state of interface {interface.name} to {is_enabled}")
 
     def _get_edge_os_api_endpoint(self, endpoint):
-        url = EDGE_OS_API_URL.format(self._config_data.url, endpoint)
+        url = API_URL.format(self._config_data.url, endpoint)
 
         return url

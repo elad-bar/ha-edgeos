@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.4
+
+- Add IP address to status switch of its interface [#71](https://github.com/elad-bar/ha-edgeos/issues/71)
+- Constants clean up
+
 ## 2.0.3
 
 - Fix wrong parameter for CPU [#70](https://github.com/elad-bar/ha-edgeos/issues/70)
