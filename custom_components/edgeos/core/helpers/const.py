@@ -8,7 +8,6 @@ from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
 from homeassistant.components.stream import DOMAIN as DOMAIN_STREAM
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
 from homeassistant.components.vacuum import DOMAIN as DOMAIN_VACUUM
-from homeassistant.const import CONF_NAME
 
 from ...configuration.helpers.const import *
 
@@ -47,11 +46,8 @@ DOMAIN_KEY_FILE = f"{DOMAIN}.key"
 
 ATTR_OPTIONS = "attr_options"
 
-CONF_CONTENT_TYPE = "content_type"
-CONF_LIMIT_REFETCH_TO_URL_CHANGE = "limit_refetch_to_url_change"
 CONF_STILL_IMAGE_URL = "still_image_url"
 CONF_STREAM_SOURCE = "stream_source"
-CONF_FRAMERATE = "framerate"
 CONF_MOTION_DETECTION = "motion_detection"
 
 ATTR_STREAM_FPS = "stream_fps"
@@ -62,7 +58,6 @@ ATTR_FANS_SPEED_LIST = "fan_speed_list"
 PROTOCOLS = {True: "https", False: "http"}
 WS_PROTOCOLS = {True: "wss", False: "ws"}
 
-ACTION_GET_CORE_ENTITY_FAN_SPEED = "get_gan_speed"
 ACTION_CORE_ENTITY_RETURN_TO_BASE = "return_to_base"
 ACTION_CORE_ENTITY_SET_FAN_SPEED = "set_fan_speed"
 ACTION_CORE_ENTITY_START = "start"

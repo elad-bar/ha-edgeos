@@ -4,6 +4,7 @@ Support for binary sensors.
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 
 from ..helpers.const import *

@@ -454,7 +454,7 @@ class IntegrationWS(BaseAPI):
                         discover_addresses = {}
 
                         for address in device_data_item:
-                            hw_addr = address.get(ADDRESS_HWADDR)
+                            hw_addr = address.get(ADDRESS_HW_ADDR)
                             ipv4 = address.get(ADDRESS_IPV4)
 
                             discover_addresses[hw_addr] = ipv4

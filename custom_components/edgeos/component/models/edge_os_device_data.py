@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from ..helpers.const import *
 from .edge_os_traffic_data import EdgeOSTrafficData
 
@@ -52,7 +54,7 @@ class EdgeOSDeviceData:
             DEVICE_DATA_RECEIVED: self.received.to_dict(),
             DEVICE_DATA_SENT: self.sent.to_dict(),
             ENTITY_UNIQUE_ID: self.unique_id,
-            LEASED: self.is_leased
+            DHCP_SERVER_LEASED: self.is_leased
         }
 
         return obj

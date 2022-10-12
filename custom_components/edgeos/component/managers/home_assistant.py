@@ -1,12 +1,10 @@
 """
-Support for Shinobi Video.
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/shinobi/
+Support for HA manager.
 """
 from __future__ import annotations
 
 import asyncio
-import datetime
+from datetime import datetime
 import logging
 import sys
 
@@ -14,9 +12,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
 )
-from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.sensor import SensorEntityDescription, SensorStateClass
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as async_get_device_registry
 from homeassistant.helpers.entity import EntityCategory, EntityDescription
@@ -294,7 +293,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             await self.storage_api.debug_log_api(self.api.data)
 
             data = self.api.data.get(API_DATA_SYSTEM, {})
-            system_info = self.api.data.get(SYS_INFO_KEY, {})
+            system_info = self.api.data.get(API_DATA_SYS_INFO, {})
 
             self._extract_system(data, system_info)
 
@@ -504,17 +503,17 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
     def _extract_unknown_devices(self):
         try:
             unknown_devices = 0
-            data_leases_stats = self.api.data.get(DHCP_STATS_KEY, {})
+            data_leases_stats = self.api.data.get(API_DATA_DHCP_STATS, {})
 
             subnets = data_leases_stats.get(DHCP_SERVER_STATS, {})
 
             for subnet in subnets:
                 subnet_data = subnets.get(subnet, {})
-                unknown_devices += int(subnet_data.get(LEASED, 0))
+                unknown_devices += int(subnet_data.get(DHCP_SERVER_LEASED, 0))
 
             self._system.leased_devices = unknown_devices
 
-            data_leases = self.api.data.get(DHCP_LEASES_KEY, {})
+            data_leases = self.api.data.get(API_DATA_DHCP_LEASES, {})
             data_server_leases = data_leases.get(DHCP_SERVER_LEASES, {})
 
             for subnet in data_server_leases:
@@ -526,8 +525,8 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                     hostname = device_data.get(DHCP_SERVER_LEASES_CLIENT_HOSTNAME)
 
                     static_mapping_data = {
-                        IP_ADDRESS: ip,
-                        MAC_ADDRESS: device_data.get(DEVICE_DATA_MAC)
+                        DHCP_SERVER_IP_ADDRESS: ip,
+                        DHCP_SERVER_MAC_ADDRESS: device_data.get(DEVICE_DATA_MAC)
                     }
 
                     self._set_device(hostname, None, static_mapping_data, True)
@@ -539,19 +538,19 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
     def _extract_devices(self, data: dict):
         try:
-            service = data.get(SERVICE, {})
-            dhcp_server = service.get(DHCP_SERVER, {})
-            shared_network_names = dhcp_server.get(SHARED_NETWORK_NAME, {})
+            service = data.get(DATA_SYSTEM_SERVICE, {})
+            dhcp_server = service.get(DATA_SYSTEM_SERVICE_DHCP_SERVER, {})
+            shared_network_names = dhcp_server.get(DHCP_SERVER_SHARED_NETWORK_NAME, {})
 
             for shared_network_name in shared_network_names:
                 shared_network_name_data = shared_network_names.get(shared_network_name, {})
-                subnets = shared_network_name_data.get(SUBNET, {})
+                subnets = shared_network_name_data.get(DHCP_SERVER_SUBNET, {})
 
                 for subnet in subnets:
                     subnet_data = subnets.get(subnet, {})
 
                     domain_name = subnet_data.get(SYSTEM_DATA_DOMAIN_NAME)
-                    static_mappings = subnet_data.get(STATIC_MAPPING, {})
+                    static_mappings = subnet_data.get(DHCP_SERVER_STATIC_MAPPING, {})
 
                     for hostname in static_mappings:
                         static_mapping_data = static_mappings.get(hostname, {})
@@ -564,8 +563,8 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             _LOGGER.error(f"Failed to extract Devices data, Error: {ex}, Line: {line_number}")
 
     def _set_device(self, hostname: str, domain_name: str | None, static_mapping_data: dict, is_leased: bool):
-        ip_address = static_mapping_data.get(IP_ADDRESS)
-        mac_address = static_mapping_data.get(MAC_ADDRESS)
+        ip_address = static_mapping_data.get(DHCP_SERVER_IP_ADDRESS)
+        mac_address = static_mapping_data.get(DHCP_SERVER_MAC_ADDRESS)
 
         device_data = EdgeOSDeviceData(hostname, ip_address, mac_address, domain_name, is_leased)
         existing_device_data = self._devices.get(device_data.unique_id)
@@ -664,7 +663,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
-                LEASED: leased_devices
+                DHCP_SERVER_LEASED: leased_devices
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
@@ -696,17 +695,8 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         try:
             state = self._system.cpu
 
-            leased_devices = []
-
-            for unique_id in self._devices:
-                device = self._devices.get(unique_id)
-
-                if device.is_leased:
-                    leased_devices.append(f"{device.hostname} ({device.ip})")
-
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
-                LEASED: leased_devices
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
@@ -739,17 +729,8 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         try:
             state = self._system.mem
 
-            leased_devices = []
-
-            for unique_id in self._devices:
-                device = self._devices.get(unique_id)
-
-                if device.is_leased:
-                    leased_devices.append(f"{device.hostname} ({device.ip})")
-
             attributes = {
-                ATTR_FRIENDLY_NAME: entity_name,
-                LEASED: leased_devices
+                ATTR_FRIENDLY_NAME: entity_name
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)

@@ -1,11 +1,7 @@
 """
-Support for Shinobi Video.
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.shinobi/
+Support for Constants.
 """
-from datetime import datetime, timedelta
-
-from homeassistant.components.sensor import SensorStateClass
+from datetime import timedelta
 
 from ...core.helpers.const import *
 
@@ -68,21 +64,22 @@ KILO_BYTE = BYTE * 1024
 MEGA_BYTE = KILO_BYTE * 1024
 
 # CHANGE TO API DATA
-DHCP_STATS_KEY = "dhcp_stats"
-SYS_INFO_KEY = "sys_info"
-DHCP_LEASES_KEY = "dhcp-leases"
+API_DATA_DHCP_STATS = "dhcp_stats"
+API_DATA_SYS_INFO = "sys_info"
+API_DATA_DHCP_LEASES = "dhcp-leases"
+
+DATA_SYSTEM_SERVICE = "service"
+DATA_SYSTEM_SERVICE_DHCP_SERVER = "dhcp-server"
+
 DHCP_SERVER_LEASES = "dhcp-server-leases"
 DHCP_SERVER_STATS = "dhcp-server-stats"
-LEASED = "leased"
+DHCP_SERVER_LEASED = "leased"
 DHCP_SERVER_LEASES_CLIENT_HOSTNAME = "client-hostname"
-ROUTES_KEY = "routes"
-SERVICE = "service"
-DHCP_SERVER = "dhcp-server"
-SHARED_NETWORK_NAME = "shared-network-name"
-SUBNET = "subnet"
-STATIC_MAPPING = "static-mapping"
-IP_ADDRESS = "ip-address"
-MAC_ADDRESS = "mac-address"
+DHCP_SERVER_SHARED_NETWORK_NAME = "shared-network-name"
+DHCP_SERVER_SUBNET = "subnet"
+DHCP_SERVER_STATIC_MAPPING = "static-mapping"
+DHCP_SERVER_IP_ADDRESS = "ip-address"
+DHCP_SERVER_MAC_ADDRESS = "mac-address"
 
 WS_INTERFACES_KEY = "interfaces"
 WS_SYSTEM_STATS_KEY = "system-stats"
@@ -90,10 +87,9 @@ WS_EXPORT_KEY = "export"
 WS_DISCOVER_KEY = "discover"
 
 UPDATE_DATE_ENDPOINTS = [
-    SYS_INFO_KEY,
-    DHCP_STATS_KEY,
-    DHCP_LEASES_KEY,
-    ROUTES_KEY
+    API_DATA_SYS_INFO,
+    API_DATA_DHCP_STATS,
+    API_DATA_DHCP_LEASES
 ]
 
 DISCOVER_DATA_FW_VERSION = "fwversion"
@@ -123,7 +119,7 @@ DEVICE_LIST = "devices"
 ADDRESS_LIST = "addresses"
 FW_LATEST = "addresses"
 ADDRESS_IPV4 = "ipv4"
-ADDRESS_HWADDR = "hwaddr"
+ADDRESS_HW_ADDR = "hwaddr"
 LAST_ACTIVITY = "Last Activity"
 
 RESPONSE_SUCCESS_KEY = "success"

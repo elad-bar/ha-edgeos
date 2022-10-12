@@ -1,8 +1,5 @@
 """
-Support for Ubiquiti EdgeOS routers.
-HEAVILY based on the AsusWRT component
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.edgeos/
+Support for device tracker.
 """
 from __future__ import annotations
 
@@ -40,7 +37,7 @@ class CoreScanner(BaseEntity, ScannerEntity):
 
     @property
     def source_type(self):
-        """Return the source type, eg gps or router, of the device."""
+        """Return the source type."""
         return self.entity.attributes.get(ATTR_SOURCE_TYPE, SOURCE_TYPE_ROUTER)
 
     @staticmethod

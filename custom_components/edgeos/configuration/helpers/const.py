@@ -13,8 +13,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
-    STATE_OFF,
-    STATE_ON,
 )
 
 DOMAIN = "edgeos"

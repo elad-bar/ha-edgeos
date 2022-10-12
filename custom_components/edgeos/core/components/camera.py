@@ -39,7 +39,6 @@ class CoreCamera(Camera, BaseEntity, ABC):
         self._auth = None
         self._last_url = None
         self._last_image = None
-        self._limit_refetch = False
         self.verify_ssl = False
         self._is_recording_state = None
 
@@ -120,9 +119,6 @@ class CoreCamera(Camera, BaseEntity, ABC):
             url = self._still_image_url.async_render()
         except TemplateError as err:
             _LOGGER.error(f"Error parsing template {self._still_image_url}, Error: {err}")
-            return self._last_image
-
-        if url == self._last_url and self._limit_refetch:
             return self._last_image
 
         try:
