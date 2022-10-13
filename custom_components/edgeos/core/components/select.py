@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class CoreSelect(SelectEntity, BaseEntity, ABC):
-    """ Shinobi Video Monitor Mode Control """
+    """  Core Select """
     def initialize(
         self,
         hass: HomeAssistant,
@@ -43,7 +43,7 @@ class CoreSelect(SelectEntity, BaseEntity, ABC):
         return str(self.entity.state)
 
     async def async_select_option(self, option: str) -> None:
-        """Select monitor mode."""
+        """Select option."""
         await self.ha.async_core_entity_select_option(self.entity, option)
 
     @staticmethod

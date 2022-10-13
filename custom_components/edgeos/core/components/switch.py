@@ -14,7 +14,7 @@ from ..models.entity_data import EntityData
 
 
 class CoreSwitch(SwitchEntity, BaseEntity):
-    """Class for a Shinobi Video switch."""
+    """Class for a  switch."""
 
     @property
     def is_on(self) -> bool | None:

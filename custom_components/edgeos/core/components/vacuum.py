@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class CoreVacuum(StateVacuumEntity, BaseEntity, ABC):
-    """Class for a Shinobi Video switch."""
+    """Class for a  switch."""
 
     def initialize(
         self,

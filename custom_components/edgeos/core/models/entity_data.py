@@ -18,11 +18,11 @@ class EntityData:
     disabled: bool
     domain: str | None
     entry_id: str
-    entity_description: EntityDescription
+    entity_description: EntityDescription | None
 
-    def __init__(self, entry_id: str, entity_description: EntityDescription):
+    def __init__(self, entry_id: str):
         self.entry_id = entry_id
-        self.entity_description = entity_description
+        self.entity_description = None
         self.state = None
         self.attributes = {}
         self.details = {}

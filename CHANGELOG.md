@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.10
+
+- Update core to latest
+
 ## 2.0.9
 
 - Fix configuration migration process

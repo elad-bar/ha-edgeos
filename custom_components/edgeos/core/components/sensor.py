@@ -7,7 +7,7 @@ from ..models.entity_data import EntityData
 
 
 class CoreSensor(SensorEntity, BaseEntity):
-    """Representation a binary sensor that is updated by EdgeOS."""
+    """Representation a binary sensor."""
 
     @property
     def native_value(self):

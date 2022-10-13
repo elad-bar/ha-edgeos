@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class CoreCamera(Camera, BaseEntity, ABC):
-    """ Shinobi Video Camera """
+    """  Camera """
 
     def __init__(self, hass, device_info):
         super().__init__()
