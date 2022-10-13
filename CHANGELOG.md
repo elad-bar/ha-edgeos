@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.7
+
+- Add service data validation
+
 ## 2.0.6
 
 - Fix configuration load, save and import processes

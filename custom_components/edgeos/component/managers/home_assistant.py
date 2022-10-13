@@ -140,38 +140,19 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
     async def async_initialize_data_providers(self):
         await self.storage_api.initialize(self.config_data)
 
-        has_legacy_configuration = False
+        updated = False
 
         if self._entry is not None:
+            entry_options = self._entry.options.__dict__
+
+            migration_data = {} if entry_options is None else entry_options
+
             if self._entry.data is not None:
-                unit = self._entry.data.get(STORAGE_DATA_UNIT)
+                migration_data[STORAGE_DATA_UNIT] = self._entry.data.get(STORAGE_DATA_UNIT)
 
-                if unit is not None:
-                    await self.storage_api.set_unit(unit)
+            updated = await self._update_configuration_data(migration_data)
 
-                    has_legacy_configuration = True
-
-            if self._entry.options is not None:
-                storage_data_import_keys: dict[str, Callable[[int | bool], Awaitable[None]]]  = {
-                    STORAGE_DATA_CONSIDER_AWAY_INTERVAL: self.storage_api.set_consider_away_interval,
-                    STORAGE_DATA_UPDATE_ENTITIES_INTERVAL: self.storage_api.set_update_entities_interval,
-                    STORAGE_DATA_UPDATE_API_INTERVAL: self.storage_api.set_update_api_interval,
-                    STORAGE_DATA_LOG_INCOMING_MESSAGES: self.storage_api.set_log_incoming_messages
-                }
-
-                for key in storage_data_import_keys:
-                    entry_key = key.replace(STRING_DASH, STRING_UNDERSCORE)
-
-                    if entry_key in self._entry.options:
-                        if not has_legacy_configuration:
-                            has_legacy_configuration = True
-
-                        data = self._entry.options.get(entry_key)
-                        set_func = storage_data_import_keys.get(key)
-
-                        await set_func(data)
-
-        if has_legacy_configuration:
+        if updated:
             _LOGGER.info("Starting configuration migration")
 
             data = {}
@@ -208,7 +189,10 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             _LOGGER.error(f"Failed to async_update_data_providers, Error: {ex}, Line: {line_number}")
 
     def register_services(self, entry: ConfigEntry | None = None):
-        self._hass.services.async_register(DOMAIN, SERVICE_UPDATE_CONFIGURATION, self._update_configuration)
+        self._hass.services.async_register(DOMAIN,
+                                           SERVICE_UPDATE_CONFIGURATION,
+                                           self._update_configuration,
+                                           SERVICE_SCHEMA_UPDATE_CONFIGURATION)
 
     def load_devices(self):
         if not self._can_load_components:
@@ -1455,7 +1439,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
     async def _async_update_configuration(self, service_call):
         service_data = service_call.data
-        device_id = service_data.get("device_id")
+        device_id = service_data.get(CONF_DEVICE_ID)
 
         _LOGGER.info(f"Update configuration called with data: {service_data}")
 
@@ -1466,31 +1450,38 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             dr = async_get_device_registry(self._hass)
             device = dr.devices.get(device_id)
             can_handle_device = self.entry_id in device.config_entries
-            should_reload_integration = False
 
             if can_handle_device:
-                storage_data_import_keys: dict[str, Callable[[int | bool | str], Awaitable[None]]] = {
-                    STORAGE_DATA_CONSIDER_AWAY_INTERVAL: self.storage_api.set_consider_away_interval,
-                    STORAGE_DATA_UPDATE_ENTITIES_INTERVAL: self.storage_api.set_update_entities_interval,
-                    STORAGE_DATA_UPDATE_API_INTERVAL: self.storage_api.set_update_api_interval,
-                    STORAGE_DATA_LOG_INCOMING_MESSAGES: self.storage_api.set_log_incoming_messages,
-                    STORAGE_DATA_UNIT: self.storage_api.set_unit
-                }
+                updated = await self._update_configuration_data(service_data)
 
-                for key in storage_data_import_keys:
-                    data_item = service_data.get(key.replace(STRING_DASH, STRING_UNDERSCORE))
-                    existing_data = self.storage_api.data.get(key)
-
-                    if data_item is not None and data_item != existing_data:
-                        if not should_reload_integration and key != STORAGE_DATA_UNIT:
-                            should_reload_integration = True
-
-                        set_func = storage_data_import_keys.get(key)
-
-                        await set_func(data_item)
-
-                if should_reload_integration:
+                if updated:
                     await self._reload_integration()
+
+    async def _update_configuration_data(self, data: dict):
+        result = False
+
+        storage_data_import_keys: dict[str, Callable[[int | bool | str], Awaitable[None]]] = {
+            STORAGE_DATA_CONSIDER_AWAY_INTERVAL: self.storage_api.set_consider_away_interval,
+            STORAGE_DATA_UPDATE_ENTITIES_INTERVAL: self.storage_api.set_update_entities_interval,
+            STORAGE_DATA_UPDATE_API_INTERVAL: self.storage_api.set_update_api_interval,
+            STORAGE_DATA_LOG_INCOMING_MESSAGES: self.storage_api.set_log_incoming_messages,
+            STORAGE_DATA_STORE_DEBUG_DATA: self.storage_api.set_store_debug_data,
+            STORAGE_DATA_UNIT: self.storage_api.set_unit
+        }
+
+        for key in storage_data_import_keys:
+            data_item = data.get(key.replace(STRING_DASH, STRING_UNDERSCORE))
+            existing_data = self.storage_api.data.get(key)
+
+            if data_item is not None and data_item != existing_data:
+                if not result:
+                    result = True
+
+                set_func = storage_data_import_keys.get(key)
+
+                await set_func(data_item)
+
+        return result
 
     @staticmethod
     def _get_last_reset(uptime):

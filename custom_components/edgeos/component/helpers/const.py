@@ -3,9 +3,15 @@ Support for Constants.
 """
 from datetime import timedelta
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+
 from ...core.helpers.const import *
 
 ATTR_FRIENDLY_NAME = "friendly_name"
+
+CONF_DEVICE_ID = "device_id"
 
 WS_MAX_MSG_SIZE = 0
 WS_RECONNECT_INTERVAL = timedelta(seconds=30)
@@ -259,7 +265,6 @@ INTERFACES_MAIN_MAP = [
     INTERFACE_DATA_MAC,
 ]
 
-
 DISCOVER_DEVICE_ITEMS = [
     DEVICE_DATA_NAME,
     DISCOVER_DATA_PRODUCT,
@@ -267,3 +272,15 @@ DISCOVER_DEVICE_ITEMS = [
     DISCOVER_DATA_FW_VERSION,
     "system_status"
 ]
+
+SERVICE_SCHEMA_UPDATE_CONFIGURATION = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.string,
+        vol.Optional(STORAGE_DATA_CONSIDER_AWAY_INTERVAL): vol.Range(10, 1800),
+        vol.Optional(STORAGE_DATA_UPDATE_ENTITIES_INTERVAL): vol.Range(1, 60),
+        vol.Optional(STORAGE_DATA_UPDATE_API_INTERVAL): vol.Range(30, 180),
+        vol.Optional(STORAGE_DATA_LOG_INCOMING_MESSAGES): cv.boolean,
+        vol.Optional(STORAGE_DATA_STORE_DEBUG_DATA): cv.boolean,
+        vol.Optional(STORAGE_DATA_UNIT): vol.In(UNIT_MAPPING.keys()),
+    }
+)
