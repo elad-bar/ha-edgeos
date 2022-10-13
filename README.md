@@ -26,7 +26,6 @@ Integration supports **multiple** EdgeOS devices
 
 | Fields name | Type      | Required | Default | Description                                                                                                                                      |
 |-------------|-----------|----------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| Name        | Textbox   | +        | -       | Represents the integration name                                                                                                                  |
 | Host        | Textbox   | +        | -       | Hostname or IP address to access EdgeOS device                                                                                                   |
 | Username    | Textbox   | +        | -       | Username of user with `Operator` level access or higher, better to create a dedicated user for that integration for faster issues identification |
 | Password    | Textbox   | +        | -       |                                                                                                                                                  |
@@ -58,12 +57,12 @@ Please remove the integration and re-add it to make it work again.
 
 _Configuration -> Integrations -> {Integration} -> Options_ <br />
 
-| Fields name              | Type      | Required | Default   | Description                                                                                                                                      |
-|--------------------------|-----------|----------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| Host                     | Textbox   | +        | -         | Hostname or IP address to access EdgeOS device                                                                                                   |
-| Username                 | Textbox   | +        | -         | Username of user with `Operator` level access or higher, better to create a dedicated user for that integration for faster issues identification |
-| Password                 | Textbox   | +        | -         |                                                                                                                                                  |
-| Clear credentials        | Check-box | +        | Unchecked | Will reset username and password (Not being stored under options)                                                                                |
+| Fields name       | Type      | Required | Default   | Description                                                                                                                                      |
+|-------------------|-----------|----------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| Host              | Textbox   | +        | -         | Hostname or IP address to access EdgeOS device                                                                                                   |
+| Username          | Textbox   | +        | -         | Username of user with `Operator` level access or higher, better to create a dedicated user for that integration for faster issues identification |
+| Password          | Textbox   | +        | -         |                                                                                                                                                  |
+| Clear credentials | Check-box | +        | Unchecked | Will reset username and password (Not being stored under options)                                                                                |
 
 #### Debugging
 

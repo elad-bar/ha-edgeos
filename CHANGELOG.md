@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.8
+
+- Removed port from configuration as it's not being used
+
 ## 2.0.7
 
 - Add service data validation

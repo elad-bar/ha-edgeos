@@ -5,11 +5,9 @@
         "title": "Configurar Roteador EdgeOS",
         "description": "Configure seu roteador EdgeOS, observe que a integração se comunicará usando a conexão HTTPS",
         "data": {
-          "name": "Nome",
           "host": "Host",
           "username": "Nome de usuário",
-          "password": "Senha",
-          "unit": "Unidade"
+          "password": "Senha"
         }
       }
     },
@@ -33,20 +31,10 @@
         "title": "Opções para EdgeOS.",
         "description": "Configure seus dispositivos / interfaces monitorados e dispositivos rastreados, use valores separados por vírgulas, para limpar o valor existente, use a caixa de seleção.",
         "data": {
-          "name": "Nome",
           "host": "Host",
           "username": "Nome de usuário",
           "password": "Senha",
-          "clear-credentials": "Limpar credenciais",
-          "unit": "Unidade",
-          "consider_away_interval": "Considerar intervalo de ausência (segundos)",
-          "monitored_interfaces": "Interfaces monitoradas",
-          "monitored_devices": "Dispositivos monitorados",
-          "track_devices": "Dispositivos rastreados",
-          "update_api_interval": "Atualizar intervalo da API (segundos)",
-          "update_entities_interval": "Atualizar intervalo de entidades (segundos)",
-          "log_level": "Nível de registro",
-          "log_incoming_messages": "Registrar mensagens recebidas"
+          "clear-credentials": "Limpar credenciais"
         }
       }
     },

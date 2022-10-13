@@ -5,11 +5,9 @@
         "title": "Sett opp EdgeOS Router",
         "description": "Sett opp EdgeOS-ruteren din, vær oppmerksom på at integrasjon vil kommunisere ved hjelp av HTTPS-tilkobling",
         "data": {
-          "name": "Navn",
           "host": "Vert",
           "username": "Brukernavn",
-          "password": "Passord",
-          "unit": "Enhet"
+          "password": "Passord"
         }
       }
     },
@@ -33,20 +31,10 @@
         "title": "Alternativer for EdgeOS.",
         "description": "Sett opp dine overvåkede enheter / grensesnitt og sporede enheter, bruk kommaadskilte verdier, for å fjerne eksisterende verdi, bruk avkrysningsruten.",
         "data": {
-          "name": "Navn",
           "host": "Vert",
           "username": "Brukernavn",
           "password": "Passord",
-          "clear-credentials": "Fjern legitimasjon",
-          "unit": "Enhet",
-          "consider_away_interval": "Borteintervall (sekunder)",
-          "monitored_interfaces": "Overvåkede grensesnitt",
-          "monitored_devices": "Overvåkede enheter",
-          "track_devices": "Sporede enheter",
-          "update_api_interval": "Oppdater API-intervall (sekunder)",
-          "update_entities_interval": "Oppdater enhetsintervall (sekunder)",
-          "log_level": "Loggnivå",
-          "log_incoming_messages": "Logg innkommende meldinger"
+          "clear-credentials": "Fjern legitimasjon"
         }
       }
     },

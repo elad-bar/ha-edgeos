@@ -9,14 +9,12 @@ from ..helpers.const import *
 
 class ConfigData:
     host: str | None
-    port: int
     username: str | None
     password: str | None
     entry: ConfigEntry | None
 
     def __init__(self):
         self.host = None
-        self.port = DEFAULT_PORT
         self.username = None
         self.password = None
         self.entry = None
@@ -33,7 +31,6 @@ class ConfigData:
 
         if data is not None:
             result.host = data.get(CONF_HOST)
-            result.port = data.get(CONF_PORT, DEFAULT_PORT)
             result.username = data.get(CONF_USERNAME)
             result.password = data.get(CONF_PASSWORD)
 
@@ -42,7 +39,6 @@ class ConfigData:
     def to_dict(self):
         obj = {
             CONF_HOST: self.host,
-            CONF_PORT: self.port,
             CONF_USERNAME: self.username,
             CONF_PASSWORD: self.password
         }

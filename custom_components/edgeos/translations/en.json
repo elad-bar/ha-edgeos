@@ -6,7 +6,6 @@
         "description": "Set up your EdgeOS Router, note that integration will communicate using HTTPS connection",
         "data": {
           "host": "Host",
-          "port": "Port",
           "username": "Username",
           "password": "Password"
         }
@@ -33,13 +32,8 @@
         "description": "Set up your monitored devices / interfaces and tracked devices, use comma separated values, to clear existing value, use the checkbox.",
         "data": {
           "host": "Host",
-          "port": "Port",
           "username": "Username",
-          "password": "Password",
-          "clear-credentials": "Clear credentials",
-          "consider_away_interval": "Consider away interval (Seconds)",
-          "update_api_interval": "Update API interval (Seconds)",
-          "update_entities_interval": "Update entities interval (Seconds)"
+          "password": "Password"
         }
       }
     },

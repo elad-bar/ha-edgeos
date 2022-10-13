@@ -108,7 +108,6 @@ class ConfigurationManager:
 
         fields = {
             vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
-            vol.Required(CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)): int,
             vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME)): str,
             vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
         }
