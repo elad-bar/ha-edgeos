@@ -123,9 +123,12 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             self._config_manager = ConfigurationManager(self._hass, self.api)
             await self._config_manager.load(entry)
 
+            await self.storage_api.initialize(self.config_data)
+
             update_entities_interval = timedelta(seconds=self.storage_api.update_entities_interval)
             update_api_interval = timedelta(seconds=self.storage_api.update_api_interval)
 
+            _LOGGER.info(f"Setting intervals, API: {update_api_interval}, Entities: {update_entities_interval}")
             self.update_intervals(update_entities_interval, update_api_interval)
 
         except Exception as ex:
@@ -157,12 +160,13 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 }
 
                 for key in storage_data_import_keys:
-                    if key in self._entry.options:
+                    entry_key = key.replace(STRING_DASH, STRING_UNDERSCORE)
+
+                    if entry_key in self._entry.options:
                         if not has_legacy_configuration:
                             has_legacy_configuration = True
 
-                        data_key = key.replace(STRING_DASH, STRING_UNDERSCORE)
-                        data = self._entry.options.get(data_key)
+                        data = self._entry.options.get(entry_key)
                         set_func = storage_data_import_keys.get(key)
 
                         await set_func(data)
@@ -221,6 +225,8 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             self._load_interface_device(interface_item)
 
     def load_entities(self):
+        _LOGGER.info("Loading entities")
+
         if not self._can_load_components:
             return
 

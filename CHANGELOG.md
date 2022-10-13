@@ -2,7 +2,7 @@
 
 ## 2.0.6
 
-- Fix configuration save
+- Fix configuration load, save and import processes
 
 ## 2.0.5
 
