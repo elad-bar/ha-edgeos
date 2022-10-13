@@ -3,6 +3,7 @@
 ## 2.0.7
 
 - Add service data validation
+- Fix binary sensor of interface status
 
 ## 2.0.6
 

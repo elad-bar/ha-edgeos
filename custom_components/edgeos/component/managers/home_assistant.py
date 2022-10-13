@@ -1268,7 +1268,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         entity_name = f"{interface_name} Status"
 
         try:
-            state = interface.up
+            state = STATE_ON if interface.up else STATE_OFF
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
