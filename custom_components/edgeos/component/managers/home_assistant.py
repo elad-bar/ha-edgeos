@@ -1448,10 +1448,10 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         self._hass.async_create_task(self._async_update_configuration(service_call))
 
     async def _async_update_configuration(self, service_call):
-        data = service_call.data
-        device_id = data.get("device_id")
+        service_data = service_call.data
+        device_id = service_data.get("device_id")
 
-        _LOGGER.info(f"Update configuration called with data: {data}")
+        _LOGGER.info(f"Update configuration called with data: {service_data}")
 
         if device_id is None:
             _LOGGER.error("Operation cannot be performed, missing device information")
@@ -1472,7 +1472,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 }
 
                 for key in storage_data_import_keys:
-                    data_item = data.get(key)
+                    data_item = service_data.get(key.replace(STRING_DASH, STRING_UNDERSCORE))
                     existing_data = self.storage_api.data.get(key)
 
                     if data_item is not None and data_item != existing_data:

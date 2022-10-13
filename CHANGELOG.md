@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.6
+
+- Fix configuration save
+
 ## 2.0.5
 
 - Since user with operator role cannot update interface status, non-admin user will have binary sensor for status of interface instead of switch, in addition, an INFO log message will explain it
