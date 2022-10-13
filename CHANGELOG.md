@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.9
+
+- Fix configuration migration process
+
 ## 2.0.8
 
 - Removed port from configuration as it's not being used

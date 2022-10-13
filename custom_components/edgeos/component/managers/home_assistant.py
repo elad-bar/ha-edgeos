@@ -143,9 +143,12 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         updated = False
 
         if self._entry is not None:
-            entry_options = self._entry.options.__dict__
+            migration_data = {}
+            entry_options = self._entry.options
 
-            migration_data = {} if entry_options is None else entry_options
+            if entry_options is not None:
+                for option_key in entry_options:
+                    migration_data[option_key] = entry_options.get(option_key)
 
             if self._entry.data is not None:
                 migration_data[STORAGE_DATA_UNIT] = self._entry.data.get(STORAGE_DATA_UNIT)

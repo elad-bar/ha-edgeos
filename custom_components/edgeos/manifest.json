@@ -7,6 +7,6 @@
   "codeowners": ["@elad-bar"],
   "requirements": ["aiohttp"],
   "config_flow": true,
-  "version": "2.0.8",
+  "version": "2.0.9",
   "iot_class": "local_polling"
 }
