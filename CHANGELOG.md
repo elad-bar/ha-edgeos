@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.11
+
+- Fix core wrong reference
+
 ## 2.0.10
 
 - Update core to latest

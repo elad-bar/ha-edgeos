@@ -172,6 +172,7 @@ class EntityManager:
             )
 
     def _compare_data(self,
+                      entity_name: str,
                       entity: EntityData,
                       state: str | int | float | bool,
                       attributes: dict,
@@ -206,7 +207,7 @@ class EntityManager:
         if modified:
             full_message = " | ".join(msgs)
 
-            _LOGGER.debug(f"{entity.entity_description.name} | {entity.domain} | {full_message}")
+            _LOGGER.debug(f"{entity_name} | {entity.domain} | {full_message}")
 
         return modified
 
@@ -238,7 +239,7 @@ class EntityManager:
                    ):
 
         entity = self.entities.get(entity_description.key)
-
+        entity_name = entity_description.name
         original_status = None
 
         if entity is None:
@@ -246,11 +247,11 @@ class EntityManager:
             entity.status = EntityStatus.CREATED
             entity.domain = domain
 
-            self._compare_data(entity, state, attributes, device_name)
+            self._compare_data(entity_name, entity, state, attributes, device_name)
 
         else:
             original_status = entity.status
-            was_modified = self._compare_data(entity, state, attributes, device_name, entity_description, details)
+            was_modified = self._compare_data(entity_name, entity, state, attributes, device_name, entity_description, details)
 
             if was_modified:
                 entity.status = EntityStatus.UPDATED
@@ -276,4 +277,7 @@ class EntityManager:
             self.entities[entity_description.key] = entity
 
             if entity.status != EntityStatus.READY:
-                _LOGGER.info(f"{entity.name} ({entity.domain}) {entity.status}, state: {entity.state} | {original_status}")
+                _LOGGER.info(
+                    f"{entity_name} ({entity.domain}) {entity.status}, "
+                    f"state: {entity.state} | {original_status}"
+                )
