@@ -4,7 +4,6 @@ Support for binary sensors.
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 
 from ..helpers.const import *
@@ -15,9 +14,9 @@ from ..models.entity_data import EntityData
 class CoreBinarySensor(BinarySensorEntity, BaseEntity):
     """Representation a binary sensor that is updated."""
     @property
-    def is_on(self):
+    def is_on(self) -> boolean | None:
         """Return true if the binary sensor is on."""
-        return self.entity.state == STATE_ON
+        return self.entity.state
 
     @staticmethod
     def get_component(hass: HomeAssistant, entity: EntityData):
