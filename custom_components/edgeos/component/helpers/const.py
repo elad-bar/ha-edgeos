@@ -276,11 +276,11 @@ DISCOVER_DEVICE_ITEMS = [
 SERVICE_SCHEMA_UPDATE_CONFIGURATION = vol.Schema(
     {
         vol.Required(CONF_DEVICE_ID): cv.string,
-        vol.Optional(STORAGE_DATA_CONSIDER_AWAY_INTERVAL): vol.Range(10, 1800),
-        vol.Optional(STORAGE_DATA_UPDATE_ENTITIES_INTERVAL): vol.Range(1, 60),
-        vol.Optional(STORAGE_DATA_UPDATE_API_INTERVAL): vol.Range(30, 180),
-        vol.Optional(STORAGE_DATA_LOG_INCOMING_MESSAGES): cv.boolean,
-        vol.Optional(STORAGE_DATA_STORE_DEBUG_DATA): cv.boolean,
-        vol.Optional(STORAGE_DATA_UNIT): vol.In(UNIT_MAPPING.keys()),
+        vol.Optional(STORAGE_DATA_CONSIDER_AWAY_INTERVAL.replace(STRING_DASH, STRING_UNDERSCORE)): vol.Range(10, 1800),
+        vol.Optional(STORAGE_DATA_UPDATE_ENTITIES_INTERVAL.replace(STRING_DASH, STRING_UNDERSCORE)): vol.Range(1, 60),
+        vol.Optional(STORAGE_DATA_UPDATE_API_INTERVAL.replace(STRING_DASH, STRING_UNDERSCORE)): vol.Range(30, 180),
+        vol.Optional(STORAGE_DATA_LOG_INCOMING_MESSAGES.replace(STRING_DASH, STRING_UNDERSCORE)): cv.boolean,
+        vol.Optional(STORAGE_DATA_STORE_DEBUG_DATA.replace(STRING_DASH, STRING_UNDERSCORE)): cv.boolean,
+        vol.Optional(STORAGE_DATA_UNIT.replace(STRING_DASH, STRING_UNDERSCORE)): vol.In(UNIT_MAPPING.keys()),
     }
 )

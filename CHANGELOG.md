@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.12
+
+- Fix wrong parameters for service validation [#77](https://github.com/elad-bar/ha-edgeos/issues/77)
+
 ## 2.0.11
 
 - Fix core wrong reference
