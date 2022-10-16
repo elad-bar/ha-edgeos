@@ -37,11 +37,11 @@ STORAGE_DATA_FILES = [
 STORAGE_DATA_MONITORED_INTERFACES = "monitored-interfaces"
 STORAGE_DATA_MONITORED_DEVICES = "monitored-devices"
 STORAGE_DATA_UNIT = "unit"
-STORAGE_DATA_LOG_INCOMING_MESSAGES = "log-incoming-messages"
-STORAGE_DATA_STORE_DEBUG_DATA = "store-debug-data"
-STORAGE_DATA_CONSIDER_AWAY_INTERVAL = "consider-away-interval"
-STORAGE_DATA_UPDATE_ENTITIES_INTERVAL = "update-entities-interval"
-STORAGE_DATA_UPDATE_API_INTERVAL = "update-api-interval"
+STORAGE_DATA_LOG_INCOMING_MESSAGES = "log_incoming_messages"
+STORAGE_DATA_STORE_DEBUG_DATA = "store_debug_data"
+STORAGE_DATA_CONSIDER_AWAY_INTERVAL = "consider_away_interval"
+STORAGE_DATA_UPDATE_ENTITIES_INTERVAL = "update_entities_interval"
+STORAGE_DATA_UPDATE_API_INTERVAL = "update_api_interval"
 
 API_DATA_LAST_UPDATE = "lastUpdate"
 
