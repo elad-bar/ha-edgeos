@@ -115,9 +115,6 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             if self.api.status == ConnectivityStatus.Connected:
                 await self.ws.initialize(self.config_data)
 
-                if not self.ws.status == ConnectivityStatus.NotConnected:
-                    await asyncio.sleep(WS_RECONNECT_INTERVAL.total_seconds())
-
     async def async_component_initialize(self, entry: ConfigEntry):
         try:
             self._config_manager = ConfigurationManager(self._hass, self.api)
@@ -410,12 +407,18 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             interface_types = data.get(API_DATA_INTERFACES, {})
 
             for interface_type_name in interface_types:
-                if interface_type_name in MONITORED_INTERFACE_TYPES:
+                if interface_type_name not in UNMONITORED_INTERFACE_TYPES:
                     interface_type_data = interface_types.get(interface_type_name)
 
                     for interface_name in interface_type_data:
                         interface_data = interface_type_data.get(interface_name, {})
                         self._extract_interface(interface_name, interface_type_name, interface_data)
+
+                else:
+                    interface_type_data = interface_types.get(interface_type_name)
+
+                    _LOGGER.debug(f"Unmonitored interface {interface_type_name}, Data: {interface_type_data}")
+
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno

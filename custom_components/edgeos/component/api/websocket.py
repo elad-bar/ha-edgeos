@@ -4,6 +4,7 @@ websocket.
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime
 import json
 import logging
 import re
@@ -36,6 +37,7 @@ class IntegrationWS(BaseAPI):
     _ws_handlers: dict
     _messages_received: float
     _messages_ignored: float
+    _last_disconnection: float
 
     def __init__(self,
                  hass: HomeAssistant,
@@ -59,6 +61,8 @@ class IntegrationWS(BaseAPI):
             WS_EXPORT_KEY: {},
             WS_INTERFACES_KEY: {},
         }
+
+        self._last_disconnection = 0
 
     @property
     def _api_session_id(self):
@@ -127,7 +131,13 @@ class IntegrationWS(BaseAPI):
                 exc_type, exc_obj, tb = sys.exc_info()
                 line_number = tb.tb_lineno
 
-                _LOGGER.warning(f"Failed to connect WS, Error: {ex}, Line: {line_number}")
+                now = datetime.now().timestamp()
+                seconds_since_last_disconnection = now - self._last_disconnection
+
+                if seconds_since_last_disconnection <= WS_WARNING_INTERVAL.total_seconds():
+                    _LOGGER.warning(f"Failed to connect WS, Error: {ex}, Line: {line_number}")
+
+                self._last_disconnection = now
 
         if self.status == ConnectivityStatus.Connected:
             await self.set_status(ConnectivityStatus.NotConnected)
