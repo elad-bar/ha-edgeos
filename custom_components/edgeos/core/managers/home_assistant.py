@@ -35,7 +35,6 @@ class HomeAssistantManager:
         self._hass = hass
 
         self._is_initialized = False
-        self._is_updating = False
         self._update_entities_interval = scan_interval
         self._update_data_providers_interval = scan_interval
         self._heartbeat_interval = heartbeat_interval

@@ -3,7 +3,7 @@
 ## 2.0.13
 
 - Add support for all interfaces but `loopback` [#76](https://github.com/elad-bar/ha-edgeos/issues/76)
-- Remove error message when websockets disconnects but able to reconnect in 95 seconds (timeout=60s + reconnect=30s + buffer=5s)
+- Improved WS connection management
 
 ## 2.0.12
 

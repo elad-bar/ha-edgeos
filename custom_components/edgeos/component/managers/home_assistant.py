@@ -3,7 +3,7 @@ Support for HA manager.
 """
 from __future__ import annotations
 
-import asyncio
+from asyncio import sleep
 from datetime import datetime
 import logging
 import sys
@@ -108,12 +108,16 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
     async def _ws_status_changed(self, status: ConnectivityStatus):
         _LOGGER.info(f"WS Status changed to {status}, API Status: {self.api.status}")
 
-        if status == ConnectivityStatus.Connected:
-            self._can_load_components = True
+        api_connected = self.api.status == ConnectivityStatus.Connected
+        ws_connected = status == ConnectivityStatus.Connected
+        ws_reconnect = status in [ConnectivityStatus.NotConnected, ConnectivityStatus.Failed]
 
-        if status == ConnectivityStatus.NotConnected:
-            if self.api.status == ConnectivityStatus.Connected:
-                await self.ws.initialize(self.config_data)
+        self._can_load_components = ws_connected
+
+        if ws_reconnect and api_connected:
+            await sleep(WS_RECONNECT_INTERVAL.total_seconds())
+
+            await self.ws.initialize()
 
     async def async_component_initialize(self, entry: ConfigEntry):
         try:
@@ -809,14 +813,6 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
 
         try:
             state = self._system.last_reset
-
-            leased_devices = []
-
-            for unique_id in self._devices:
-                device = self._devices.get(unique_id)
-
-                if device.is_leased:
-                    leased_devices.append(f"{device.hostname} ({device.ip})")
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name

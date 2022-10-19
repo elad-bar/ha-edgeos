@@ -88,15 +88,18 @@ class IntegrationWS(BaseAPI):
         self._api_data = api_data
         self._can_log_messages = can_log_messages
 
-    async def initialize(self, config_data: ConfigData):
-        self._config_data = config_data
+    async def initialize(self, config_data: ConfigData | None = None):
+        if config_data is None:
+            _LOGGER.debug(f"Reinitializing WebSocket connection")
 
-        _LOGGER.debug(f"Initializing WebSocket connection")
-        await self.set_status(ConnectivityStatus.Connecting)
+        else:
+            self._config_data = config_data
 
-        previous_status = self.status
+            _LOGGER.debug(f"Initializing WebSocket connection")
 
         try:
+            await self.set_status(ConnectivityStatus.Connecting)
+
             if self.hass is None:
                 self._session = ClientSession(cookies=self._api_cookies)
             else:
@@ -104,14 +107,8 @@ class IntegrationWS(BaseAPI):
                     hass=self.hass, cookies=self._api_cookies
                 )
 
-        except Exception as ex:
-            _LOGGER.warning(f"Failed to create web socket session, Error: {str(ex)}")
-
-        try:
-            url = self._ws_url
-
             async with self._session.ws_connect(
-                url,
+                self._ws_url,
                 ssl=False,
                 autoclose=True,
                 max_msg_size=WS_MAX_MSG_SIZE,
@@ -124,38 +121,33 @@ class IntegrationWS(BaseAPI):
 
                 await self._listen()
 
+                await self.set_status(ConnectivityStatus.NotConnected)
+
         except Exception as ex:
             if self._session is not None and self._session.closed:
                 _LOGGER.info(f"WS Session closed")
+
+                await self.terminate()
+
             else:
                 exc_type, exc_obj, tb = sys.exc_info()
                 line_number = tb.tb_lineno
 
-                now = datetime.now().timestamp()
-                seconds_since_last_disconnection = now - self._last_disconnection
+                if self.status == ConnectivityStatus.Connected:
+                    _LOGGER.info(f"WS got disconnected will try to recover, Error: {ex}, Line: {line_number}")
 
-                if seconds_since_last_disconnection <= WS_WARNING_INTERVAL.total_seconds():
+                else:
                     _LOGGER.warning(f"Failed to connect WS, Error: {ex}, Line: {line_number}")
 
-                self._last_disconnection = now
-
-        if self.status == ConnectivityStatus.Connected:
-            await self.set_status(ConnectivityStatus.NotConnected)
-
-            _LOGGER.info("WS Connection terminated")
-
-        else:
-            if previous_status == ConnectivityStatus.NotConnected:
-                await asyncio.sleep(WS_RECONNECT_INTERVAL.total_seconds())
-
-                await self.fire_status_changed_event()
+                await self.set_status(ConnectivityStatus.Failed)
 
     async def terminate(self):
         if self._remove_async_track_time is not None:
             self._remove_async_track_time()
             self._remove_async_track_time = None
 
-        await self.set_status(ConnectivityStatus.Disconnected)
+        if self.status != ConnectivityStatus.Disconnected:
+            await self.set_status(ConnectivityStatus.Disconnected)
 
     async def async_send_heartbeat(self):
         _LOGGER.debug(f"Keep alive message sent")
@@ -168,34 +160,23 @@ class IntegrationWS(BaseAPI):
             await self._ws.send_str(content)
 
     async def _listen(self):
-        try:
-            _LOGGER.info(f"Starting to listen connected")
+        _LOGGER.info(f"Starting to listen connected")
 
-            subscription_data = self._get_subscription_data()
-            await self._ws.send_str(subscription_data)
+        subscription_data = self._get_subscription_data()
+        await self._ws.send_str(subscription_data)
 
-            _LOGGER.info("Subscribed to WS payloads")
+        _LOGGER.info("Subscribed to WS payloads")
 
-            async for msg in self._ws:
-                continue_to_next = await self._handle_next_message(msg)
+        async for msg in self._ws:
+            continue_to_next = await self._handle_next_message(msg)
 
-                if (
-                    not continue_to_next
-                    or self.status != ConnectivityStatus.Connected
-                ):
-                    break
+            if (
+                not continue_to_next
+                or self.status != ConnectivityStatus.Connected
+            ):
+                break
 
-            _LOGGER.info(f"Stop listening")
-
-        except Exception as ex:
-            if self._session is not None and self._session.closed:
-                _LOGGER.info(f"Stopped listen, Error: WS Session closed")
-
-            else:
-                exc_type, exc_obj, tb = sys.exc_info()
-                line_number = tb.tb_lineno
-
-                _LOGGER.warning(f"Stopped listen, Error: {ex}, Line: {line_number}")
+        _LOGGER.info(f"Stop listening")
 
     async def _handle_next_message(self, msg):
         _LOGGER.debug(f"Starting to handle next message")
@@ -206,10 +187,10 @@ class IntegrationWS(BaseAPI):
             aiohttp.WSMsgType.CLOSED,
             aiohttp.WSMsgType.CLOSING,
         ):
-            _LOGGER.info("Connection closed (By Message Close)")
+            _LOGGER.warning(f"WS Connection message: {msg.type}")
 
         elif msg.type == aiohttp.WSMsgType.ERROR:
-            _LOGGER.warning(f"Connection error, Description: {self._ws.exception()}")
+            _LOGGER.warning(f"WS Error message, Description: {self._ws.exception()}")
 
         else:
             if self._can_log_messages:
