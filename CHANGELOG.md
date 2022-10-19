@@ -3,7 +3,10 @@
 ## 2.0.13
 
 - Add support for all interfaces but `loopback` [#76](https://github.com/elad-bar/ha-edgeos/issues/76)
-- Improved WS connection management
+- Improve WS connection management
+- Fix WS ping message
+- Change interval of ping message
+- Add WS connection compression to support deflate
 - Add 3 sensors for WS messages - Received, Ignored and Error
 
 ## 2.0.12

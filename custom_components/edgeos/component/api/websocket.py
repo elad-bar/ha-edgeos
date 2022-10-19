@@ -3,6 +3,7 @@ websocket.
 """
 from __future__ import annotations
 
+from asyncio import sleep
 import json
 import logging
 import re
@@ -102,6 +103,7 @@ class IntegrationWS(BaseAPI):
                 autoclose=True,
                 max_msg_size=WS_MAX_MSG_SIZE,
                 timeout=WS_TIMEOUT,
+                compress=WS_COMPRESSION_DEFLATE
             ) as ws:
 
                 await self.set_status(ConnectivityStatus.Connected)
@@ -142,11 +144,18 @@ class IntegrationWS(BaseAPI):
         _LOGGER.debug(f"Keep alive message sent")
 
         if self.status == ConnectivityStatus.Connected:
-            content = "{CLIENT_PING}"
+            content = {
+                "CLIENT_PING": "",
+                "SESSION_ID": self._api_session_id
+            }
 
-            _LOGGER.debug(f"Keep alive data to be sent: {content}")
+            content_str = json.dumps(content)
+            data = f"{len(content_str)}\n{content_str}"
+            data_for_log = data.replace("\n", "")
 
-            await self._ws.send_str(content)
+            _LOGGER.debug(f"Keep alive data to be sent: {data_for_log}")
+
+            await self._ws.send_str(data)
 
     async def _listen(self):
         _LOGGER.info(f"Starting to listen connected")
@@ -156,32 +165,31 @@ class IntegrationWS(BaseAPI):
 
         _LOGGER.info("Subscribed to WS payloads")
 
-        async for msg in self._ws:
-            should_exit = True
+        listening = True
 
-            if msg.type in WS_CLOSING_MESSAGE:
-                _LOGGER.warning(f"WS Connection message: {msg.type}")
+        while listening and self.status == ConnectivityStatus.Connected:
+            async for msg in self._ws:
+                is_closing_type = msg.type in WS_CLOSING_MESSAGE
+                is_error = msg.type == aiohttp.WSMsgType.ERROR
+                is_closing_data = False if is_closing_type or is_error else msg.data == "close"
 
-            elif msg.type == aiohttp.WSMsgType.ERROR:
-                _LOGGER.warning(f"WS Error message, Description: {self._ws.exception()}")
+                if is_closing_type or is_error or is_closing_data:
+                    _LOGGER.warning(
+                        f"WS stopped listening, "
+                        f"Message: {str(msg)}, "
+                        f"Exception: {self._ws.exception()}"
+                    )
 
-                error_messages = self.data.get(WS_ERROR_MESSAGES, 0)
+                    listening = False
+                    break
 
-                self.data[WS_ERROR_MESSAGES] = error_messages + 1
+                else:
+                    if self._can_log_messages:
+                        _LOGGER.debug(f"Message received: {str(msg)}")
 
-            else:
-                if self._can_log_messages:
-                    _LOGGER.debug(f"New message received: {str(msg)}")
-
-                should_exit = msg.data == "close"
-
-                if not should_exit:
                     await self.parse_message(msg.data)
 
-                    should_exit = self.status != ConnectivityStatus.Connected
-
-            if should_exit:
-                break
+            await sleep(1)
 
         _LOGGER.info(f"Stop listening")
 
@@ -237,12 +245,20 @@ class IntegrationWS(BaseAPI):
         new_message_length = len(message) - len(str(previous_message_length)) - 1
 
         if new_message_length > previous_message_length:
-            _LOGGER.debug(
-                f"Ignored partial message, "
-                f"Expected {previous_message_length} chars, "
-                f"Provided {new_message_length}, "
-                f"Content: {message}"
-            )
+            if self._can_log_messages:
+                _LOGGER.debug(
+                    f"Ignored partial message, "
+                    f"Expected {previous_message_length} chars, "
+                    f"Provided {new_message_length}, "
+                    f"Content: {message}"
+                )
+
+            else:
+                _LOGGER.debug(
+                    f"Ignored partial message, "
+                    f"Expected {previous_message_length} chars, "
+                    f"Provided {new_message_length}"
+                )
 
             message = original_message
 
@@ -267,8 +283,9 @@ class IntegrationWS(BaseAPI):
         content = json.dumps(data, separators=(STRING_COMMA, STRING_COLON))
         content_length = len(content)
         data = f"{content_length}\n{content}"
+        data_for_log = data.replace("\n", "")
 
-        _LOGGER.debug(f"Subscription data to be sent: {data}")
+        _LOGGER.debug(f"Subscription data to be sent: {data_for_log}")
 
         return data
 
@@ -286,8 +303,6 @@ class IntegrationWS(BaseAPI):
         try:
             if payload is not None:
                 for key in payload:
-                    _LOGGER.debug(f"Running parser of {key}")
-
                     data = payload.get(key)
                     handler = self._ws_handlers.get(key)
 

@@ -16,13 +16,15 @@ CONF_DEVICE_ID = "device_id"
 
 WS_MAX_MSG_SIZE = 0
 WS_RECONNECT_INTERVAL = timedelta(seconds=30)
-WS_TIMEOUT = timedelta(seconds=60)
+WS_TIMEOUT = timedelta(minutes=1)
 WS_WARNING_INTERVAL = timedelta(seconds=95)
 
-DEFAULT_UPDATE_API_INTERVAL = timedelta(seconds=60)
+WS_COMPRESSION_DEFLATE = 15
+
+DEFAULT_UPDATE_API_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_ENTITIES_INTERVAL = timedelta(seconds=1)
-DEFAULT_HEARTBEAT_INTERVAL = timedelta(seconds=25)
-DEFAULT_CONSIDER_AWAY_INTERVAL = timedelta(seconds=180)
+DEFAULT_HEARTBEAT_INTERVAL = timedelta(seconds=50)
+DEFAULT_CONSIDER_AWAY_INTERVAL = timedelta(minutes=3)
 
 STORAGE_DATA_FILE_CONFIG = "config"
 STORAGE_DATA_FILE_API_DEBUG = "debug.api"
