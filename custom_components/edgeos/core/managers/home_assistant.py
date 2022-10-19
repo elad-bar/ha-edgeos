@@ -261,9 +261,10 @@ class HomeAssistantManager:
             return
 
         for domain in PLATFORMS:
-            signal = PLATFORMS.get(domain)
+            if self._domains.get(domain, False):
+                signal = PLATFORMS.get(domain)
 
-            async_dispatcher_send(self._hass, signal)
+                async_dispatcher_send(self._hass, signal)
 
     def set_action(self, entity_id: str, action_name: str, action):
         key = f"{entity_id}:{action_name}"

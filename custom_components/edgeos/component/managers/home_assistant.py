@@ -213,7 +213,7 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
             self._load_interface_device(interface_item)
 
     def load_entities(self):
-        _LOGGER.info("Loading entities")
+        _LOGGER.debug("Loading entities")
 
         if not self._can_load_components:
             return
@@ -226,6 +226,10 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         self._load_firmware_upgrade_binary_sensor()
         self._load_log_incoming_messages_switch()
         self._load_store_debug_data_switch()
+
+        self._load_received_messages_sensor()
+        self._load_ignored_messages_sensor()
+        self._load_error_messages_sensor()
 
         for unique_id in self._devices:
             device_item = self._get_device(unique_id)
@@ -826,6 +830,105 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=SensorStateClass.TOTAL_INCREASING
+            )
+
+            self.entity_manager.set_entity(DOMAIN_SENSOR,
+                                           self.entry_id,
+                                           state,
+                                           attributes,
+                                           device_name,
+                                           entity_description)
+
+        except Exception as ex:
+            self.log_exception(
+                ex, f"Failed to load sensor for {entity_name}"
+            )
+
+    def _load_received_messages_sensor(self):
+        device_name = self.system_name
+        entity_name = f"{device_name} Received Messages"
+
+        try:
+            state = self._ws.data.get(WS_RECEIVED_MESSAGES, 0)
+
+            attributes = {
+                ATTR_FRIENDLY_NAME: entity_name
+            }
+
+            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
+            icon = "mdi:message-bulleted"
+
+            entity_description = SensorEntityDescription(
+                key=unique_id,
+                name=entity_name,
+                icon=icon,
+                state_class=SensorStateClass.MEASUREMENT
+            )
+
+            self.entity_manager.set_entity(DOMAIN_SENSOR,
+                                           self.entry_id,
+                                           state,
+                                           attributes,
+                                           device_name,
+                                           entity_description)
+
+        except Exception as ex:
+            self.log_exception(
+                ex, f"Failed to load sensor for {entity_name}"
+            )
+
+    def _load_ignored_messages_sensor(self):
+        device_name = self.system_name
+        entity_name = f"{device_name} Ignored Messages"
+
+        try:
+            state = self._ws.data.get(WS_IGNORED_MESSAGES, 0)
+
+            attributes = {
+                ATTR_FRIENDLY_NAME: entity_name
+            }
+
+            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
+            icon = "mdi:message-bulleted-off"
+
+            entity_description = SensorEntityDescription(
+                key=unique_id,
+                name=entity_name,
+                icon=icon,
+                state_class=SensorStateClass.MEASUREMENT
+            )
+
+            self.entity_manager.set_entity(DOMAIN_SENSOR,
+                                           self.entry_id,
+                                           state,
+                                           attributes,
+                                           device_name,
+                                           entity_description)
+
+        except Exception as ex:
+            self.log_exception(
+                ex, f"Failed to load sensor for {entity_name}"
+            )
+
+    def _load_error_messages_sensor(self):
+        device_name = self.system_name
+        entity_name = f"{device_name} Error Messages"
+
+        try:
+            state = self._ws.data.get(WS_ERROR_MESSAGES, 0)
+
+            attributes = {
+                ATTR_FRIENDLY_NAME: entity_name
+            }
+
+            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
+            icon = "mdi:message-alert"
+
+            entity_description = SensorEntityDescription(
+                key=unique_id,
+                name=entity_name,
+                icon=icon,
+                state_class=SensorStateClass.MEASUREMENT
             )
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,

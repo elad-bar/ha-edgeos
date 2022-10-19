@@ -3,8 +3,6 @@ websocket.
 """
 from __future__ import annotations
 
-import asyncio
-from datetime import datetime
 import json
 import logging
 import re
@@ -12,7 +10,6 @@ import sys
 from typing import Awaitable, Callable
 from urllib.parse import urlparse
 
-import aiohttp
 from aiohttp import ClientSession
 
 from homeassistant.core import HomeAssistant
@@ -35,9 +32,6 @@ class IntegrationWS(BaseAPI):
     _can_log_messages: bool
     _previous_message: dict | None
     _ws_handlers: dict
-    _messages_received: float
-    _messages_ignored: float
-    _last_disconnection: float
 
     def __init__(self,
                  hass: HomeAssistant,
@@ -54,15 +48,7 @@ class IntegrationWS(BaseAPI):
         self._remove_async_track_time = None
         self._ws_handlers = self._get_ws_handlers()
         self._can_log_messages: bool = False
-        self._messages_received = 0
-        self._messages_ignored = 0
         self._previous_message = None
-        self.data = {
-            WS_EXPORT_KEY: {},
-            WS_INTERFACES_KEY: {},
-        }
-
-        self._last_disconnection = 0
 
     @property
     def _api_session_id(self):
@@ -98,6 +84,11 @@ class IntegrationWS(BaseAPI):
             _LOGGER.debug(f"Initializing WebSocket connection")
 
         try:
+            self.data = {
+                WS_EXPORT_KEY: {},
+                WS_INTERFACES_KEY: {},
+            }
+
             await self.set_status(ConnectivityStatus.Connecting)
 
             if self.hass is None:
@@ -168,46 +159,37 @@ class IntegrationWS(BaseAPI):
         _LOGGER.info("Subscribed to WS payloads")
 
         async for msg in self._ws:
-            continue_to_next = await self._handle_next_message(msg)
+            should_exit = True
 
-            if (
-                not continue_to_next
-                or self.status != ConnectivityStatus.Connected
-            ):
+            if msg.type in WS_CLOSING_MESSAGE:
+                _LOGGER.warning(f"WS Connection message: {msg.type}")
+
+            elif msg.type == aiohttp.WSMsgType.ERROR:
+                _LOGGER.warning(f"WS Error message, Description: {self._ws.exception()}")
+
+                error_messages = self.data.get(WS_ERROR_MESSAGES, 0)
+
+                self.data[WS_ERROR_MESSAGES] = error_messages + 1
+
+            else:
+                if self._can_log_messages:
+                    _LOGGER.debug(f"New message received: {str(msg)}")
+
+                should_exit = msg.data == "close"
+
+                if not should_exit:
+                    await self.parse_message(msg.data)
+
+                    should_exit = self.status != ConnectivityStatus.Connected
+
+            if should_exit:
                 break
 
         _LOGGER.info(f"Stop listening")
 
-    async def _handle_next_message(self, msg):
-        _LOGGER.debug(f"Starting to handle next message")
-        result = False
-
-        if msg.type in (
-            aiohttp.WSMsgType.CLOSE,
-            aiohttp.WSMsgType.CLOSED,
-            aiohttp.WSMsgType.CLOSING,
-        ):
-            _LOGGER.warning(f"WS Connection message: {msg.type}")
-
-        elif msg.type == aiohttp.WSMsgType.ERROR:
-            _LOGGER.warning(f"WS Error message, Description: {self._ws.exception()}")
-
-        else:
-            if self._can_log_messages:
-                _LOGGER.debug(f"New message received: {str(msg)}")
-
-            if msg.data == "close":
-                result = False
-            else:
-                await self.parse_message(msg.data)
-
-                result = True
-
-        return result
-
     async def parse_message(self, message):
         try:
-            self._messages_received += 1
+            self._increase_counter(WS_RECEIVED_MESSAGES)
 
             if self._previous_message is not None:
                 message = self._get_corrected_message(message)
@@ -220,10 +202,10 @@ class IntegrationWS(BaseAPI):
 
                     await self._message_handler(payload_json)
             else:
-                self._messages_ignored += 1
+                self._increase_counter(WS_IGNORED_MESSAGES)
 
         except ValueError:
-            self._messages_ignored += 1
+            self._increase_counter(WS_IGNORED_MESSAGES)
 
             previous_messages = re.findall(BEGINS_WITH_SIX_DIGITS, message)
 
@@ -267,7 +249,7 @@ class IntegrationWS(BaseAPI):
             message = original_message
 
         else:
-            self._messages_ignored -= 1
+            self._decrease_counter(WS_IGNORED_MESSAGES)
             _LOGGER.debug("Partial message corrected")
 
         return message
@@ -462,3 +444,13 @@ class IntegrationWS(BaseAPI):
             _LOGGER.error(
                 f"Failed to load {WS_DISCOVER_KEY}, Original Message: {data}, Error: {ex}, Line: {line_number}"
             )
+
+    def _increase_counter(self, key):
+        counter = self.data.get(key, 0)
+
+        self.data[key] = counter + 1
+
+    def _decrease_counter(self, key):
+        counter = self.data.get(key, 0)
+
+        self.data[key] = counter - 1

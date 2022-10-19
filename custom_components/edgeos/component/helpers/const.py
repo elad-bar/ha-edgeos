@@ -3,6 +3,7 @@ Support for Constants.
 """
 from datetime import timedelta
 
+import aiohttp
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -98,6 +99,10 @@ WS_INTERFACES_KEY = "interfaces"
 WS_SYSTEM_STATS_KEY = "system-stats"
 WS_EXPORT_KEY = "export"
 WS_DISCOVER_KEY = "discover"
+
+WS_RECEIVED_MESSAGES = "received-messages"
+WS_IGNORED_MESSAGES = "ignored-messages"
+WS_ERROR_MESSAGES = "error-messages"
 
 UPDATE_DATE_ENDPOINTS = [
     API_DATA_SYS_INFO,
@@ -281,3 +286,9 @@ SERVICE_SCHEMA_UPDATE_CONFIGURATION = vol.Schema(
         vol.Optional(STORAGE_DATA_UNIT.replace(STRING_DASH, STRING_UNDERSCORE)): vol.In(UNIT_MAPPING.keys()),
     }
 )
+
+WS_CLOSING_MESSAGE = [
+    aiohttp.WSMsgType.CLOSE,
+    aiohttp.WSMsgType.CLOSED,
+    aiohttp.WSMsgType.CLOSING,
+]

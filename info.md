@@ -24,11 +24,11 @@ Provides an integration between EdgeOS (Ubiquiti) routers to Home Assistant.
 To add integration use Configuration -> Integrations -> Add `EdgeOS`
 Integration supports **multiple** EdgeOS devices
 
-| Fields name | Type      | Required | Default | Description                                                                                                                                      |
-|-------------|-----------|----------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| Host        | Textbox   | +        | -       | Hostname or IP address to access EdgeOS device                                                                                                   |
-| Username    | Textbox   | +        | -       | Username of user with `Operator` level access or higher, better to create a dedicated user for that integration for faster issues identification |
-| Password    | Textbox   | +        | -       |                                                                                                                                                  |
+| Fields name | Type    | Required | Default | Description                                                                                                                                      |
+|-------------|---------|----------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| Host        | Textbox | +        | -       | Hostname or IP address to access EdgeOS device, can hold also port (HOST:PORT), default port is 443                                              |
+| Username    | Textbox | +        | -       | Username of user with `Operator` level access or higher, better to create a dedicated user for that integration for faster issues identification |
+| Password    | Textbox | +        | -       |                                                                                                                                                  |
 
 ###### EdgeOS Device validation errors
 
@@ -59,7 +59,7 @@ _Configuration -> Integrations -> {Integration} -> Options_ <br />
 
 | Fields name       | Type      | Required | Default   | Description                                                                                                                                      |
 |-------------------|-----------|----------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| Host              | Textbox   | +        | -         | Hostname or IP address to access EdgeOS device                                                                                                   |
+| Host              | Textbox   | +        | -         | Hostname or IP address to access EdgeOS device, can hold also port (HOST:PORT), default port is 443                                              |
 | Username          | Textbox   | +        | -         | Username of user with `Operator` level access or higher, better to create a dedicated user for that integration for faster issues identification |
 | Password          | Textbox   | +        | -         |                                                                                                                                                  |
 | Clear credentials | Check-box | +        | Unchecked | Will reset username and password (Not being stored under options)                                                                                |
@@ -81,10 +81,13 @@ logger:
 | Entity Name                         | Type          | Description                                                               | Additional information                        |
 |-------------------------------------|---------------|---------------------------------------------------------------------------|-----------------------------------------------|
 | {Router Name} Unit                  | Select        | Sets whether to monitor device and create all the components below or not |                                               |
-| {Router Name} CPU                   | Sensor        | Represents CPU usage                                                      | Attributes holds the leased hostname and IPs  |
-| {Router Name} RAM                   | Sensor        | Represents RAM usage                                                      | Attributes holds the leased hostname and IPs  |
-| {Router Name} Uptime                | Sensor        | Represents last time the EdgeOS was restarted                             | Attributes holds the leased hostname and IPs  |
+| {Router Name} CPU                   | Sensor        | Represents CPU usage                                                      |                                               |
+| {Router Name} RAM                   | Sensor        | Represents RAM usage                                                      |                                               |
+| {Router Name} Uptime                | Sensor        | Represents last time the EdgeOS was restarted                             |                                               |
 | {Router Name} Unknown devices       | Sensor        | Represents number of devices leased by the DHCP server                    | Attributes holds the leased hostname and IPs  |
+| {Router Name} Received Messages     | Sensor        | Represents the number of WS messages handled                              |                                               |
+| {Router Name} Ignored Messages      | Sensor        | Represents the number of WS messages ignored                              |                                               |
+| {Router Name} Error Messages        | Sensor        | Represents the number of WS messages of errors                            |                                               |
 | {Router Name} Firmware Updates      | Binary Sensor | New firmware available indication                                         | Attributes holds the url and new release name |
 | {Router Name} Log incoming messages | Switch        | Sets whether to log WebSocket incoming messages for debugging             |                                               |
 | {Router Name} Store Debug Data      | Switch        | Sets whether to store API and WebSocket latest data for debugging         |                                               |
