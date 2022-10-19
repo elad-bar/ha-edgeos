@@ -20,8 +20,6 @@ from ...configuration.models.config_data import ConfigData
 from ...core.api.base_api import BaseAPI
 from ...core.helpers.enums import ConnectivityStatus
 
-REQUIREMENTS = ["aiohttp"]
-
 _LOGGER = logging.getLogger(__name__)
 
 
