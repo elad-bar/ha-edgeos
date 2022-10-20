@@ -49,7 +49,7 @@ class IntegrationAPI(BaseAPI):
             line_number = tb.tb_lineno
 
             _LOGGER.error(
-                f"Failed to load Shinobi Video API, error: {ex}, line: {line_number}"
+                f"Failed to load API, error: {ex}, line: {line_number}"
             )
 
     @property

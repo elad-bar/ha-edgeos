@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
-    """Set up the Shinobi Video Switch."""
+    """Set up the Sensor."""
     await async_setup_base_entry(
         hass, config_entry, async_add_devices, CoreSensor.get_domain(), CoreSensor.get_component
     )

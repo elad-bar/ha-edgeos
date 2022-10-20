@@ -1,7 +1,5 @@
 """
-This component provides support for Shinobi Video.
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/shinobi/
+Init.
 """
 import logging
 import sys
@@ -20,7 +18,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up a Shinobi Video component."""
+    """Set up a component."""
     initialized = False
 
     try:
@@ -35,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         exc_type, exc_obj, tb = sys.exc_info()
         line_number = tb.tb_lineno
 
-        _LOGGER.error(f"Failed to load Shinobi Video, error: {ex}, line: {line_number}")
+        _LOGGER.error(f"Failed to load integration, error: {ex}, line: {line_number}")
 
     return initialized
 

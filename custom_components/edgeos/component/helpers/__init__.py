@@ -6,7 +6,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 
 from ...component.helpers.const import *
-from ...component.managers.home_assistant import ShinobiHomeAssistantManager
+from ...component.managers.home_assistant import EdgeOSHomeAssistantManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ async def async_set_ha(hass: HomeAssistant, entry: ConfigEntry):
         if DATA not in hass.data:
             hass.data[DATA] = {}
 
-        instance = ShinobiHomeAssistantManager(hass)
+        instance = EdgeOSHomeAssistantManager(hass)
 
         await instance.async_init(entry)
 
@@ -37,7 +37,7 @@ async def async_set_ha(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.error(f"Failed to async_set_ha, error: {ex}, line: {line_number}")
 
 
-def get_ha(hass: HomeAssistant, entry_id) -> ShinobiHomeAssistantManager:
+def get_ha(hass: HomeAssistant, entry_id) -> EdgeOSHomeAssistantManager:
     ha_data = hass.data.get(DATA, dict())
     ha = ha_data.get(entry_id)
 

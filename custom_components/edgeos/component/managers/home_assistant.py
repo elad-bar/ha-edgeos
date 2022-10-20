@@ -13,6 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
 )
+
 from homeassistant.components.sensor import SensorEntityDescription, SensorStateClass
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -38,7 +39,7 @@ from ..models.edge_os_system_data import EdgeOSSystemData
 _LOGGER = logging.getLogger(__name__)
 
 
-class ShinobiHomeAssistantManager(HomeAssistantManager):
+class EdgeOSHomeAssistantManager(HomeAssistantManager):
     def __init__(self, hass: HomeAssistant):
         super().__init__(hass, DEFAULT_UPDATE_API_INTERVAL, DEFAULT_HEARTBEAT_INTERVAL)
 
@@ -52,6 +53,10 @@ class ShinobiHomeAssistantManager(HomeAssistantManager):
         self._interfaces: dict[str, EdgeOSInterfaceData] = {}
         self._unknown_devices: int | None = None
         self._can_load_components: bool = False
+
+    @property
+    def hass(self) -> HomeAssistant:
+        return self._hass
 
     @property
     def api(self) -> IntegrationAPI:
