@@ -85,12 +85,8 @@ logger:
 | {Router Name} RAM                   | Sensor        | Represents RAM usage                                                      |                                               |
 | {Router Name} Uptime                | Sensor        | Represents last time the EdgeOS was restarted                             |                                               |
 | {Router Name} Unknown devices       | Sensor        | Represents number of devices leased by the DHCP server                    | Attributes holds the leased hostname and IPs  |
-| {Router Name} Received Messages     | Sensor        | Represents the number of WS messages handled                              |                                               |
-| {Router Name} Ignored Messages      | Sensor        | Represents the number of WS messages ignored                              |                                               |
-| {Router Name} Error Messages        | Sensor        | Represents the number of WS messages of errors                            |                                               |
 | {Router Name} Firmware Updates      | Binary Sensor | New firmware available indication                                         | Attributes holds the url and new release name |
 | {Router Name} Log incoming messages | Switch        | Sets whether to log WebSocket incoming messages for debugging             |                                               |
-| {Router Name} Store Debug Data      | Switch        | Sets whether to store API and WebSocket latest data for debugging         |                                               |
 
 *Changing the unit will reload the integration*
 
@@ -150,3 +146,14 @@ data:
 ```
 
 *Changing the unit will reload the integration*
+
+## Endpoints
+
+| Endpoint Name              | Method | Description                                                                                         |
+|----------------------------|--------|-----------------------------------------------------------------------------------------------------|
+| /api/edgeos/list           | GET    | List all the endpoints available (supporting multiple integrations), available once for integration |
+| /api/edgeos/{ENTRY_ID}/ha  | GET    | JSON of all HA processed data before sent to entities, per integration                              |
+| /api/edgeos/{ENTRY_ID}/api | GET    | JSON of all raw data from the EdgeOS API, per integration                                           |
+| /api/edgeos/{ENTRY_ID}/ws  | GET    | JSON of all raw data from the EdgeOS WebSocket, per integration                                     |
+
+**Authentication: Requires long-living token from HA**

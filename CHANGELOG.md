@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.14
+
+**Debugging became easier (less IO and Disk Space)**
+- Removed `Store Debug Data` switch (Moved to the API endpoints below)
+- Removed WebSocket messages sensors (Moved to the API endpoints below)
+- Add endpoints to expose the data was previously stored to files and the messages counters
+
+| Endpoint Name              | Method | Description                                                                                         |
+|----------------------------|--------|-----------------------------------------------------------------------------------------------------|
+| /api/edgeos/list           | GET    | List all the endpoints available (supporting multiple integrations), available once for integration |
+| /api/edgeos/{ENTRY_ID}/ha  | GET    | JSON of all HA processed data before sent to entities including messages counters, per integration  |
+| /api/edgeos/{ENTRY_ID}/api | GET    | JSON of all raw data from the EdgeOS API, per integration                                           |
+| /api/edgeos/{ENTRY_ID}/ws  | GET    | JSON of all raw data from the EdgeOS WebSocket, per integration                                     |
+
+**Authentication: Requires long-living token from HA**
+
 ## 2.0.13
 
 - Add support for all interfaces but `loopback` [#76](https://github.com/elad-bar/ha-edgeos/issues/76)

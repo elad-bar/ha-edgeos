@@ -11,7 +11,7 @@ DOMAIN = "edgeos"
 DEFAULT_NAME = "EdgeOS"
 MANUFACTURER = "Ubiquiti"
 
-CONFIGURATION_MANAGER = f"cm_{DOMAIN}"
+MAIN_VIEW = f"main_view_{DOMAIN}"
 
 DATA_KEYS = [
     CONF_HOST,

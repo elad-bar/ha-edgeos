@@ -13,7 +13,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
 )
-
 from homeassistant.components.sensor import SensorEntityDescription, SensorStateClass
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -230,11 +229,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         self._load_uptime_sensor()
         self._load_firmware_upgrade_binary_sensor()
         self._load_log_incoming_messages_switch()
-        self._load_store_debug_data_switch()
-
-        self._load_received_messages_sensor()
-        self._load_ignored_messages_sensor()
-        self._load_error_messages_sensor()
 
         for unique_id in self._devices:
             device_item = self._get_device(unique_id)
@@ -348,10 +342,19 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             _LOGGER.error(f"Failed to extract API data, Error: {ex}, Line: {line_number}")
 
     async def _log_ha_data(self):
+        messages = {}
+
+        for key in WS_MESSAGES:
+            message_counter = self._ws.data.get(key, 0)
+            counter_name = key.replace(f"-{MESSAGES_COUNTER_SECTION.lower()}", "")
+
+            messages[counter_name] = message_counter
+
         data = {
             API_DATA_SYSTEM: self._system,
             DEVICE_LIST: self._devices,
-            API_DATA_INTERFACES: self._interfaces
+            API_DATA_INTERFACES: self._interfaces,
+            MESSAGES_COUNTER_SECTION: messages
         }
 
         await self.storage_api.debug_log_ha(data)
@@ -849,105 +852,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 ex, f"Failed to load sensor for {entity_name}"
             )
 
-    def _load_received_messages_sensor(self):
-        device_name = self.system_name
-        entity_name = f"{device_name} Received Messages"
-
-        try:
-            state = self._ws.data.get(WS_RECEIVED_MESSAGES, 0)
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = "mdi:message-bulleted"
-
-            entity_description = SensorEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.MEASUREMENT
-            )
-
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description)
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
-
-    def _load_ignored_messages_sensor(self):
-        device_name = self.system_name
-        entity_name = f"{device_name} Ignored Messages"
-
-        try:
-            state = self._ws.data.get(WS_IGNORED_MESSAGES, 0)
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = "mdi:message-bulleted-off"
-
-            entity_description = SensorEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.MEASUREMENT
-            )
-
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description)
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
-
-    def _load_error_messages_sensor(self):
-        device_name = self.system_name
-        entity_name = f"{device_name} Error Messages"
-
-        try:
-            state = self._ws.data.get(WS_ERROR_MESSAGES, 0)
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
-            icon = "mdi:message-alert"
-
-            entity_description = SensorEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                state_class=SensorStateClass.MEASUREMENT
-            )
-
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description)
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
-
     def _load_firmware_upgrade_binary_sensor(self):
         device_name = self.system_name
         entity_name = f"{device_name} Firmware Upgrade"
@@ -1016,43 +920,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         except Exception as ex:
             self.log_exception(
                 ex, f"Failed to load log incoming messages switch for {entity_name}"
-            )
-
-    def _load_store_debug_data_switch(self):
-        device_name = self.system_name
-        entity_name = f"{device_name} Store Debug Data"
-
-        try:
-            state = self.storage_api.store_debug_data
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SWITCH, entity_name)
-
-            icon = "mdi:file-download"
-
-            entity_description = SwitchEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                icon=icon,
-                entity_category=EntityCategory.CONFIG
-            )
-
-            self.entity_manager.set_entity(DOMAIN_SWITCH,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description)
-
-            self.set_action(unique_id, ACTION_CORE_ENTITY_TURN_ON, self._enable_store_debug_data)
-            self.set_action(unique_id, ACTION_CORE_ENTITY_TURN_OFF, self._disable_store_debug_data)
-
-        except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load store debug data switch for {entity_name}"
             )
 
     def _load_device_received_rate_sensor(self, device: EdgeOSDeviceData):
@@ -1480,12 +1347,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
     async def _disable_log_incoming_messages(self, entity: EntityData):
         await self.storage_api.set_log_incoming_messages(False)
 
-    async def _enable_store_debug_data(self, entity: EntityData):
-        await self.storage_api.set_store_debug_data(True)
-
-    async def _disable_store_debug_data(self, entity: EntityData):
-        await self.storage_api.set_store_debug_data(False)
-
     async def _set_unit(self, entity: EntityData, option: str):
         await self.storage_api.set_unit(option)
 
@@ -1575,7 +1436,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             STORAGE_DATA_UPDATE_ENTITIES_INTERVAL: self.storage_api.set_update_entities_interval,
             STORAGE_DATA_UPDATE_API_INTERVAL: self.storage_api.set_update_api_interval,
             STORAGE_DATA_LOG_INCOMING_MESSAGES: self.storage_api.set_log_incoming_messages,
-            STORAGE_DATA_STORE_DEBUG_DATA: self.storage_api.set_store_debug_data,
             STORAGE_DATA_UNIT: self.storage_api.set_unit
         }
 
