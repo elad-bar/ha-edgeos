@@ -3,6 +3,7 @@
 ## 2.0.15
 
 - Fix unhandled WS session disconnection
+- Add support for special interfaces (vtun, switch, pppoe, openvpn)
 
 ## 2.0.14
 
