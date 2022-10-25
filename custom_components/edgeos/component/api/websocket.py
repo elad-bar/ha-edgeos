@@ -142,6 +142,8 @@ class IntegrationWS(BaseAPI):
 
     async def async_send_heartbeat(self):
         _LOGGER.debug(f"Keep alive message sent")
+        if self._session is None or self._session.closed:
+            await self.set_status(ConnectivityStatus.NotConnected)
 
         if self.status == ConnectivityStatus.Connected:
             content = {
@@ -172,8 +174,9 @@ class IntegrationWS(BaseAPI):
                 is_closing_type = msg.type in WS_CLOSING_MESSAGE
                 is_error = msg.type == aiohttp.WSMsgType.ERROR
                 is_closing_data = False if is_closing_type or is_error else msg.data == "close"
+                session_is_closed = self._session is None or self._session.closed
 
-                if is_closing_type or is_error or is_closing_data:
+                if is_closing_type or is_error or is_closing_data or session_is_closed:
                     _LOGGER.warning(
                         f"WS stopped listening, "
                         f"Message: {str(msg)}, "

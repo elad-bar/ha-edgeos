@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.15
+
+- Fix unhandled WS session disconnection 
+
 ## 2.0.14
 
 **Debugging became easier (less IO and Disk Space)**
