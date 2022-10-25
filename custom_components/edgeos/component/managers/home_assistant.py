@@ -297,6 +297,20 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 if interface_item is not None:
                     self._update_interface_stats(interface_item, stats)
 
+                else:
+                    interface_type_name = None
+
+                    for interface_prefix in SPECIAL_INTERFACES:
+                        if name.startswith(interface_prefix):
+                            interface_type_name = SPECIAL_INTERFACES.get(interface_prefix)
+
+                    if interface_type_name is not None:
+                        interface_data = interfaces_data.get(name)
+                        self._extract_interface(name, interface_type_name, interface_data)
+
+                        interface_item = self._interfaces.get(name)
+                        self._update_interface_stats(interface_item, stats)
+
             await self._log_ha_data()
 
         except Exception as ex:

@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 
 from cryptography.fernet import InvalidToken
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry

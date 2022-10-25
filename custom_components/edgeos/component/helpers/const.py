@@ -306,3 +306,10 @@ WS_CLOSING_MESSAGE = [
     aiohttp.WSMsgType.CLOSED,
     aiohttp.WSMsgType.CLOSING,
 ]
+
+SPECIAL_INTERFACES = {
+    "pppoe": "Internet Dail-Up",
+    "switch": "Switch",
+    "vtun": "Virtual Tunnel",
+    "openvpn": "OpenVPN"
+}
