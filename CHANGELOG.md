@@ -2,7 +2,7 @@
 
 ## 2.0.15
 
-- Fix unhandled WS session disconnection 
+- Fix unhandled WS session disconnection
 
 ## 2.0.14
 
