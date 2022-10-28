@@ -102,20 +102,22 @@ logger:
 
 
 ### Per interface
-| Entity Name                                             | Type   | Description                                                                  | Additional information      |
-|---------------------------------------------------------|--------|------------------------------------------------------------------------------|-----------------------------|
-| {Router Name} {Interface Name} Status                   | Switch | Sets whether to interface is active or not                                   |                             |
-| {Router Name} {Interface Name} Monitored                | Switch | Sets whether to monitor interface and create all the components below or not |                             |
-| {Router Name} {Interface Name} Received Rate            | Sensor | Received Rate per second                                                     | Statistics: Measurement     |
-| {Router Name} {Interface Name} Received Traffic         | Sensor | Received total traffic                                                       | Statistics: Total Increment |
-| {Router Name} {Interface Name} Received Dropped Packets | Sensor | Received packets lost                                                        | Statistics: Total Increment |
-| {Router Name} {Interface Name} Received Errors          | Sensor | Received errors                                                              | Statistics: Total Increment |
-| {Router Name} {Interface Name} Received Packets         | Sensor | Received packets                                                             | Statistics: Total Increment |
-| {Router Name} {Interface Name} Sent Rate                | Sensor | Sent Rate per second                                                         | Statistics: Measurement     |
-| {Router Name} {Interface Name} Sent Traffic             | Sensor | Sent total traffic                                                           | Statistics: Total Increment |
-| {Router Name} {Interface Name} Sent Dropped Packets     | Sensor | Sent packets lost                                                            | Statistics: Total Increment |
-| {Router Name} {Interface Name} Sent Errors              | Sensor | Sent errors                                                                  | Statistics: Total Increment |
-| {Router Name} {Interface Name} Sent Packets             | Sensor | Sent packets                                                                 | Statistics: Total Increment |
+| Entity Name                                             | Type          | Description                                                                  | Additional information                      |
+|---------------------------------------------------------|---------------|------------------------------------------------------------------------------|---------------------------------------------|
+| {Router Name} {Interface Name} Status                   | Switch        | Sets whether to interface is active or not                                   | Available only if user level is `admin`     |
+| {Router Name} {Interface Name} Status                   | Binary Sensor | Indicates whether interface is active or not                                 | Available only if user level is not `admin` |
+| {Router Name} {Interface Name} Connected                | Binary Sensor | Indicates whether interface's port is connected or not                       |                                             |
+| {Router Name} {Interface Name} Monitored                | Switch        | Sets whether to monitor interface and create all the components below or not |                                             |
+| {Router Name} {Interface Name} Received Rate            | Sensor        | Received Rate per second                                                     | Statistics: Measurement                     |
+| {Router Name} {Interface Name} Received Traffic         | Sensor        | Received total traffic                                                       | Statistics: Total Increment                 |
+| {Router Name} {Interface Name} Received Dropped Packets | Sensor        | Received packets lost                                                        | Statistics: Total Increment                 |
+| {Router Name} {Interface Name} Received Errors          | Sensor        | Received errors                                                              | Statistics: Total Increment                 |
+| {Router Name} {Interface Name} Received Packets         | Sensor        | Received packets                                                             | Statistics: Total Increment                 |
+| {Router Name} {Interface Name} Sent Rate                | Sensor        | Sent Rate per second                                                         | Statistics: Measurement                     |
+| {Router Name} {Interface Name} Sent Traffic             | Sensor        | Sent total traffic                                                           | Statistics: Total Increment                 |
+| {Router Name} {Interface Name} Sent Dropped Packets     | Sensor        | Sent packets lost                                                            | Statistics: Total Increment                 |
+| {Router Name} {Interface Name} Sent Errors              | Sensor        | Sent errors                                                                  | Statistics: Total Increment                 |
+| {Router Name} {Interface Name} Sent Packets             | Sensor        | Sent packets                                                                 | Statistics: Total Increment                 |
 
 
 _Unit of measurement for `Traffic` and `Rate` are according to the unit settings of the integration_

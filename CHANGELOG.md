@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.16
+
+- Add interface line connected binary sensor
+
 ## 2.0.15
 
 - Fix unhandled WS session disconnection

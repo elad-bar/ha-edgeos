@@ -255,6 +255,8 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             else:
                 self._load_interface_status_binary_sensor(interface_item)
 
+            self._load_interface_connected_binary_sensor(interface_item)
+
             self._load_interface_received_rate_sensor(interface_item)
             self._load_interface_received_traffic_sensor(interface_item)
             self._load_interface_received_dropped_sensor(interface_item)
@@ -480,9 +482,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             interface.priority = data.get(INTERFACE_DATA_PRIORITY)
             interface.promiscuous = data.get(INTERFACE_DATA_PROMISCUOUS)
             interface.stp = data.get(INTERFACE_DATA_STP, FALSE_STR).lower() == TRUE_STR
-
-            if is_special:
-                interface.up = True
 
             self._interfaces[interface.unique_id] = interface
 
@@ -1266,6 +1265,38 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
         try:
             state = STATE_ON if interface.up else STATE_OFF
+
+            attributes = {
+                ATTR_FRIENDLY_NAME: entity_name,
+                ADDRESS_LIST: interface.address
+            }
+
+            unique_id = EntityData.generate_unique_id(DOMAIN_BINARY_SENSOR, entity_name)
+
+            entity_description = BinarySensorEntityDescription(
+                key=unique_id,
+                name=entity_name,
+                device_class=BinarySensorDeviceClass.CONNECTIVITY
+            )
+
+            self.entity_manager.set_entity(DOMAIN_BINARY_SENSOR,
+                                           self.entry_id,
+                                           state,
+                                           attributes,
+                                           interface_name,
+                                           entity_description)
+
+        except Exception as ex:
+            self.log_exception(
+                ex, f"Failed to load binary sensor for {entity_name}"
+            )
+
+    def _load_interface_connected_binary_sensor(self, interface: EdgeOSInterfaceData):
+        interface_name = self._get_interface_name(interface)
+        entity_name = f"{interface_name} Connected"
+
+        try:
+            state = STATE_ON if interface.l1up else STATE_OFF
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
