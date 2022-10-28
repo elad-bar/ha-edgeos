@@ -245,7 +245,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
         for unique_id in self._interfaces:
             interface_item = self._interfaces.get(unique_id)
-            self._load_interface_monitor_switch(interface_item)
+
+            if not interface_item.is_special:
+                self._load_interface_monitor_switch(interface_item)
 
             if self._system.user_level == USER_LEVEL_ADMIN:
                 self._load_interface_status_switch(interface_item)
@@ -306,7 +308,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
                     if interface_type_name is not None:
                         interface_data = interfaces_data.get(name)
-                        self._extract_interface(name, interface_type_name, interface_data)
+                        self._extract_interface(name, interface_type_name, interface_data, True)
 
                         interface_item = self._interfaces.get(name)
                         self._update_interface_stats(interface_item, stats)
@@ -455,7 +457,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             _LOGGER.error(f"Failed to extract Interfaces data, Error: {ex}, Line: {line_number}")
 
-    def _extract_interface(self, name: str, interface_type: str, data: dict):
+    def _extract_interface(self, name: str, interface_type: str, data: dict, is_special: bool = False):
         try:
             existing_interface_data = self._interfaces.get(name)
 
@@ -465,6 +467,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             else:
                 interface = existing_interface_data
 
+            interface.is_special = is_special
             interface.description = data.get(INTERFACE_DATA_DESCRIPTION)
             interface.duplex = data.get(INTERFACE_DATA_DUPLEX)
             interface.speed = data.get(INTERFACE_DATA_SPEED)
@@ -477,6 +480,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             interface.priority = data.get(INTERFACE_DATA_PRIORITY)
             interface.promiscuous = data.get(INTERFACE_DATA_PROMISCUOUS)
             interface.stp = data.get(INTERFACE_DATA_STP, FALSE_STR).lower() == TRUE_STR
+
+            if is_special:
+                interface.up = True
 
             self._interfaces[interface.unique_id] = interface
 

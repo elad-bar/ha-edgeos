@@ -25,6 +25,7 @@ class EdgeOSInterfaceData:
     up: bool | None
     l1up: bool | None
     mac: str | None
+    is_special: bool
 
     def __init__(self, name: str, interface_type: str):
         self.name = name
@@ -48,6 +49,7 @@ class EdgeOSInterfaceData:
         self.up = None
         self.l1up = None
         self.mac = None
+        self.is_special = False
 
     @property
     def unique_id(self) -> str:

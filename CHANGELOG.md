@@ -5,6 +5,9 @@
 - Fix unhandled WS session disconnection
 - Add support for special interfaces (vtun, switch, pppoe, openvpn)
 
+**Please note:**
+For now, special interface do not support to turn on / off
+
 ## 2.0.14
 
 **Debugging became easier (less IO and Disk Space)**
