@@ -68,12 +68,6 @@ class StorageAPI(BaseAPI):
         return result
 
     @property
-    def store_debug_data(self):
-        result = self.data.get(STORAGE_DATA_STORE_DEBUG_DATA, False)
-
-        return result
-
-    @property
     def consider_away_interval(self):
         result = self.data.get(STORAGE_DATA_CONSIDER_AWAY_INTERVAL, DEFAULT_CONSIDER_AWAY_INTERVAL.total_seconds())
 
@@ -149,7 +143,6 @@ class StorageAPI(BaseAPI):
                 STORAGE_DATA_MONITORED_DEVICES: {},
                 STORAGE_DATA_UNIT: ATTR_BYTE,
                 STORAGE_DATA_LOG_INCOMING_MESSAGES: False,
-                STORAGE_DATA_STORE_DEBUG_DATA: False,
                 STORAGE_DATA_CONSIDER_AWAY_INTERVAL: DEFAULT_CONSIDER_AWAY_INTERVAL.total_seconds(),
                 STORAGE_DATA_UPDATE_ENTITIES_INTERVAL: DEFAULT_UPDATE_ENTITIES_INTERVAL.total_seconds(),
                 STORAGE_DATA_UPDATE_API_INTERVAL: DEFAULT_UPDATE_API_INTERVAL.total_seconds()

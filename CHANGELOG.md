@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.18
+
+- Removed configuration and service parameter of `store debug data`
+
 ## 2.0.17
 
 - Fix missing switch for monitoring

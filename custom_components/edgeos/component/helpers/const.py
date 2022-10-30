@@ -48,7 +48,6 @@ STORAGE_DATA_MONITORED_INTERFACES = "monitored-interfaces"
 STORAGE_DATA_MONITORED_DEVICES = "monitored-devices"
 STORAGE_DATA_UNIT = "unit"
 STORAGE_DATA_LOG_INCOMING_MESSAGES = "log-incoming-messages"
-STORAGE_DATA_STORE_DEBUG_DATA = "store-debug-data"
 STORAGE_DATA_CONSIDER_AWAY_INTERVAL = "consider-away-interval"
 STORAGE_DATA_UPDATE_ENTITIES_INTERVAL = "update-entities-interval"
 STORAGE_DATA_UPDATE_API_INTERVAL = "update-api-interval"
@@ -296,7 +295,6 @@ SERVICE_SCHEMA_UPDATE_CONFIGURATION = vol.Schema(
         vol.Optional(STORAGE_DATA_UPDATE_ENTITIES_INTERVAL.replace(STRING_DASH, STRING_UNDERSCORE)): vol.Range(1, 60),
         vol.Optional(STORAGE_DATA_UPDATE_API_INTERVAL.replace(STRING_DASH, STRING_UNDERSCORE)): vol.Range(30, 180),
         vol.Optional(STORAGE_DATA_LOG_INCOMING_MESSAGES.replace(STRING_DASH, STRING_UNDERSCORE)): cv.boolean,
-        vol.Optional(STORAGE_DATA_STORE_DEBUG_DATA.replace(STRING_DASH, STRING_UNDERSCORE)): cv.boolean,
         vol.Optional(STORAGE_DATA_UNIT.replace(STRING_DASH, STRING_UNDERSCORE)): vol.In(UNIT_MAPPING.keys()),
     }
 )

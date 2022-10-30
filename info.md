@@ -140,7 +140,6 @@ service: edgeos.update_configuration
 data:
   device_id: {Main device ID}
   unit: Bytes
-  store_debug_data: true
   log_incoming_messages: true
   consider_away_interval: 180
   update_api_interval: 30

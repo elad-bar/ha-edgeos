@@ -52,13 +52,6 @@ update_configuration:
       example: "false"
       selector:
         boolean:
-    store_debug_data:
-      name: Store debug data
-      description: Enable / Disable store debug data to './storage' directory of HA for API (edgeos.debug.api.json) and WS (edgeos.debug.ws.json) data for faster debugging or just to get more ideas for additional features
-      required: false
-      example: "false"
-      selector:
-        boolean:
     unit:
       name: Unit
       description: Unit of measurement
