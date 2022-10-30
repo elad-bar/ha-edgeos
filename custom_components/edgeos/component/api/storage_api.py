@@ -20,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 class StorageAPI(BaseAPI):
     _stores: dict[str, Store] | None
-    _views: dict[str, EdgeOSBaseView] | None
     _config_data: ConfigData | None
     _data: dict
 
@@ -34,7 +33,6 @@ class StorageAPI(BaseAPI):
 
         self._config_data = None
         self._stores = None
-        self._views = None
         self._data = {}
 
     @property
