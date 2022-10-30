@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.17
+
+- Fix missing switch for monitoring
+- Non admin user INFO message that prevents interface switch to turn on / off will be logged once
+
 ## 2.0.16
 
 - Add interface line connected binary sensor

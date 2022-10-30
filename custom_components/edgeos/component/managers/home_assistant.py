@@ -52,6 +52,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         self._interfaces: dict[str, EdgeOSInterfaceData] = {}
         self._unknown_devices: int | None = None
         self._can_load_components: bool = False
+        self._user_level_warning_logged: bool = False
 
     @property
     def hass(self) -> HomeAssistant:
@@ -184,7 +185,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
     async def async_stop_data_providers(self):
         await self.api.terminate()
-        await self.ws.terminate()
 
     async def async_update_data_providers(self):
         try:
@@ -246,15 +246,13 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         for unique_id in self._interfaces:
             interface_item = self._interfaces.get(unique_id)
 
-            if not interface_item.is_special:
-                self._load_interface_monitor_switch(interface_item)
-
-            if self._system.user_level == USER_LEVEL_ADMIN:
+            if self._system.user_level == USER_LEVEL_ADMIN and not interface_item.is_special:
                 self._load_interface_status_switch(interface_item)
 
             else:
                 self._load_interface_status_binary_sensor(interface_item)
 
+            self._load_interface_monitor_switch(interface_item)
             self._load_interface_connected_binary_sensor(interface_item)
 
             self._load_interface_received_rate_sensor(interface_item)
@@ -424,7 +422,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             self._system = system_data
 
-            if system_data.user_level != USER_LEVEL_ADMIN:
+            if system_data.user_level != USER_LEVEL_ADMIN and not self._user_level_warning_logged:
+                self._user_level_warning_logged = False
+
                 _LOGGER.info(
                     f"User {self.config_data.username} level is {self._system.user_level}, "
                     f"Interface status switch will not be created as it requires admin role"
