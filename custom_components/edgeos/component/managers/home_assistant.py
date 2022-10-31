@@ -31,6 +31,7 @@ from ..api.api import IntegrationAPI
 from ..api.storage_api import StorageAPI
 from ..api.websocket import IntegrationWS
 from ..helpers.const import *
+from ..helpers.enums import InterfaceHandlers
 from ..models.edge_os_device_data import EdgeOSDeviceData
 from ..models.edge_os_interface_data import EdgeOSInterfaceData
 from ..models.edge_os_system_data import EdgeOSSystemData
@@ -50,9 +51,8 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         self._devices: dict[str, EdgeOSDeviceData] = {}
         self._devices_ip_mapping: dict[str, str] = {}
         self._interfaces: dict[str, EdgeOSInterfaceData] = {}
-        self._unknown_devices: int | None = None
         self._can_load_components: bool = False
-        self._user_level_warning_logged: bool = False
+        self._unique_messages: list[str] = []
 
     @property
     def hass(self) -> HomeAssistant:
@@ -222,6 +222,8 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         if not self._can_load_components:
             return
 
+        is_admin = self._system.user_level == USER_LEVEL_ADMIN
+
         self._load_unit_select()
         self._load_unknown_devices_sensor()
         self._load_cpu_sensor()
@@ -233,20 +235,26 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         for unique_id in self._devices:
             device_item = self._get_device(unique_id)
 
-            if not device_item.is_leased:
-                self._load_device_monitor_switch(device_item)
+            if device_item.is_leased:
+                continue
 
-                self._load_device_received_rate_sensor(device_item)
-                self._load_device_received_traffic_sensor(device_item)
-                self._load_device_sent_rate_sensor(device_item)
-                self._load_device_sent_traffic_sensor(device_item)
+            self._load_device_monitor_switch(device_item)
+            self._load_device_tracker(device_item)
 
-                self._load_device_tracker(device_item)
+            stats_data = device_item.get_stats()
+
+            for stats_data_key in stats_data:
+                stats_data_item = stats_data.get(stats_data_key)
+
+                self._load_device_stats_sensor(device_item, stats_data_key, stats_data_item)
 
         for unique_id in self._interfaces:
             interface_item = self._interfaces.get(unique_id)
 
-            if self._system.user_level == USER_LEVEL_ADMIN and not interface_item.is_special:
+            if interface_item.handler == InterfaceHandlers.IGNORED:
+                continue
+
+            if is_admin and interface_item.handler == InterfaceHandlers.REGULAR:
                 self._load_interface_status_switch(interface_item)
 
             else:
@@ -255,17 +263,12 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             self._load_interface_monitor_switch(interface_item)
             self._load_interface_connected_binary_sensor(interface_item)
 
-            self._load_interface_received_rate_sensor(interface_item)
-            self._load_interface_received_traffic_sensor(interface_item)
-            self._load_interface_received_dropped_sensor(interface_item)
-            self._load_interface_received_errors_sensor(interface_item)
-            self._load_interface_received_packets_sensor(interface_item)
+            stats_data = interface_item.get_stats()
 
-            self._load_interface_sent_rate_sensor(interface_item)
-            self._load_interface_sent_traffic_sensor(interface_item)
-            self._load_interface_sent_dropped_sensor(interface_item)
-            self._load_interface_sent_errors_sensor(interface_item)
-            self._load_interface_sent_packets_sensor(interface_item)
+            for stats_data_key in stats_data:
+                stats_data_item = stats_data.get(stats_data_key)
+
+                self._load_interface_stats_sensor(interface_item, stats_data_key, stats_data_item)
 
     def _get_device_name(self, device: EdgeOSDeviceData):
         return f"{self.system_name} Device {device.hostname}"
@@ -296,22 +299,11 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 interface_item = self._interfaces.get(name)
                 stats = interfaces_data.get(name)
 
-                if interface_item is not None:
-                    self._update_interface_stats(interface_item, stats)
+                if interface_item is None:
+                    interface_data = interfaces_data.get(name)
+                    interface_item = self._extract_interface(name, interface_data)
 
-                else:
-                    interface_type_name = None
-
-                    for interface_prefix in SPECIAL_INTERFACES:
-                        if name.startswith(interface_prefix):
-                            interface_type_name = SPECIAL_INTERFACES.get(interface_prefix)
-
-                    if interface_type_name is not None:
-                        interface_data = interfaces_data.get(name)
-                        self._extract_interface(name, interface_type_name, interface_data, True)
-
-                        interface_item = self._interfaces.get(name)
-                        self._update_interface_stats(interface_item, stats)
+                self._update_interface_stats(interface_item, stats)
 
             await self._log_ha_data()
 
@@ -422,13 +414,12 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             self._system = system_data
 
-            if system_data.user_level != USER_LEVEL_ADMIN and not self._user_level_warning_logged:
-                self._user_level_warning_logged = False
+            message = (
+                f"User {self.config_data.username} level is {self._system.user_level}, "
+                f"Interface status switch will not be created as it requires admin role"
+            )
 
-                _LOGGER.info(
-                    f"User {self.config_data.username} level is {self._system.user_level}, "
-                    f"Interface status switch will not be created as it requires admin role"
-                )
+            self.unique_log(logging.INFO, message)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -440,18 +431,12 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         try:
             interface_types = data.get(API_DATA_INTERFACES, {})
 
-            for interface_type_name in interface_types:
-                if interface_type_name not in UNMONITORED_INTERFACE_TYPES:
-                    interface_type_data = interface_types.get(interface_type_name)
+            for interface_type in interface_types:
+                interfaces = interface_types.get(interface_type)
 
-                    for interface_name in interface_type_data:
-                        interface_data = interface_type_data.get(interface_name, {})
-                        self._extract_interface(interface_name, interface_type_name, interface_data)
-
-                else:
-                    interface_type_data = interface_types.get(interface_type_name)
-
-                    _LOGGER.debug(f"Unmonitored interface {interface_type_name}, Data: {interface_type_data}")
+                for interface_name in interfaces:
+                    interface_data = interfaces.get(interface_name, {})
+                    self._extract_interface(interface_name, interface_data, interface_type)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -459,31 +444,33 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             _LOGGER.error(f"Failed to extract Interfaces data, Error: {ex}, Line: {line_number}")
 
-    def _extract_interface(self, name: str, interface_type: str, data: dict, is_special: bool = False):
+    def _extract_interface(self, name: str, data: dict, interface_type: str | None = None) -> EdgeOSInterfaceData:
+        interface = self._interfaces.get(name)
+
         try:
-            existing_interface_data = self._interfaces.get(name)
+            if data is not None:
+                if interface is None:
+                    interface = EdgeOSInterfaceData(name)
+                    interface.set_type(interface_type)
 
-            if existing_interface_data is None:
-                interface = EdgeOSInterfaceData(name, interface_type)
+                    if interface.handler == InterfaceHandlers.IGNORED:
+                        message = f"Interface {name} is ignored, no entities will be created, Data: {data}"
+                        self.unique_log(logging.INFO, message)
 
-            else:
-                interface = existing_interface_data
+                interface.description = data.get(INTERFACE_DATA_DESCRIPTION)
+                interface.duplex = data.get(INTERFACE_DATA_DUPLEX)
+                interface.speed = data.get(INTERFACE_DATA_SPEED)
+                interface.bridge_group = data.get(INTERFACE_DATA_BRIDGE_GROUP)
+                interface.address = data.get(INTERFACE_DATA_ADDRESS)
+                interface.aging = data.get(INTERFACE_DATA_AGING)
+                interface.bridged_conntrack = data.get(INTERFACE_DATA_BRIDGED_CONNTRACK)
+                interface.hello_time = data.get(INTERFACE_DATA_HELLO_TIME)
+                interface.max_age = data.get(INTERFACE_DATA_MAX_AGE)
+                interface.priority = data.get(INTERFACE_DATA_PRIORITY)
+                interface.promiscuous = data.get(INTERFACE_DATA_PROMISCUOUS)
+                interface.stp = data.get(INTERFACE_DATA_STP, FALSE_STR).lower() == TRUE_STR
 
-            interface.is_special = is_special
-            interface.description = data.get(INTERFACE_DATA_DESCRIPTION)
-            interface.duplex = data.get(INTERFACE_DATA_DUPLEX)
-            interface.speed = data.get(INTERFACE_DATA_SPEED)
-            interface.bridge_group = data.get(INTERFACE_DATA_BRIDGE_GROUP)
-            interface.address = data.get(INTERFACE_DATA_ADDRESS)
-            interface.aging = data.get(INTERFACE_DATA_AGING)
-            interface.bridged_conntrack = data.get(INTERFACE_DATA_BRIDGED_CONNTRACK)
-            interface.hello_time = data.get(INTERFACE_DATA_HELLO_TIME)
-            interface.max_age = data.get(INTERFACE_DATA_MAX_AGE)
-            interface.priority = data.get(INTERFACE_DATA_PRIORITY)
-            interface.promiscuous = data.get(INTERFACE_DATA_PROMISCUOUS)
-            interface.stp = data.get(INTERFACE_DATA_STP, FALSE_STR).lower() == TRUE_STR
-
-            self._interfaces[interface.unique_id] = interface
+                self._interfaces[interface.unique_id] = interface
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -495,33 +482,36 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 f"Line: {line_number}"
             )
 
+        return interface
+
     @staticmethod
-    def _update_interface_stats(interface_data: EdgeOSInterfaceData, data: dict):
+    def _update_interface_stats(interface: EdgeOSInterfaceData, data: dict):
         try:
-            interface_data.up = str(data.get(INTERFACE_DATA_UP, False)).lower() == TRUE_STR
-            interface_data.l1up = str(data.get(INTERFACE_DATA_LINK_UP, False)).lower() == TRUE_STR
-            interface_data.mac = data.get(INTERFACE_DATA_MAC)
-            interface_data.multicast = data.get(INTERFACE_DATA_MULTICAST, 0)
-            interface_data.address = data.get(ADDRESS_LIST, [])
+            if data is not None:
+                interface.up = str(data.get(INTERFACE_DATA_UP, False)).lower() == TRUE_STR
+                interface.l1up = str(data.get(INTERFACE_DATA_LINK_UP, False)).lower() == TRUE_STR
+                interface.mac = data.get(INTERFACE_DATA_MAC)
+                interface.multicast = data.get(INTERFACE_DATA_MULTICAST, 0)
+                interface.address = data.get(ADDRESS_LIST, [])
 
-            directions = [interface_data.received, interface_data.sent]
+                directions = [interface.received, interface.sent]
 
-            for direction in directions:
-                stat_data = {}
-                for stat_key in TRAFFIC_DATA_INTERFACE_ITEMS:
-                    key = f"{direction.direction}_{stat_key}"
-                    stat_data_item = TRAFFIC_DATA_INTERFACE_ITEMS.get(stat_key)
+                for direction in directions:
+                    stat_data = {}
+                    for stat_key in TRAFFIC_DATA_INTERFACE_ITEMS:
+                        key = f"{direction.direction}_{stat_key}"
+                        stat_data_item = TRAFFIC_DATA_INTERFACE_ITEMS.get(stat_key)
 
-                    stat_data[stat_data_item] = float(data.get(key))
+                        stat_data[stat_data_item] = float(data.get(key))
 
-                direction.update(stat_data)
+                    direction.update(stat_data)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
             _LOGGER.error(
-                f"Failed to update interface statistics for {interface_data.name}, "
+                f"Failed to update interface statistics for {interface.name}, "
                 f"Error: {ex}, "
                 f"Line: {line_number}"
             )
@@ -941,52 +931,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 ex, f"Failed to load log incoming messages switch for {entity_name}"
             )
 
-    def _load_device_received_rate_sensor(self, device: EdgeOSDeviceData):
-        unit_of_measurement = self._get_rate_unit_of_measurement()
-
-        state = self._convert_unit(device.received.rate)
-
-        self._load_device_stats_sensor(device,
-                                       "Received Rate",
-                                       state,
-                                       unit_of_measurement,
-                                       "mdi:upload-network-outline",
-                                       SensorStateClass.MEASUREMENT)
-
-    def _load_device_received_traffic_sensor(self, device: EdgeOSDeviceData):
-        unit_of_measurement = self._get_unit_of_measurement()
-
-        state = self._convert_unit(device.received.total)
-
-        self._load_device_stats_sensor(device,
-                                       "Received Traffic",
-                                       state,
-                                       unit_of_measurement,
-                                       "mdi:download-network-outline")
-
-    def _load_device_sent_rate_sensor(self, device: EdgeOSDeviceData):
-        unit_of_measurement = self._get_rate_unit_of_measurement()
-
-        state = self._convert_unit(device.sent.rate)
-
-        self._load_device_stats_sensor(device,
-                                       "Sent Rate",
-                                       state,
-                                       unit_of_measurement,
-                                       "mdi:upload-network-outline",
-                                       SensorStateClass.MEASUREMENT)
-
-    def _load_device_sent_traffic_sensor(self, device: EdgeOSDeviceData):
-        unit_of_measurement = self._get_unit_of_measurement()
-
-        state = self._convert_unit(device.sent.total)
-
-        self._load_device_stats_sensor(device,
-                                       "Sent Traffic",
-                                       state,
-                                       unit_of_measurement,
-                                       "mdi:upload-network-outline")
-
     def _load_device_tracker(self, device: EdgeOSDeviceData):
         device_name = self._get_device_name(device)
         entity_name = f"{device_name}"
@@ -1062,121 +1006,59 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 ex, f"Failed to load switch for {entity_name}"
             )
 
-    def _load_interface_received_rate_sensor(self, interface: EdgeOSInterfaceData):
-        unit_of_measurement = self._get_rate_unit_of_measurement()
-
-        state = self._convert_unit(interface.received.rate)
-
-        self._load_interface_stats_sensor(interface,
-                                          "Received Rate",
-                                          state,
-                                          unit_of_measurement,
-                                          "mdi:download-network-outline",
-                                          SensorStateClass.MEASUREMENT)
-
-    def _load_interface_received_traffic_sensor(self, interface: EdgeOSInterfaceData):
-        unit_of_measurement = self._get_unit_of_measurement()
-
-        state = self._convert_unit(interface.received.total)
-
-        self._load_interface_stats_sensor(interface,
-                                          "Received Traffic",
-                                          state,
-                                          unit_of_measurement,
-                                          "mdi:download-network-outline")
-
-    def _load_interface_received_dropped_sensor(self, interface: EdgeOSInterfaceData):
-        self._load_interface_stats_sensor(interface,
-                                          "Received Dropped",
-                                          interface.received.dropped,
-                                          TRAFFIC_DATA_DROPPED.capitalize(),
-                                          "mdi:package-variant-minus")
-
-    def _load_interface_received_errors_sensor(self, interface: EdgeOSInterfaceData):
-        self._load_interface_stats_sensor(interface,
-                                          "Received Errors",
-                                          interface.received.errors,
-                                          TRAFFIC_DATA_ERRORS.capitalize(),
-                                          "mdi:timeline-alert")
-
-    def _load_interface_received_packets_sensor(self, interface: EdgeOSInterfaceData):
-        self._load_interface_stats_sensor(interface,
-                                          "Received Packets",
-                                          interface.received.packets,
-                                          TRAFFIC_DATA_PACKETS.capitalize(),
-                                          "mdi:package-up")
-
-    def _load_interface_sent_rate_sensor(self, interface: EdgeOSInterfaceData):
-        unit_of_measurement = self._get_rate_unit_of_measurement()
-
-        state = self._convert_unit(interface.sent.rate)
-
-        self._load_interface_stats_sensor(interface,
-                                          "Sent Rate",
-                                          state,
-                                          unit_of_measurement,
-                                          "mdi:upload-network-outline",
-                                          SensorStateClass.MEASUREMENT)
-
-    def _load_interface_sent_traffic_sensor(self, interface: EdgeOSInterfaceData):
-        unit_of_measurement = self._get_unit_of_measurement()
-
-        state = self._convert_unit(interface.sent.total)
-
-        self._load_interface_stats_sensor(interface,
-                                          "Sent Traffic",
-                                          state,
-                                          unit_of_measurement,
-                                          "mdi:upload-network-outline")
-
-    def _load_interface_sent_dropped_sensor(self, interface: EdgeOSInterfaceData):
-        self._load_interface_stats_sensor(interface,
-                                          "Sent Dropped",
-                                          interface.sent.dropped,
-                                          TRAFFIC_DATA_DROPPED.capitalize(),
-                                          "mdi:package-variant-minus")
-
-    def _load_interface_sent_errors_sensor(self, interface: EdgeOSInterfaceData):
-        self._load_interface_stats_sensor(interface,
-                                          "Sent Errors",
-                                          interface.sent.errors,
-                                          TRAFFIC_DATA_ERRORS.capitalize(),
-                                          "mdi:timeline-alert")
-
-    def _load_interface_sent_packets_sensor(self, interface: EdgeOSInterfaceData):
-        self._load_interface_stats_sensor(interface,
-                                          "Sent Packets",
-                                          interface.sent.packets,
-                                          TRAFFIC_DATA_PACKETS.capitalize(),
-                                          "mdi:package-up")
-
     def _load_device_stats_sensor(self,
                                   device: EdgeOSDeviceData,
                                   entity_suffix: str,
-                                  state: str | int | float | None,
-                                  unit_of_measurement: str,
-                                  icon: str | None,
-                                  state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING):
+                                  state: str | int | float | None):
 
         device_name = self._get_device_name(device)
         entity_name = f"{device_name} {entity_suffix}"
 
         is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
+        icon = STATS_ICONS.get(entity_suffix)
+
+        is_rate_stats = entity_suffix in STATS_RATE
+
+        if is_rate_stats:
+            unit_of_measurement = self._get_rate_unit_of_measurement()
+            state = self._convert_unit(state)
+
+        elif entity_suffix in STATS_TRAFFIC:
+            unit_of_measurement = self._get_unit_of_measurement()
+            state = self._convert_unit(state)
+
+        else:
+            unit_of_measurement = str(STATS_UNITS.get(entity_suffix)).capitalize()
+
+        state_class = SensorStateClass.MEASUREMENT if is_rate_stats else SensorStateClass.TOTAL_INCREASING
 
         self._load_stats_sensor(device_name, entity_name, state, unit_of_measurement, icon, state_class, is_monitored)
 
     def _load_interface_stats_sensor(self,
                                      interface: EdgeOSInterfaceData,
                                      entity_suffix: str,
-                                     state: str | int | float | None,
-                                     unit_of_measurement: str,
-                                     icon: str | None,
-                                     state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING):
+                                     state: str | int | float | None):
 
         device_name = self._get_interface_name(interface)
         entity_name = f"{device_name} {entity_suffix}"
 
         is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
+
+        is_rate_stats = entity_suffix in STATS_RATE
+        icon = STATS_ICONS.get(entity_suffix)
+
+        if is_rate_stats:
+            unit_of_measurement = self._get_rate_unit_of_measurement()
+            state = self._convert_unit(state)
+
+        elif entity_suffix in STATS_TRAFFIC:
+            unit_of_measurement = self._get_unit_of_measurement()
+            state = self._convert_unit(state)
+
+        else:
+            unit_of_measurement = str(STATS_UNITS.get(entity_suffix)).capitalize()
+
+        state_class = SensorStateClass.MEASUREMENT if is_rate_stats else SensorStateClass.TOTAL_INCREASING
 
         self._load_stats_sensor(device_name, entity_name, state, unit_of_measurement, icon, state_class, is_monitored)
 
@@ -1512,3 +1394,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         result = datetime.fromtimestamp(last_reset)
 
         return result
+
+    def unique_log(self, log_level: int, message: str):
+        if message not in self._unique_messages:
+            self._unique_messages.append(message)
+
+            _LOGGER.log(log_level, self._unique_messages)

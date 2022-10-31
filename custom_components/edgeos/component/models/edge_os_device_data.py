@@ -27,6 +27,16 @@ class EdgeOSDeviceData:
     def unique_id(self) -> str:
         return self.mac
 
+    def get_stats(self):
+        data = {
+            RECEIVED_RATE_PREFIX: self.received.rate,
+            RECEIVED_TRAFFIC_PREFIX: self.received.total,
+            SENT_RATE_PREFIX: self.sent.rate,
+            SENT_TRAFFIC_PREFIX: self.sent.total
+        }
+
+        return data
+
     @property
     def last_activity(self):
         received_activity = self.received.last_activity

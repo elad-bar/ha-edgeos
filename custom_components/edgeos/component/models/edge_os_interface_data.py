@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from ..helpers.const import *
+from ..helpers.enums import InterfaceHandlers
 from .edge_os_traffic_data import EdgeOSTrafficData
 
 
 class EdgeOSInterfaceData:
     name: str
-    interface_type: str
+    interface_type: str | None
     duplex: str | None
     speed: str | None
     description: str | None
@@ -25,11 +26,11 @@ class EdgeOSInterfaceData:
     up: bool | None
     l1up: bool | None
     mac: str | None
-    is_special: bool
+    handler: InterfaceHandlers
 
-    def __init__(self, name: str, interface_type: str):
+    def __init__(self, name: str):
         self.name = name
-        self.interface_type = interface_type
+        self.interface_type = None
         self.description = None
         self.duplex = None
         self.speed = None
@@ -49,7 +50,7 @@ class EdgeOSInterfaceData:
         self.up = None
         self.l1up = None
         self.mac = None
-        self.is_special = False
+        self.handler = InterfaceHandlers.IGNORED
 
     @property
     def unique_id(self) -> str:
@@ -59,7 +60,8 @@ class EdgeOSInterfaceData:
         obj = {
             INTERFACE_DATA_NAME: self.name,
             INTERFACE_DATA_DESCRIPTION: self.description,
-            INTERFACE_DATA_INTERFACE_TYPE: self.interface_type,
+            INTERFACE_DATA_TYPE: self.interface_type,
+            INTERFACE_DATA_HANDLER: self.handler.name,
             INTERFACE_DATA_DUPLEX: self.duplex,
             INTERFACE_DATA_SPEED: self.speed,
             INTERFACE_DATA_BRIDGE_GROUP: self.bridge_group,
@@ -78,6 +80,40 @@ class EdgeOSInterfaceData:
         }
 
         return obj
+
+    def set_type(self, interface_type: str | None):
+        handler = InterfaceHandlers.IGNORED
+
+        if interface_type is None:
+            for special_interface in SPECIAL_INTERFACES:
+                if self.name.startswith(special_interface):
+                    handler = InterfaceHandlers.SPECIAL
+                    interface_type = SPECIAL_INTERFACES.get(special_interface)
+
+                    break
+
+        else:
+            if interface_type not in IGNORED_INTERFACES:
+                handler = InterfaceHandlers.REGULAR
+
+        self.handler = handler
+        self.interface_type = interface_type
+
+    def get_stats(self):
+        data = {
+            RECEIVED_RATE_PREFIX: self.received.rate,
+            RECEIVED_TRAFFIC_PREFIX: self.received.total,
+            RECEIVED_DROPPED_PREFIX: self.received.dropped,
+            RECEIVED_ERRORS_PREFIX: self.received.errors,
+            RECEIVED_PACKETS_PREFIX: self.received.packets,
+            SENT_RATE_PREFIX: self.sent.rate,
+            SENT_TRAFFIC_PREFIX: self.sent.total,
+            SENT_DROPPED_PREFIX: self.sent.dropped,
+            SENT_ERRORS_PREFIX: self.sent.errors,
+            SENT_PACKETS_PREFIX: self.sent.packets
+        }
+
+        return data
 
     def __repr__(self):
         to_string = f"{self.to_dict()}"

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.19
+
+- Improved logic to identify interface types correctly and present all
+
 ## 2.0.18
 
 - Removed configuration and service parameter of `store debug data`
