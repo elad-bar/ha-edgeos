@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.20
+
+- Additional validation for WebSockets disconnection with more logging
+- Documentation for API
+- Core alignment
+
 ## 2.0.19
 
 - Improved logic to identify interface types correctly and present all

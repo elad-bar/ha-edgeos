@@ -158,3 +158,41 @@ data:
 | /api/edgeos/{ENTRY_ID}/ws  | GET    | JSON of all raw data from the EdgeOS WebSocket, per integration                                     |
 
 **Authentication: Requires long-living token from HA**
+
+
+### Examples
+
+#### List
+
+*Request*
+```bash
+curl https://ha_url:8123/api/edgeos/list
+   -H "Accept: application/json"
+   -H "Authorization: Bearer {token}"
+```
+
+#### Home Assistant Data
+
+*Request*
+```bash
+curl https://ha_url:8123/api/edgeos/{ENTRY_ID}/ha
+   -H "Accept: application/json"
+   -H "Authorization: Bearer {token}"
+```
+
+#### WebSockets Data
+
+*Request*
+```bash
+curl https://ha_url:8123/api/edgeos/{ENTRY_ID}/ws
+   -H "Accept: application/json"
+   -H "Authorization: Bearer {token}"
+```
+
+#### API Data
+
+```bash
+curl https://ha_url:8123/api/edgeos/{ENTRY_ID}/api
+   -H "Accept: application/json"
+   -H "Authorization: Bearer {token}"
+```

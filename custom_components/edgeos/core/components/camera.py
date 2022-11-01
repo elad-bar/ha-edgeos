@@ -60,7 +60,10 @@ class CoreCamera(Camera, BaseEntity, ABC):
             username = config_data.username
             password = config_data.password
 
-            fps = int(entity.details.get(ATTR_STREAM_FPS, 1))
+            fps_str = entity.details.get(ATTR_STREAM_FPS, SINGLE_FRAME_PS)
+
+            fps = SINGLE_FRAME_PS if fps_str == EMPTY_STRING else int(float(fps_str))
+
             stream_source = entity.attributes.get(CONF_STREAM_SOURCE)
 
             snapshot = entity.attributes.get(CONF_STILL_IMAGE_URL)
@@ -75,7 +78,7 @@ class CoreCamera(Camera, BaseEntity, ABC):
             self._still_image_url.hass = hass
 
             self._stream_source = stream_source
-            self._frame_interval = 1 / fps
+            self._frame_interval = SINGLE_FRAME_PS / fps
             self._supported_features = stream_support_flag
 
             self._is_recording_state = self.entity.details.get(ATTR_MODE_RECORD)

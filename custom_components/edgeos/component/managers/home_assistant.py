@@ -96,7 +96,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             await self._extract_ws_data()
 
     async def _api_status_changed(self, status: ConnectivityStatus):
-        _LOGGER.info(f"API Status changed to {status}, WS Status: {self.ws.status}")
+        _LOGGER.info(f"API Status changed to {status.name}, WS Status: {self.ws.status.name}")
         if status == ConnectivityStatus.Connected:
             await self.api.async_update()
 
@@ -111,7 +111,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 await self.ws.terminate()
 
     async def _ws_status_changed(self, status: ConnectivityStatus):
-        _LOGGER.info(f"WS Status changed to {status}, API Status: {self.api.status}")
+        _LOGGER.info(f"WS Status changed to {status.name}, API Status: {self.api.status.name}")
 
         api_connected = self.api.status == ConnectivityStatus.Connected
         ws_connected = status == ConnectivityStatus.Connected

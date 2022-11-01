@@ -145,6 +145,8 @@ class IntegrationWS(BaseAPI):
         if self._session is None or self._session.closed:
             await self.set_status(ConnectivityStatus.NotConnected)
 
+            return
+
         if self.status == ConnectivityStatus.Connected:
             content = {
                 "CLIENT_PING": "",
@@ -157,7 +159,12 @@ class IntegrationWS(BaseAPI):
 
             _LOGGER.debug(f"Keep alive data to be sent: {data_for_log}")
 
-            await self._ws.send_str(data)
+            try:
+                await self._ws.send_str(data)
+            except ConnectionResetError as cre:
+                _LOGGER.warning(f"Connection reset error raise by the client, will try to reconnect soon, Error: {cre}")
+
+                await self.set_status(ConnectivityStatus.Failed)
 
     async def _listen(self):
         _LOGGER.info(f"Starting to listen connected")
@@ -171,12 +178,13 @@ class IntegrationWS(BaseAPI):
 
         while listening and self.status == ConnectivityStatus.Connected:
             async for msg in self._ws:
+                is_connected = self.status == ConnectivityStatus.Connected
                 is_closing_type = msg.type in WS_CLOSING_MESSAGE
                 is_error = msg.type == aiohttp.WSMsgType.ERROR
                 is_closing_data = False if is_closing_type or is_error else msg.data == "close"
                 session_is_closed = self._session is None or self._session.closed
 
-                if is_closing_type or is_error or is_closing_data or session_is_closed:
+                if is_closing_type or is_error or is_closing_data or session_is_closed or not is_connected:
                     _LOGGER.warning(
                         f"WS stopped listening, "
                         f"Message: {str(msg)}, "
@@ -191,6 +199,8 @@ class IntegrationWS(BaseAPI):
                         _LOGGER.debug(f"Message received: {str(msg)}")
 
                     await self.parse_message(msg.data)
+
+            _LOGGER.info("Message queue is empty, will try to resample in a second")
 
             await sleep(1)
 
