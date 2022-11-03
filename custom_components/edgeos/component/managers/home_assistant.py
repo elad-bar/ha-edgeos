@@ -702,7 +702,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 key=unique_id,
                 name=entity_name,
                 device_class=f"{DOMAIN}__{STORAGE_DATA_UNIT}",
-                options=UNIT_OF_MEASUREMENT_MAPPING.keys(),
+                options=list(UNIT_OF_MEASUREMENT_MAPPING.keys()),
                 entity_category=EntityCategory.CONFIG
             )
 

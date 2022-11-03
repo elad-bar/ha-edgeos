@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.22
+
+- Fix issue with new Select options
+
 ## 2.0.21
 
 **Version requires HA v2022.11.0 and above**
