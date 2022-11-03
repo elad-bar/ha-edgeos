@@ -1,5 +1,5 @@
 {
   "name": "EdgeOS (Ubiquiti)",
   "iot_class": "Local Polling",
-  "homeassistant": "2021.12.0"
+  "homeassistant": "2022.11.0"
 }

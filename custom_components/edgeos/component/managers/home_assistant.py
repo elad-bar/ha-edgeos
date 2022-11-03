@@ -13,6 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
 )
+from homeassistant.components.select import SelectEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription, SensorStateClass
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -26,7 +27,6 @@ from ...configuration.models.config_data import ConfigData
 from ...core.helpers.enums import ConnectivityStatus
 from ...core.managers.home_assistant import HomeAssistantManager
 from ...core.models.entity_data import EntityData
-from ...core.models.select_description import SelectDescription
 from ..api.api import IntegrationAPI
 from ..api.storage_api import StorageAPI
 from ..api.websocket import IntegrationWS
@@ -698,11 +698,11 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             unique_id = EntityData.generate_unique_id(DOMAIN_SELECT, entity_name)
             state = self.storage_api.unit
 
-            entity_description = SelectDescription(
+            entity_description = SelectEntityDescription(
                 key=unique_id,
                 name=entity_name,
                 device_class=f"{DOMAIN}__{STORAGE_DATA_UNIT}",
-                attr_options=tuple(UNIT_OF_MEASUREMENT_MAPPING.keys()),
+                options=UNIT_OF_MEASUREMENT_MAPPING.keys(),
                 entity_category=EntityCategory.CONFIG
             )
 

@@ -44,7 +44,7 @@ DATA = f"data_{DOMAIN}"
 
 DOMAIN_KEY_FILE = f"{DOMAIN}.key"
 
-ATTR_OPTIONS = "attr_options"
+ATTR_OPTIONS = "options"
 
 CONF_STILL_IMAGE_URL = "still_image_url"
 CONF_STREAM_SOURCE = "stream_source"

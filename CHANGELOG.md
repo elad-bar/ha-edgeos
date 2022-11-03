@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.21
+
+**Version requires HA v2022.11.0 and above**
+
+- Aligned *Core Select* according to new HA *SelectEntityDescription* object
+
 ## 2.0.20
 
 - Additional validation for WebSockets disconnection with more logging
