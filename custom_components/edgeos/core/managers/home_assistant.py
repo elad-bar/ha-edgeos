@@ -246,8 +246,15 @@ class HomeAssistantManager:
 
         self._update_lock = True
 
-        self.load_devices()
-        self.load_entities()
+        try:
+            self.load_devices()
+            self.load_entities()
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(f"Failed to update devices and entities, Error: {ex}, Line: {line_number}")
 
         self.entity_manager.update()
 

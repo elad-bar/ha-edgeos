@@ -271,7 +271,7 @@ class IntegrationAPI(BaseAPI):
 
                         self._last_valid = ts
             else:
-                _LOGGER.warning(f"Heartbeat not ran due to closed session")
+                _LOGGER.debug(f"Ignoring request to send heartbeat, Reason: closed session")
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -321,7 +321,7 @@ class IntegrationAPI(BaseAPI):
                     else:
                         _LOGGER.error("Invalid response, not contain success status")
             else:
-                _LOGGER.warning(f"Get devices data not ran due to closed session")
+                _LOGGER.debug(f"Ignoring request to get devices data, Reason: closed session")
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -348,7 +348,7 @@ class IntegrationAPI(BaseAPI):
                         else:
                             self.data[key] = data.get(RESPONSE_OUTPUT)
             else:
-                _LOGGER.warning(f"Get data of {key} not ran due to closed session")
+                _LOGGER.debug(f"Ignoring request to get data of {key}, Reason: closed session")
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
