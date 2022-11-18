@@ -11,10 +11,7 @@ import sys
 from typing import Awaitable, Callable
 from urllib.parse import urlparse
 
-from aiohttp import ClientSession
-
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from ...component.helpers.const import *
 from ...configuration.models.config_data import ConfigData
@@ -25,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class IntegrationWS(BaseAPI):
-    _session: ClientSession | None
     _config_data: ConfigData | None
     _api_data: dict
     _can_log_messages: bool
@@ -33,7 +29,7 @@ class IntegrationWS(BaseAPI):
     _ws_handlers: dict
 
     def __init__(self,
-                 hass: HomeAssistant,
+                 hass: HomeAssistant | None,
                  async_on_data_changed: Callable[[], Awaitable[None]] | None = None,
                  async_on_status_changed: Callable[[ConnectivityStatus], Awaitable[None]] | None = None
                  ):
@@ -41,7 +37,6 @@ class IntegrationWS(BaseAPI):
         super().__init__(hass, async_on_data_changed, async_on_status_changed)
 
         self._config_data = None
-        self._session = None
         self._ws = None
         self._api_data = {}
         self._remove_async_track_time = None
@@ -88,16 +83,9 @@ class IntegrationWS(BaseAPI):
                 WS_INTERFACES_KEY: {},
             }
 
-            await self.set_status(ConnectivityStatus.Connecting)
+            await self.initialize_session(cookies=self._api_cookies)
 
-            if self.hass is None:
-                self._session = ClientSession(cookies=self._api_cookies)
-            else:
-                self._session = async_create_clientsession(
-                    hass=self.hass, cookies=self._api_cookies
-                )
-
-            async with self._session.ws_connect(
+            async with self.session.ws_connect(
                 self._ws_url,
                 ssl=False,
                 autoclose=True,
@@ -115,7 +103,7 @@ class IntegrationWS(BaseAPI):
                 await self.set_status(ConnectivityStatus.NotConnected)
 
         except Exception as ex:
-            if self._session is not None and self._session.closed:
+            if self.session is not None and self.session.closed:
                 _LOGGER.info(f"WS Session closed")
 
                 await self.terminate()
@@ -133,16 +121,20 @@ class IntegrationWS(BaseAPI):
                 await self.set_status(ConnectivityStatus.Failed)
 
     async def terminate(self):
+        await super().terminate()
+
         if self._remove_async_track_time is not None:
             self._remove_async_track_time()
             self._remove_async_track_time = None
 
-        if self.status != ConnectivityStatus.Disconnected:
-            await self.set_status(ConnectivityStatus.Disconnected)
+        if self._ws is not None:
+            await self._ws.close()
+
+        self._ws = None
 
     async def async_send_heartbeat(self):
         _LOGGER.debug(f"Keep alive message sent")
-        if self._session is None or self._session.closed:
+        if self.session is None or self.session.closed:
             await self.set_status(ConnectivityStatus.NotConnected)
 
             return
@@ -182,7 +174,7 @@ class IntegrationWS(BaseAPI):
                 is_closing_type = msg.type in WS_CLOSING_MESSAGE
                 is_error = msg.type == aiohttp.WSMsgType.ERROR
                 is_closing_data = False if is_closing_type or is_error else msg.data == "close"
-                session_is_closed = self._session is None or self._session.closed
+                session_is_closed = self.session is None or self.session.closed
 
                 if is_closing_type or is_error or is_closing_data or session_is_closed or not is_connected:
                     _LOGGER.warning(

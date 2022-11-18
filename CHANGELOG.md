@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.23
+
+- Add test file to run locally (requires environment variables)
+- Cleaner code to resolve URLs
+- Remove unused constants
+- Core feature: BaseAPI to handle session initialization and termination
+- Core fix: wrongfully reported logs of entities getting updated when no update perform
+
 ## 2.0.22
 
 - Fix issue with new Select options

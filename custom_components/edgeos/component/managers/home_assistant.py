@@ -950,7 +950,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 name=entity_name
             )
 
-            details = device.to_dict()
+            details = {
+                ENTITY_UNIQUE_ID: device.unique_id
+            }
 
             is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
 
@@ -989,7 +991,10 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 entity_category=EntityCategory.CONFIG
             )
 
-            details = device.to_dict()
+            details = {
+                ENTITY_UNIQUE_ID: device.unique_id
+            }
+
             self.set_action(unique_id, ACTION_CORE_ENTITY_TURN_ON, self._set_device_monitored)
             self.set_action(unique_id, ACTION_CORE_ENTITY_TURN_OFF, self._set_device_unmonitored)
 
@@ -1123,7 +1128,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 entity_category=EntityCategory.CONFIG
             )
 
-            details = interface.to_dict()
+            details = {
+                ENTITY_UNIQUE_ID: interface.unique_id
+            }
 
             self.set_action(unique_id, ACTION_CORE_ENTITY_TURN_ON, self._set_interface_enabled)
             self.set_action(unique_id, ACTION_CORE_ENTITY_TURN_OFF, self._set_interface_disabled)
@@ -1226,7 +1233,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 entity_category=EntityCategory.CONFIG
             )
 
-            details = interface.to_dict()
+            details = {
+                ENTITY_UNIQUE_ID: interface.unique_id
+            }
 
             self.set_action(unique_id, ACTION_CORE_ENTITY_TURN_ON, self._set_interface_monitored)
             self.set_action(unique_id, ACTION_CORE_ENTITY_TURN_OFF, self._set_interface_unmonitored)

@@ -7,10 +7,9 @@ import logging
 import sys
 from typing import Awaitable, Callable
 
-from aiohttp import ClientSession, CookieJar
+from aiohttp import CookieJar
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from ...configuration.models.config_data import ConfigData
 from ...core.api.base_api import BaseAPI
@@ -25,11 +24,10 @@ _LOGGER = logging.getLogger(__name__)
 class IntegrationAPI(BaseAPI):
     """The Class for handling the data retrieval."""
 
-    _session: ClientSession | None
     _config_data: ConfigData | None
 
     def __init__(self,
-                 hass: HomeAssistant,
+                 hass: HomeAssistant | None,
                  async_on_data_changed: Callable[[], Awaitable[None]] | None = None,
                  async_on_status_changed: Callable[[ConnectivityStatus], Awaitable[None]] | None = None
                  ):
@@ -38,7 +36,6 @@ class IntegrationAPI(BaseAPI):
 
         try:
             self._config_data = None
-            self._session = None
             self._cookies = {}
             self._last_valid = None
 
@@ -74,9 +71,6 @@ class IntegrationAPI(BaseAPI):
     def cookies_data(self):
         return self._cookies
 
-    async def terminate(self):
-        await self.set_status(ConnectivityStatus.Disconnected)
-
     async def initialize(self, config_data: ConfigData):
         _LOGGER.info("Initializing API")
 
@@ -85,14 +79,7 @@ class IntegrationAPI(BaseAPI):
 
             cookie_jar = CookieJar(unsafe=True)
 
-            if self.hass is None:
-                self._session = ClientSession(cookie_jar=cookie_jar)
-            else:
-                self._session = async_create_clientsession(
-                    hass=self.hass, cookies=self._cookies, cookie_jar=cookie_jar,
-                )
-
-            await self._login()
+            await self.initialize_session(cookies=self._cookies, cookie_jar=cookie_jar)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -115,8 +102,8 @@ class IntegrationAPI(BaseAPI):
 
         return cookie_data
 
-    async def _login(self):
-        await self.set_status(ConnectivityStatus.Connecting)
+    async def login(self):
+        await super().login()
 
         try:
             username = self._config_data.username
@@ -126,11 +113,11 @@ class IntegrationAPI(BaseAPI):
 
             url = self._config_data.url
 
-            if self._session.closed:
+            if self.session.closed:
                 raise SessionTerminatedException()
 
-            async with self._session.post(url, data=credentials, ssl=False) as response:
-                all_cookies = self._session.cookie_jar.filter_cookies(response.url)
+            async with self.session.post(url, data=credentials, ssl=False) as response:
+                all_cookies = self.session.cookie_jar.filter_cookies(response.url)
 
                 for key, cookie in all_cookies.items():
                     self._cookies[cookie.key] = cookie.value
@@ -177,10 +164,18 @@ class IntegrationAPI(BaseAPI):
 
             await self.set_status(ConnectivityStatus.NotFound)
 
-    async def _async_get(self, url):
+    async def _async_get(self,
+                         endpoint,
+                         timestamp: str | None = None,
+                         action: str | None = None,
+                         subset: str | None = None
+                         ):
+
         result = None
         message = None
         status = 404
+
+        url = self._build_endpoint(endpoint, timestamp, action, subset)
 
         retry_attempt = 0
         while retry_attempt < MAXIMUM_RECONNECT:
@@ -190,8 +185,8 @@ class IntegrationAPI(BaseAPI):
             retry_attempt = retry_attempt + 1
 
             try:
-                if self._session is not None:
-                    async with self._session.get(url, ssl=False) as response:
+                if self.session is not None:
+                    async with self.session.get(url, ssl=False) as response:
                         status = response.status
 
                         message = (
@@ -202,7 +197,7 @@ class IntegrationAPI(BaseAPI):
                             result = await response.json()
                             break
                         elif status == 403:
-                            self._session = None
+                            self.session = None
                             self._cookies = {}
 
                             break
@@ -225,8 +220,8 @@ class IntegrationAPI(BaseAPI):
 
     def _get_post_headers(self):
         headers = {}
-        for header_key in self._session.headers:
-            header = self._session.headers.get(header_key)
+        for header_key in self.session.headers:
+            header = self.session.headers.get(header_key)
 
             if header is not None:
                 headers[header_key] = header
@@ -235,15 +230,17 @@ class IntegrationAPI(BaseAPI):
 
         return headers
 
-    async def _async_post(self, url, data):
+    async def _async_post(self, endpoint, data):
         result = None
 
         try:
-            if self._session is not None:
+            url = self._build_endpoint(endpoint)
+
+            if self.session is not None:
                 headers = self._get_post_headers()
                 data_json = json.dumps(data)
 
-                async with self._session.post(url, headers=headers, data=data_json, ssl=False) as response:
+                async with self.session.post(url, headers=headers, data=data_json, ssl=False) as response:
                     response.raise_for_status()
 
                     result = await response.json()
@@ -252,7 +249,7 @@ class IntegrationAPI(BaseAPI):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            message = f"URL: {url}, Error: {ex}, Line: {line_number}"
+            message = f"Endpoint: {endpoint}, Error: {ex}, Line: {line_number}"
             _LOGGER.warning(f"Request failed, {message}")
 
         return result
@@ -267,14 +264,7 @@ class IntegrationAPI(BaseAPI):
                 if current_invocation > timedelta(seconds=max_age):
                     current_ts = str(int(ts.timestamp()))
 
-                    heartbeat_req_url = self._get_edge_os_api_endpoint(
-                        API_HEARTBEAT
-                    )
-                    heartbeat_req_full_url = API_URL_HEARTBEAT_TEMPLATE.format(
-                        heartbeat_req_url, current_ts
-                    )
-
-                    response = await self._async_get(heartbeat_req_full_url)
+                    response = await self._async_get(API_URL_HEARTBEAT, timestamp=current_ts)
 
                     if response is not None:
                         _LOGGER.debug(f"Heartbeat response: {response}")
@@ -314,9 +304,7 @@ class IntegrationAPI(BaseAPI):
     async def _load_system_data(self):
         try:
             if self.status == ConnectivityStatus.Connected:
-                get_req_url = self._get_edge_os_api_endpoint(API_GET)
-
-                result_json = await self._async_get(get_req_url)
+                result_json = await self._async_get(API_URL_DATA, action=API_GET)
 
                 if result_json is not None:
                     if RESPONSE_SUCCESS_KEY in result_json:
@@ -348,12 +336,8 @@ class IntegrationAPI(BaseAPI):
                 _LOGGER.debug(f"Loading {key} data")
 
                 clean_item = key.replace(STRING_DASH, STRING_UNDERSCORE)
-                data_req_url = self._get_edge_os_api_endpoint(API_DATA)
-                data_req_full_url = API_URL_DATA_TEMPLATE.format(
-                    data_req_url, clean_item
-                )
 
-                data = await self._async_get(data_req_full_url)
+                data = await self._async_get(API_URL_DATA_SUBSET, action=API_DATA, subset=clean_item)
 
                 if data is not None:
                     if RESPONSE_SUCCESS_KEY in data:
@@ -388,9 +372,7 @@ class IntegrationAPI(BaseAPI):
             }
         }
 
-        get_req_url = self._get_edge_os_api_endpoint(endpoint)
-
-        result_json = await self._async_post(get_req_url, data)
+        result_json = await self._async_post(endpoint, data)
 
         if result_json is not None:
             set_response = result_json.get(API_DATA_SAVE.upper(), {})
@@ -405,7 +387,14 @@ class IntegrationAPI(BaseAPI):
         if not modified:
             _LOGGER.error(f"Failed to set state of interface {interface.name} to {is_enabled}")
 
-    def _get_edge_os_api_endpoint(self, endpoint):
-        url = API_URL.format(self._config_data.url, endpoint)
+    def _build_endpoint(self, endpoint, timestamp: str | None = None, action: str | None = None, subset: str | None = None):
+        data = {
+            API_URL_PARAMETER_BASE_URL: self._config_data.url,
+            API_URL_PARAMETER_TIMESTAMP: timestamp,
+            API_URL_PARAMETER_ACTION: action,
+            API_URL_PARAMETER_SUBSET: subset
+        }
+
+        url = endpoint.format(**data)
 
         return url

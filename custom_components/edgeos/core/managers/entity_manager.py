@@ -98,6 +98,9 @@ class EntityManager:
 
                     entity.status = EntityStatus.READY
 
+                elif entity.status == EntityStatus.UPDATED:
+                    entity.status = EntityStatus.READY
+
             for domain in self.domain_component_manager:
                 domain_manager = self.domain_component_manager.get(domain)
 
@@ -238,46 +241,61 @@ class EntityManager:
                    destructors: list[bool] = None
                    ):
 
-        entity = self.entities.get(entity_description.key)
-        entity_name = entity_description.name
-        original_status = None
+        try:
+            entity = self.entities.get(entity_description.key)
+            entity_name = entity_description.name
+            original_status = None
 
-        if entity is None:
-            entity = EntityData(entry_id)
-            entity.status = EntityStatus.CREATED
-            entity.domain = domain
+            if destructors is not None and True in destructors:
+                if entity is not None and entity.status != EntityStatus.CREATED:
+                    _LOGGER.debug(f"{entity_name} will be removed")
 
-            self._compare_data(entity_name, entity, state, attributes, device_name)
+                    entity.status = EntityStatus.DELETED
 
-        else:
-            original_status = entity.status
-            was_modified = self._compare_data(entity_name, entity, state, attributes, device_name, entity_description, details)
-
-            if was_modified:
-                entity.status = EntityStatus.UPDATED
-
-        if entity.status in [EntityStatus.CREATED, EntityStatus.UPDATED]:
-            entity.state = state
-            entity.attributes = attributes
-            entity.device_name = device_name
-            entity.details = details
-            entity.entity_description = entity_description
-
-        if destructors is not None and True in destructors:
-            if entity.status == EntityStatus.CREATED:
-                entity = None
+                    self.entities[entity_description.key] = entity
 
             else:
-                entity.status = EntityStatus.DELETED
+                if entity is None:
+                    entity = EntityData(entry_id)
+                    entity.status = EntityStatus.CREATED
+                    entity.domain = domain
 
-        if entity is None:
-            _LOGGER.debug(f"{entity_description.name} ignored")
+                    self._compare_data(entity_name, entity, state, attributes, device_name)
 
-        else:
-            self.entities[entity_description.key] = entity
+                else:
+                    original_status = entity.status
+                    was_modified = self._compare_data(entity_name,
+                                                      entity,
+                                                      state,
+                                                      attributes,
+                                                      device_name,
+                                                      entity_description,
+                                                      details)
 
-            if entity.status != EntityStatus.READY:
-                _LOGGER.info(
-                    f"{entity_name} ({entity.domain}) {entity.status}, "
-                    f"state: {entity.state} | {original_status}"
-                )
+                    if was_modified:
+                        entity.status = EntityStatus.UPDATED
+
+                if entity.status in [EntityStatus.CREATED, EntityStatus.UPDATED]:
+                    entity.state = state
+                    entity.attributes = attributes
+                    entity.device_name = device_name
+                    entity.details = details
+                    entity.entity_description = entity_description
+
+                self.entities[entity_description.key] = entity
+
+                if entity.status != EntityStatus.READY:
+                    _LOGGER.info(
+                        f"{entity_name} ({entity.domain}) {original_status} -> {entity.status}, "
+                        f"state: {entity.state}"
+                    )
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(
+                f"Failed to set entity {entity_description.name}, "
+                f"Error: {str(ex)}, "
+                f"Line: {line_number}"
+            )

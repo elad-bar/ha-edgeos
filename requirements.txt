@@ -3,3 +3,4 @@ homeassistant
 voluptuous
 aiohttp
 cryptography
+numpy

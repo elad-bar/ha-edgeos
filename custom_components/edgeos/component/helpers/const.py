@@ -63,15 +63,19 @@ API_DATA_COOKIES = "cookies"
 
 API_DATA_SAVE = "SAVE"
 
-API_URL_DATA_TEMPLATE = "{}?data={}"
-API_URL_HEARTBEAT_TEMPLATE = "{}?_={}"
-
-API_URL = "{}/api/edge/{}.json"
 API_GET = "get"
 API_SET = "set"
 API_DELETE = "delete"
 API_DATA = "data"
-API_HEARTBEAT = "heartbeat"
+
+API_URL_PARAMETER_BASE_URL = "base_url"
+API_URL_PARAMETER_TIMESTAMP = "timestamp"
+API_URL_PARAMETER_ACTION = "action"
+API_URL_PARAMETER_SUBSET = "subset"
+
+API_URL_HEARTBEAT = "{base_url}?_={timestamp}"
+API_URL_DATA = "{base_url}/api/edge/{action}.json"
+API_URL_DATA_SUBSET = f"{API_URL_DATA}?data={{subset}}"
 
 TRUE_STR = "true"
 FALSE_STR = "false"
