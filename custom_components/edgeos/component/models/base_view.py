@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Callable
 
 from homeassistant.components.http import HomeAssistantView
 

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant

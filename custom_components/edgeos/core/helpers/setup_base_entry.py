@@ -1,6 +1,7 @@
+from collections.abc import Callable
 import logging
 import sys
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

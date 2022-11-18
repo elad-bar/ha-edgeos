@@ -4,11 +4,11 @@ websocket.
 from __future__ import annotations
 
 from asyncio import sleep
+from collections.abc import Awaitable, Callable
 import json
 import logging
 import re
 import sys
-from typing import Awaitable, Callable
 from urllib.parse import urlparse
 
 from homeassistant.core import HomeAssistant

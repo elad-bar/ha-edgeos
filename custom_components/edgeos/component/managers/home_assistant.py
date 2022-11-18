@@ -4,10 +4,10 @@ Support for HA manager.
 from __future__ import annotations
 
 from asyncio import sleep
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 import logging
 import sys
-from typing import Awaitable, Callable
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,

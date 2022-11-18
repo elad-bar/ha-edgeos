@@ -13,26 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     name: pre-commit
     steps:
-      - uses: actions/checkout@v2.3.4
-      - uses: actions/setup-python@v2.2.1
+      - uses: actions/checkout@v3.1.0
+      - uses: actions/setup-python@v4.3.0
         with:
-          python-version: "3.9"
+          python-version: "3.10"
       - run: |
           pip install --constraint=.github/workflows/constraints.txt pip
           pip install --constraint=.github/workflows/constraints.txt pre-commit
-      - name: Compute cache key prefix
-        if: matrix.os != 'windows-latest'
-        id: cache_key_prefix
-        shell: python
-        run: |
-          import hashlib
-          import sys
-          python = "py{}.{}".format(*sys.version_info[:2])
-          payload = sys.version.encode() + sys.executable.encode()
-          digest = hashlib.sha256(payload).hexdigest()
-          result = "${{ runner.os }}-{}-{}-pre-commit".format(python, digest)
-          print("::set-output name=result::{}".format(result))
-      - uses: actions/cache@v2.1.3
+      - uses: actions/cache@v3.0.11
         if: matrix.os != 'windows-latest'
         with:
           path: ~/.cache/pre-commit

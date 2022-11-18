@@ -1,9 +1,9 @@
 """Storage handlers."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 import logging
 import sys
-from typing import Awaitable, Callable
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
