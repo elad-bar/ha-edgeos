@@ -3,7 +3,7 @@
   "name": "Ubiquiti EdgeOS Routers",
   "documentation": "https://github.com/elad-bar/ha-edgeos",
   "issue_tracker": "https://github.com/elad-bar/ha-edgeos/issues",
-  "dependencies": [],
+  "dependencies": ["http"],
   "codeowners": ["@elad-bar"],
   "requirements": ["aiohttp"],
   "config_flow": true,
