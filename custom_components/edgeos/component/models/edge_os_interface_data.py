@@ -76,7 +76,7 @@ class EdgeOSInterfaceData:
             INTERFACE_DATA_MULTICAST: self.multicast,
             INTERFACE_DATA_RECEIVED: self.received.to_dict(),
             INTERFACE_DATA_SENT: self.sent.to_dict(),
-            ENTITY_UNIQUE_ID: self.unique_id
+            ENTITY_UNIQUE_ID: self.unique_id,
         }
 
         return obj
@@ -110,7 +110,7 @@ class EdgeOSInterfaceData:
             SENT_TRAFFIC_PREFIX: self.sent.total,
             SENT_DROPPED_PREFIX: self.sent.dropped,
             SENT_ERRORS_PREFIX: self.sent.errors,
-            SENT_PACKETS_PREFIX: self.sent.packets
+            SENT_PACKETS_PREFIX: self.sent.packets,
         }
 
         return data

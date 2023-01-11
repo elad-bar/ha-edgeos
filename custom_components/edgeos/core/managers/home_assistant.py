@@ -26,11 +26,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class HomeAssistantManager:
-    def __init__(self,
-                 hass: HomeAssistant,
-                 scan_interval: datetime.timedelta,
-                 heartbeat_interval: datetime.timedelta | None = None
-                 ):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        scan_interval: datetime.timedelta,
+        heartbeat_interval: datetime.timedelta | None = None,
+    ):
 
         self._hass = hass
 
@@ -61,7 +62,9 @@ class HomeAssistantManager:
 
         self._send_heartbeat = _send_heartbeat
 
-        self._domains = {domain: self.is_domain_supported(domain) for domain in SUPPORTED_PLATFORMS}
+        self._domains = {
+            domain: self.is_domain_supported(domain) for domain in SUPPORTED_PLATFORMS
+        }
 
     @property
     def entity_manager(self) -> EntityManager:
@@ -90,44 +93,43 @@ class HomeAssistantManager:
     def entry_title(self) -> str:
         return self._entry.title
 
-    def update_intervals(self,
-                         entities_interval: datetime.timedelta,
-                         data_interval: datetime.timedelta
-                         ):
+    def update_intervals(
+        self, entities_interval: datetime.timedelta, data_interval: datetime.timedelta
+    ):
 
         self._update_entities_interval = entities_interval
         self._update_data_providers_interval = data_interval
 
     async def async_component_initialize(self, entry: ConfigEntry):
-        """ Component initialization """
+        """Component initialization"""
         pass
 
     async def async_send_heartbeat(self):
-        """ Must be implemented to be able to send heartbeat to API """
+        """Must be implemented to be able to send heartbeat to API"""
         pass
 
     def register_services(self, entry: ConfigEntry | None = None):
-        """ Must be implemented to be able to expose services """
+        """Must be implemented to be able to expose services"""
         pass
 
     async def async_initialize_data_providers(self):
-        """ Must be implemented to be able to send heartbeat to API """
+        """Must be implemented to be able to send heartbeat to API"""
         pass
 
     async def async_stop_data_providers(self):
-        """ Must be implemented to be able to send heartbeat to API """
+        """Must be implemented to be able to send heartbeat to API"""
         pass
 
     async def async_update_data_providers(self):
-        """ Must be implemented to be able to send heartbeat to API """
+        """Must be implemented to be able to send heartbeat to API"""
         pass
 
     def load_entities(self):
-        """ Must be implemented to be able to send heartbeat to API """
+        """Must be implemented to be able to send heartbeat to API"""
         pass
 
     def load_devices(self):
-        """ Must be implemented to be able to send heartbeat to API """
+        """Must be implemented to be able to send heartbeat to API"""
         pass
 
     async def async_init(self, entry: ConfigEntry):
@@ -185,7 +187,9 @@ class HomeAssistantManager:
             entry = self._entry
 
             track_time_update_data_providers = async_track_time_interval(
-                self._hass, self._update_data_providers, self._update_data_providers_interval
+                self._hass,
+                self._update_data_providers,
+                self._update_data_providers_interval,
             )
 
             self._async_track_time_handlers.append(track_time_update_data_providers)
@@ -254,7 +258,9 @@ class HomeAssistantManager:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to update devices and entities, Error: {ex}, Line: {line_number}")
+            _LOGGER.error(
+                f"Failed to update devices and entities, Error: {ex}, Line: {line_number}"
+            )
 
         self.entity_manager.update()
 
@@ -287,96 +293,104 @@ class HomeAssistantManager:
         pass
 
     async def async_core_entity_return_to_base(self, entity: EntityData) -> None:
-        """ Handles ACTION_CORE_ENTITY_RETURN_TO_BASE. """
+        """Handles ACTION_CORE_ENTITY_RETURN_TO_BASE."""
         action = self.get_action(entity.id, ACTION_CORE_ENTITY_RETURN_TO_BASE)
 
         if action is not None:
             await action(entity)
 
-    async def async_core_entity_set_fan_speed(self, entity: EntityData, fan_speed: str) -> None:
-        """ Handles ACTION_CORE_ENTITY_SET_FAN_SPEED. """
+    async def async_core_entity_set_fan_speed(
+        self, entity: EntityData, fan_speed: str
+    ) -> None:
+        """Handles ACTION_CORE_ENTITY_SET_FAN_SPEED."""
         action = self.get_action(entity.id, ACTION_CORE_ENTITY_SET_FAN_SPEED)
 
         if action is not None:
             await action(entity, fan_speed)
 
     async def async_core_entity_start(self, entity: EntityData) -> None:
-        """ Handles ACTION_CORE_ENTITY_START. """
+        """Handles ACTION_CORE_ENTITY_START."""
         action = self.get_action(entity.id, ACTION_CORE_ENTITY_START)
 
         if action is not None:
             await action(entity)
 
     async def async_core_entity_stop(self, entity: EntityData) -> None:
-        """ Handles ACTION_CORE_ENTITY_STOP. """
+        """Handles ACTION_CORE_ENTITY_STOP."""
         action = self.get_action(entity.id, ACTION_CORE_ENTITY_STOP)
 
         if action is not None:
             await action(entity)
 
     async def async_core_entity_pause(self, entity: EntityData) -> None:
-        """ Handles ACTION_CORE_ENTITY_PAUSE. """
+        """Handles ACTION_CORE_ENTITY_PAUSE."""
         action = self.get_action(entity.id, ACTION_CORE_ENTITY_PAUSE)
 
         if action is not None:
             await action(entity)
 
     async def async_core_entity_turn_on(self, entity: EntityData) -> None:
-        """ Handles ACTION_CORE_ENTITY_TURN_ON. """
+        """Handles ACTION_CORE_ENTITY_TURN_ON."""
         action = self.get_action(entity.id, ACTION_CORE_ENTITY_TURN_ON)
 
         if action is not None:
             await action(entity)
 
     async def async_core_entity_turn_off(self, entity: EntityData) -> None:
-        """ Handles ACTION_CORE_ENTITY_TURN_OFF. """
+        """Handles ACTION_CORE_ENTITY_TURN_OFF."""
         action = self.get_action(entity.id, ACTION_CORE_ENTITY_TURN_OFF)
 
         if action is not None:
             await action(entity)
 
     async def async_core_entity_send_command(
-            self,
-            entity: EntityData,
-            command: str,
-            params: dict[str, Any] | list[Any] | None = None
+        self,
+        entity: EntityData,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
     ) -> None:
-        """ Handles ACTION_CORE_ENTITY_SEND_COMMAND. """
+        """Handles ACTION_CORE_ENTITY_SEND_COMMAND."""
         action = self.get_action(entity.id, ACTION_CORE_ENTITY_SEND_COMMAND)
 
         if action is not None:
             await action(entity, command, params)
 
     async def async_core_entity_locate(self, entity: EntityData) -> None:
-        """ Handles ACTION_CORE_ENTITY_LOCATE. """
+        """Handles ACTION_CORE_ENTITY_LOCATE."""
         action = self.get_action(entity.id, ACTION_CORE_ENTITY_LOCATE)
 
         if action is not None:
             await action(entity)
 
-    async def async_core_entity_select_option(self, entity: EntityData, option: str) -> None:
-        """ Handles ACTION_CORE_ENTITY_SELECT_OPTION. """
+    async def async_core_entity_select_option(
+        self, entity: EntityData, option: str
+    ) -> None:
+        """Handles ACTION_CORE_ENTITY_SELECT_OPTION."""
         action = self.get_action(entity.id, ACTION_CORE_ENTITY_SELECT_OPTION)
 
         if action is not None:
             await action(entity, option)
 
     async def async_core_entity_toggle(self, entity: EntityData) -> None:
-        """ Handles ACTION_CORE_ENTITY_TOGGLE. """
+        """Handles ACTION_CORE_ENTITY_TOGGLE."""
         action = self.get_action(entity.id, ACTION_CORE_ENTITY_TOGGLE)
 
         if action is not None:
             await action(entity)
 
-    async def async_core_entity_enable_motion_detection(self, entity: EntityData) -> None:
-        """ Handles ACTION_CORE_ENTITY_ENABLE_MOTION_DETECTION. """
+    async def async_core_entity_enable_motion_detection(
+        self, entity: EntityData
+    ) -> None:
+        """Handles ACTION_CORE_ENTITY_ENABLE_MOTION_DETECTION."""
         action = self.get_action(entity.id, ACTION_CORE_ENTITY_ENABLE_MOTION_DETECTION)
 
         if action is not None:
             await action(entity)
 
-    async def async_core_entity_disable_motion_detection(self, entity: EntityData) -> None:
-        """ Handles ACTION_CORE_ENTITY_DISABLE_MOTION_DETECTION. """
+    async def async_core_entity_disable_motion_detection(
+        self, entity: EntityData
+    ) -> None:
+        """Handles ACTION_CORE_ENTITY_DISABLE_MOTION_DETECTION."""
         action = self.get_action(entity.id, ACTION_CORE_ENTITY_DISABLE_MOTION_DETECTION)
 
         if action is not None:

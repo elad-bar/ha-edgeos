@@ -55,7 +55,9 @@ class BaseEntity(Entity):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to initialize BaseEntity, Error: {ex}, Line: {line_number}")
+            _LOGGER.error(
+                f"Failed to initialize BaseEntity, Error: {ex}, Line: {line_number}"
+            )
 
     @property
     def entry_id(self) -> str | None:

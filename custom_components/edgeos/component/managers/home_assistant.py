@@ -44,8 +44,12 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         super().__init__(hass, DEFAULT_UPDATE_API_INTERVAL, DEFAULT_HEARTBEAT_INTERVAL)
 
         self._storage_api: StorageAPI = StorageAPI(self._hass)
-        self._api: IntegrationAPI = IntegrationAPI(self._hass, self._api_data_changed, self._api_status_changed)
-        self._ws: IntegrationWS = IntegrationWS(self._hass, self._ws_data_changed, self._ws_status_changed)
+        self._api: IntegrationAPI = IntegrationAPI(
+            self._hass, self._api_data_changed, self._api_status_changed
+        )
+        self._ws: IntegrationWS = IntegrationWS(
+            self._hass, self._ws_data_changed, self._ws_status_changed
+        )
         self._config_manager: ConfigurationManager | None = None
         self._system: EdgeOSSystemData | None = None
         self._devices: dict[str, EdgeOSDeviceData] = {}
@@ -84,7 +88,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         return name
 
     async def async_send_heartbeat(self):
-        """ Must be implemented to be able to send heartbeat to API """
+        """Must be implemented to be able to send heartbeat to API"""
         await self.ws.async_send_heartbeat()
 
     async def _api_data_changed(self):
@@ -96,7 +100,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             await self._extract_ws_data()
 
     async def _api_status_changed(self, status: ConnectivityStatus):
-        _LOGGER.info(f"API Status changed to {status.name}, WS Status: {self.ws.status.name}")
+        _LOGGER.info(
+            f"API Status changed to {status.name}, WS Status: {self.ws.status.name}"
+        )
         if status == ConnectivityStatus.Connected:
             await self.api.async_update()
 
@@ -111,11 +117,16 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 await self.ws.terminate()
 
     async def _ws_status_changed(self, status: ConnectivityStatus):
-        _LOGGER.info(f"WS Status changed to {status.name}, API Status: {self.api.status.name}")
+        _LOGGER.info(
+            f"WS Status changed to {status.name}, API Status: {self.api.status.name}"
+        )
 
         api_connected = self.api.status == ConnectivityStatus.Connected
         ws_connected = status == ConnectivityStatus.Connected
-        ws_reconnect = status in [ConnectivityStatus.NotConnected, ConnectivityStatus.Failed]
+        ws_reconnect = status in [
+            ConnectivityStatus.NotConnected,
+            ConnectivityStatus.Failed,
+        ]
 
         self._can_load_components = ws_connected
 
@@ -131,17 +142,25 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             await self.storage_api.initialize(self.config_data)
 
-            update_entities_interval = timedelta(seconds=self.storage_api.update_entities_interval)
-            update_api_interval = timedelta(seconds=self.storage_api.update_api_interval)
+            update_entities_interval = timedelta(
+                seconds=self.storage_api.update_entities_interval
+            )
+            update_api_interval = timedelta(
+                seconds=self.storage_api.update_api_interval
+            )
 
-            _LOGGER.info(f"Setting intervals, API: {update_api_interval}, Entities: {update_entities_interval}")
+            _LOGGER.info(
+                f"Setting intervals, API: {update_api_interval}, Entities: {update_entities_interval}"
+            )
             self.update_intervals(update_entities_interval, update_api_interval)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to async_component_initialize, error: {ex}, line: {line_number}")
+            _LOGGER.error(
+                f"Failed to async_component_initialize, error: {ex}, line: {line_number}"
+            )
 
     async def async_initialize_data_providers(self):
         await self.storage_api.initialize(self.config_data)
@@ -157,7 +176,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                     migration_data[option_key] = entry_options.get(option_key)
 
             if self._entry.data is not None:
-                migration_data[STORAGE_DATA_UNIT] = self._entry.data.get(STORAGE_DATA_UNIT)
+                migration_data[STORAGE_DATA_UNIT] = self._entry.data.get(
+                    STORAGE_DATA_UNIT
+                )
 
             updated = await self._update_configuration_data(migration_data)
 
@@ -172,9 +193,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             options = {}
 
-            self._hass.config_entries.async_update_entry(self._entry,
-                                                         data=data,
-                                                         options=options)
+            self._hass.config_entries.async_update_entry(
+                self._entry, data=data, options=options
+            )
 
             _LOGGER.info("Configuration migration completed, reloading integration")
 
@@ -194,13 +215,17 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to async_update_data_providers, Error: {ex}, Line: {line_number}")
+            _LOGGER.error(
+                f"Failed to async_update_data_providers, Error: {ex}, Line: {line_number}"
+            )
 
     def register_services(self, entry: ConfigEntry | None = None):
-        self._hass.services.async_register(DOMAIN,
-                                           SERVICE_UPDATE_CONFIGURATION,
-                                           self._update_configuration,
-                                           SERVICE_SCHEMA_UPDATE_CONFIGURATION)
+        self._hass.services.async_register(
+            DOMAIN,
+            SERVICE_UPDATE_CONFIGURATION,
+            self._update_configuration,
+            SERVICE_SCHEMA_UPDATE_CONFIGURATION,
+        )
 
     def load_devices(self):
         if not self._can_load_components:
@@ -246,7 +271,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             for stats_data_key in stats_data:
                 stats_data_item = stats_data.get(stats_data_key)
 
-                self._load_device_stats_sensor(device_item, stats_data_key, stats_data_item)
+                self._load_device_stats_sensor(
+                    device_item, stats_data_key, stats_data_item
+                )
 
         for unique_id in self._interfaces:
             interface_item = self._interfaces.get(unique_id)
@@ -268,7 +295,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             for stats_data_key in stats_data:
                 stats_data_item = stats_data.get(stats_data_key)
 
-                self._load_interface_stats_sensor(interface_item, stats_data_key, stats_data_item)
+                self._load_interface_stats_sensor(
+                    interface_item, stats_data_key, stats_data_item
+                )
 
     def _get_device_name(self, device: EdgeOSDeviceData):
         return f"{self.system_name} Device {device.hostname}"
@@ -311,7 +340,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to extract WS data, Error: {ex}, Line: {line_number}")
+            _LOGGER.error(
+                f"Failed to extract WS data, Error: {ex}, Line: {line_number}"
+            )
 
     async def _extract_api_data(self):
         try:
@@ -340,14 +371,18 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             if len(warning_messages) > 0:
                 warning_message = " and ".join(warning_messages)
 
-                _LOGGER.warning(f"Integration will not work correctly since {warning_message}")
+                _LOGGER.warning(
+                    f"Integration will not work correctly since {warning_message}"
+                )
 
             await self._log_ha_data()
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to extract API data, Error: {ex}, Line: {line_number}")
+            _LOGGER.error(
+                f"Failed to extract API data, Error: {ex}, Line: {line_number}"
+            )
 
     async def _log_ha_data(self):
         messages = {}
@@ -362,7 +397,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             API_DATA_SYSTEM: self._system,
             DEVICE_LIST: self._devices,
             API_DATA_INTERFACES: self._interfaces,
-            MESSAGES_COUNTER_SECTION: messages
+            MESSAGES_COUNTER_SECTION: messages,
         }
 
         await self.storage_api.debug_log_ha(data)
@@ -380,16 +415,25 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             system_data.ntp_servers = ntp.get(SYSTEM_DATA_NTP_SERVER)
 
             offload: dict = system_details.get(SYSTEM_DATA_OFFLOAD, {})
-            hardware_offload = EdgeOSSystemData.is_enabled(offload, SYSTEM_DATA_OFFLOAD_HW_NAT)
-            ipsec_offload = EdgeOSSystemData.is_enabled(offload, SYSTEM_DATA_OFFLOAD_IPSEC)
+            hardware_offload = EdgeOSSystemData.is_enabled(
+                offload, SYSTEM_DATA_OFFLOAD_HW_NAT
+            )
+            ipsec_offload = EdgeOSSystemData.is_enabled(
+                offload, SYSTEM_DATA_OFFLOAD_IPSEC
+            )
 
             system_data.hardware_offload = hardware_offload
             system_data.ipsec_offload = ipsec_offload
 
-            traffic_analysis: dict = system_details.get(SYSTEM_DATA_TRAFFIC_ANALYSIS, {})
-            dpi = EdgeOSSystemData.is_enabled(traffic_analysis, SYSTEM_DATA_TRAFFIC_ANALYSIS_DPI)
-            traffic_analysis_export = EdgeOSSystemData.is_enabled(traffic_analysis,
-                                                                  SYSTEM_DATA_TRAFFIC_ANALYSIS_EXPORT)
+            traffic_analysis: dict = system_details.get(
+                SYSTEM_DATA_TRAFFIC_ANALYSIS, {}
+            )
+            dpi = EdgeOSSystemData.is_enabled(
+                traffic_analysis, SYSTEM_DATA_TRAFFIC_ANALYSIS_DPI
+            )
+            traffic_analysis_export = EdgeOSSystemData.is_enabled(
+                traffic_analysis, SYSTEM_DATA_TRAFFIC_ANALYSIS_EXPORT
+            )
 
             system_data.deep_packet_inspection = dpi
             system_data.traffic_analysis_export = traffic_analysis_export
@@ -401,7 +445,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             fw_latest_version = fw_latest.get(SYSTEM_INFO_DATA_FW_LATEST_VERSION)
             fw_latest_url = fw_latest.get(SYSTEM_INFO_DATA_FW_LATEST_URL)
 
-            system_data.upgrade_available = fw_latest_state == FW_LATEST_STATE_CAN_UPGRADE
+            system_data.upgrade_available = (
+                fw_latest_state == FW_LATEST_STATE_CAN_UPGRADE
+            )
             system_data.upgrade_url = fw_latest_url
             system_data.upgrade_version = fw_latest_version
 
@@ -425,7 +471,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to extract System data, Error: {ex}, Line: {line_number}")
+            _LOGGER.error(
+                f"Failed to extract System data, Error: {ex}, Line: {line_number}"
+            )
 
     def _extract_interfaces(self, data: dict):
         try:
@@ -436,15 +484,21 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
                 for interface_name in interfaces:
                     interface_data = interfaces.get(interface_name, {})
-                    self._extract_interface(interface_name, interface_data, interface_type)
+                    self._extract_interface(
+                        interface_name, interface_data, interface_type
+                    )
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to extract Interfaces data, Error: {ex}, Line: {line_number}")
+            _LOGGER.error(
+                f"Failed to extract Interfaces data, Error: {ex}, Line: {line_number}"
+            )
 
-    def _extract_interface(self, name: str, data: dict, interface_type: str | None = None) -> EdgeOSInterfaceData:
+    def _extract_interface(
+        self, name: str, data: dict, interface_type: str | None = None
+    ) -> EdgeOSInterfaceData:
         interface = self._interfaces.get(name)
 
         try:
@@ -468,7 +522,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 interface.max_age = data.get(INTERFACE_DATA_MAX_AGE)
                 interface.priority = data.get(INTERFACE_DATA_PRIORITY)
                 interface.promiscuous = data.get(INTERFACE_DATA_PROMISCUOUS)
-                interface.stp = data.get(INTERFACE_DATA_STP, FALSE_STR).lower() == TRUE_STR
+                interface.stp = (
+                    data.get(INTERFACE_DATA_STP, FALSE_STR).lower() == TRUE_STR
+                )
 
                 self._interfaces[interface.unique_id] = interface
 
@@ -488,8 +544,12 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
     def _update_interface_stats(interface: EdgeOSInterfaceData, data: dict):
         try:
             if data is not None:
-                interface.up = str(data.get(INTERFACE_DATA_UP, False)).lower() == TRUE_STR
-                interface.l1up = str(data.get(INTERFACE_DATA_LINK_UP, False)).lower() == TRUE_STR
+                interface.up = (
+                    str(data.get(INTERFACE_DATA_UP, False)).lower() == TRUE_STR
+                )
+                interface.l1up = (
+                    str(data.get(INTERFACE_DATA_LINK_UP, False)).lower() == TRUE_STR
+                )
                 interface.mac = data.get(INTERFACE_DATA_MAC)
                 interface.multicast = data.get(INTERFACE_DATA_MULTICAST, 0)
                 interface.address = data.get(ADDRESS_LIST, [])
@@ -594,7 +654,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
                     static_mapping_data = {
                         DHCP_SERVER_IP_ADDRESS: ip,
-                        DHCP_SERVER_MAC_ADDRESS: device_data.get(DEVICE_DATA_MAC)
+                        DHCP_SERVER_MAC_ADDRESS: device_data.get(DEVICE_DATA_MAC),
                     }
 
                     self._set_device(hostname, None, static_mapping_data, True)
@@ -602,7 +662,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to extract Unknown Devices data, Error: {ex}, Line: {line_number}")
+            _LOGGER.error(
+                f"Failed to extract Unknown Devices data, Error: {ex}, Line: {line_number}"
+            )
 
     def _extract_devices(self, data: dict):
         try:
@@ -611,7 +673,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             shared_network_names = dhcp_server.get(DHCP_SERVER_SHARED_NETWORK_NAME, {})
 
             for shared_network_name in shared_network_names:
-                shared_network_name_data = shared_network_names.get(shared_network_name, {})
+                shared_network_name_data = shared_network_names.get(
+                    shared_network_name, {}
+                )
                 subnets = shared_network_name_data.get(DHCP_SERVER_SUBNET, {})
 
                 for subnet in subnets:
@@ -623,21 +687,33 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                     for hostname in static_mappings:
                         static_mapping_data = static_mappings.get(hostname, {})
 
-                        self._set_device(hostname, domain_name, static_mapping_data, False)
+                        self._set_device(
+                            hostname, domain_name, static_mapping_data, False
+                        )
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to extract Devices data, Error: {ex}, Line: {line_number}")
+            _LOGGER.error(
+                f"Failed to extract Devices data, Error: {ex}, Line: {line_number}"
+            )
 
-    def _set_device(self, hostname: str, domain_name: str | None, static_mapping_data: dict, is_leased: bool):
+    def _set_device(
+        self,
+        hostname: str,
+        domain_name: str | None,
+        static_mapping_data: dict,
+        is_leased: bool,
+    ):
         ip_address = static_mapping_data.get(DHCP_SERVER_IP_ADDRESS)
         mac_address = static_mapping_data.get(DHCP_SERVER_MAC_ADDRESS)
 
         existing_device_data = self._devices.get(mac_address)
 
         if existing_device_data is None:
-            device_data = EdgeOSDeviceData(hostname, ip_address, mac_address, domain_name, is_leased)
+            device_data = EdgeOSDeviceData(
+                hostname, ip_address, mac_address, domain_name, is_leased
+            )
 
         else:
             device_data = existing_device_data
@@ -657,14 +733,16 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
         return device
 
-    def _set_ha_device(self, name: str, model: str, manufacturer: str, version: str | None = None):
+    def _set_ha_device(
+        self, name: str, model: str, manufacturer: str, version: str | None = None
+    ):
         device_details = self.device_manager.get(name)
 
         device_details_data = {
             "identifiers": {(DEFAULT_NAME, name)},
             "name": name,
             "manufacturer": manufacturer,
-            "model": model
+            "model": model,
         }
 
         if version is not None:
@@ -676,7 +754,12 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             _LOGGER.debug(f"Created HA device {name} [{model}]")
 
     def _load_main_device(self):
-        self._set_ha_device(self.system_name, self._system.product, MANUFACTURER, self._system.fw_version)
+        self._set_ha_device(
+            self.system_name,
+            self._system.product,
+            MANUFACTURER,
+            self._system.fw_version,
+        )
 
     def _load_device_device(self, device: EdgeOSDeviceData):
         name = self._get_device_name(device)
@@ -703,17 +786,19 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 device_class=f"{DOMAIN}__{STORAGE_DATA_UNIT}",
                 options=list(UNIT_OF_MEASUREMENT_MAPPING.keys()),
-                entity_category=EntityCategory.CONFIG
+                entity_category=EntityCategory.CONFIG,
             )
 
             self.set_action(unique_id, ACTION_CORE_ENTITY_SELECT_OPTION, self._set_unit)
 
-            self.entity_manager.set_entity(DOMAIN_SELECT,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description)
+            self.entity_manager.set_entity(
+                DOMAIN_SELECT,
+                self.entry_id,
+                state,
+                attributes,
+                device_name,
+                entity_description,
+            )
 
         except Exception as ex:
             self.log_exception(ex, f"Failed to load select for Data Unit")
@@ -735,7 +820,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
-                DHCP_SERVER_LEASED: leased_devices
+                DHCP_SERVER_LEASED: leased_devices,
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
@@ -745,20 +830,20 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 key=unique_id,
                 name=entity_name,
                 icon=icon,
-                state_class=SensorStateClass.MEASUREMENT
+                state_class=SensorStateClass.MEASUREMENT,
             )
 
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description)
+            self.entity_manager.set_entity(
+                DOMAIN_SENSOR,
+                self.entry_id,
+                state,
+                attributes,
+                device_name,
+                entity_description,
+            )
 
         except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+            self.log_exception(ex, f"Failed to load sensor for {entity_name}")
 
     def _load_cpu_sensor(self):
         device_name = self.system_name
@@ -782,17 +867,17 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 native_unit_of_measurement="%",
             )
 
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description)
+            self.entity_manager.set_entity(
+                DOMAIN_SENSOR,
+                self.entry_id,
+                state,
+                attributes,
+                device_name,
+                entity_description,
+            )
 
         except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+            self.log_exception(ex, f"Failed to load sensor for {entity_name}")
 
     def _load_ram_sensor(self):
         device_name = self.system_name
@@ -801,9 +886,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         try:
             state = self._system.mem
 
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
+            attributes = {ATTR_FRIENDLY_NAME: entity_name}
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
             icon = "mdi:memory"
@@ -816,17 +899,17 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 native_unit_of_measurement="%",
             )
 
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description)
+            self.entity_manager.set_entity(
+                DOMAIN_SENSOR,
+                self.entry_id,
+                state,
+                attributes,
+                device_name,
+                entity_description,
+            )
 
         except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+            self.log_exception(ex, f"Failed to load sensor for {entity_name}")
 
     def _load_uptime_sensor(self):
         device_name = self.system_name
@@ -835,9 +918,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         try:
             state = self._system.last_reset
 
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
+            attributes = {ATTR_FRIENDLY_NAME: entity_name}
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
             icon = "mdi:credit-card-clock"
@@ -846,20 +927,20 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 key=unique_id,
                 name=entity_name,
                 icon=icon,
-                state_class=SensorStateClass.TOTAL_INCREASING
+                state_class=SensorStateClass.TOTAL_INCREASING,
             )
 
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description)
+            self.entity_manager.set_entity(
+                DOMAIN_SENSOR,
+                self.entry_id,
+                state,
+                attributes,
+                device_name,
+                entity_description,
+            )
 
         except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+            self.log_exception(ex, f"Failed to load sensor for {entity_name}")
 
     def _load_firmware_upgrade_binary_sensor(self):
         device_name = self.system_name
@@ -871,7 +952,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
                 SYSTEM_INFO_DATA_FW_LATEST_URL: self._system.upgrade_url,
-                SYSTEM_INFO_DATA_FW_LATEST_VERSION: self._system.upgrade_version
+                SYSTEM_INFO_DATA_FW_LATEST_VERSION: self._system.upgrade_version,
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_BINARY_SENSOR, entity_name)
@@ -879,20 +960,20 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             entity_description = BinarySensorEntityDescription(
                 key=unique_id,
                 name=entity_name,
-                device_class=BinarySensorDeviceClass.UPDATE
+                device_class=BinarySensorDeviceClass.UPDATE,
             )
 
-            self.entity_manager.set_entity(DOMAIN_BINARY_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description)
+            self.entity_manager.set_entity(
+                DOMAIN_BINARY_SENSOR,
+                self.entry_id,
+                state,
+                attributes,
+                device_name,
+                entity_description,
+            )
 
         except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+            self.log_exception(ex, f"Failed to load sensor for {entity_name}")
 
     def _load_log_incoming_messages_switch(self):
         device_name = self.system_name
@@ -901,9 +982,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         try:
             state = self.storage_api.log_incoming_messages
 
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
+            attributes = {ATTR_FRIENDLY_NAME: entity_name}
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SWITCH, entity_name)
 
@@ -913,18 +992,28 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 key=unique_id,
                 name=entity_name,
                 icon=icon,
-                entity_category=EntityCategory.CONFIG
+                entity_category=EntityCategory.CONFIG,
             )
 
-            self.entity_manager.set_entity(DOMAIN_SWITCH,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description)
+            self.entity_manager.set_entity(
+                DOMAIN_SWITCH,
+                self.entry_id,
+                state,
+                attributes,
+                device_name,
+                entity_description,
+            )
 
-            self.set_action(unique_id, ACTION_CORE_ENTITY_TURN_ON, self._enable_log_incoming_messages)
-            self.set_action(unique_id, ACTION_CORE_ENTITY_TURN_OFF, self._disable_log_incoming_messages)
+            self.set_action(
+                unique_id,
+                ACTION_CORE_ENTITY_TURN_ON,
+                self._enable_log_incoming_messages,
+            )
+            self.set_action(
+                unique_id,
+                ACTION_CORE_ENTITY_TURN_OFF,
+                self._disable_log_incoming_messages,
+            )
 
         except Exception as ex:
             self.log_exception(
@@ -936,39 +1025,41 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         entity_name = f"{device_name}"
 
         try:
-            state = device.last_activity_in_seconds <= self.storage_api.consider_away_interval
+            state = (
+                device.last_activity_in_seconds
+                <= self.storage_api.consider_away_interval
+            )
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
-                LAST_ACTIVITY: device.last_activity_in_seconds
+                LAST_ACTIVITY: device.last_activity_in_seconds,
             }
 
-            unique_id = EntityData.generate_unique_id(DOMAIN_DEVICE_TRACKER, entity_name)
-
-            entity_description = EntityDescription(
-                key=unique_id,
-                name=entity_name
+            unique_id = EntityData.generate_unique_id(
+                DOMAIN_DEVICE_TRACKER, entity_name
             )
 
-            details = {
-                ENTITY_UNIQUE_ID: device.unique_id
-            }
+            entity_description = EntityDescription(key=unique_id, name=entity_name)
 
-            is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
+            details = {ENTITY_UNIQUE_ID: device.unique_id}
 
-            self.entity_manager.set_entity(DOMAIN_DEVICE_TRACKER,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description,
-                                           destructors=[not is_monitored],
-                                           details=details)
+            is_monitored = self.storage_api.monitored_devices.get(
+                device.unique_id, False
+            )
+
+            self.entity_manager.set_entity(
+                DOMAIN_DEVICE_TRACKER,
+                self.entry_id,
+                state,
+                attributes,
+                device_name,
+                entity_description,
+                destructors=[not is_monitored],
+                details=details,
+            )
 
         except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load device tracker for {entity_name}"
-            )
+            self.log_exception(ex, f"Failed to load device tracker for {entity_name}")
 
     def _load_device_monitor_switch(self, device: EdgeOSDeviceData):
         device_name = self._get_device_name(device)
@@ -977,9 +1068,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         try:
             state = self.storage_api.monitored_devices.get(device.unique_id, False)
 
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
+            attributes = {ATTR_FRIENDLY_NAME: entity_name}
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SWITCH, entity_name)
             icon = "mdi:monitor-eye"
@@ -988,33 +1077,37 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 key=unique_id,
                 name=entity_name,
                 icon=icon,
-                entity_category=EntityCategory.CONFIG
+                entity_category=EntityCategory.CONFIG,
             )
 
-            details = {
-                ENTITY_UNIQUE_ID: device.unique_id
-            }
+            details = {ENTITY_UNIQUE_ID: device.unique_id}
 
-            self.set_action(unique_id, ACTION_CORE_ENTITY_TURN_ON, self._set_device_monitored)
-            self.set_action(unique_id, ACTION_CORE_ENTITY_TURN_OFF, self._set_device_unmonitored)
+            self.set_action(
+                unique_id, ACTION_CORE_ENTITY_TURN_ON, self._set_device_monitored
+            )
+            self.set_action(
+                unique_id, ACTION_CORE_ENTITY_TURN_OFF, self._set_device_unmonitored
+            )
 
-            self.entity_manager.set_entity(DOMAIN_SWITCH,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description,
-                                           details=details)
+            self.entity_manager.set_entity(
+                DOMAIN_SWITCH,
+                self.entry_id,
+                state,
+                attributes,
+                device_name,
+                entity_description,
+                details=details,
+            )
 
         except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load switch for {entity_name}"
-            )
+            self.log_exception(ex, f"Failed to load switch for {entity_name}")
 
-    def _load_device_stats_sensor(self,
-                                  device: EdgeOSDeviceData,
-                                  entity_suffix: str,
-                                  state: str | int | float | None):
+    def _load_device_stats_sensor(
+        self,
+        device: EdgeOSDeviceData,
+        entity_suffix: str,
+        state: str | int | float | None,
+    ):
 
         device_name = self._get_device_name(device)
         entity_name = f"{device_name} {entity_suffix}"
@@ -1035,19 +1128,35 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         else:
             unit_of_measurement = str(STATS_UNITS.get(entity_suffix)).capitalize()
 
-        state_class = SensorStateClass.MEASUREMENT if is_rate_stats else SensorStateClass.TOTAL_INCREASING
+        state_class = (
+            SensorStateClass.MEASUREMENT
+            if is_rate_stats
+            else SensorStateClass.TOTAL_INCREASING
+        )
 
-        self._load_stats_sensor(device_name, entity_name, state, unit_of_measurement, icon, state_class, is_monitored)
+        self._load_stats_sensor(
+            device_name,
+            entity_name,
+            state,
+            unit_of_measurement,
+            icon,
+            state_class,
+            is_monitored,
+        )
 
-    def _load_interface_stats_sensor(self,
-                                     interface: EdgeOSInterfaceData,
-                                     entity_suffix: str,
-                                     state: str | int | float | None):
+    def _load_interface_stats_sensor(
+        self,
+        interface: EdgeOSInterfaceData,
+        entity_suffix: str,
+        state: str | int | float | None,
+    ):
 
         device_name = self._get_interface_name(interface)
         entity_name = f"{device_name} {entity_suffix}"
 
-        is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
+        is_monitored = self.storage_api.monitored_interfaces.get(
+            interface.unique_id, False
+        )
 
         is_rate_stats = entity_suffix in STATS_RATE
         icon = STATS_ICONS.get(entity_suffix)
@@ -1063,22 +1172,34 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         else:
             unit_of_measurement = str(STATS_UNITS.get(entity_suffix)).capitalize()
 
-        state_class = SensorStateClass.MEASUREMENT if is_rate_stats else SensorStateClass.TOTAL_INCREASING
+        state_class = (
+            SensorStateClass.MEASUREMENT
+            if is_rate_stats
+            else SensorStateClass.TOTAL_INCREASING
+        )
 
-        self._load_stats_sensor(device_name, entity_name, state, unit_of_measurement, icon, state_class, is_monitored)
+        self._load_stats_sensor(
+            device_name,
+            entity_name,
+            state,
+            unit_of_measurement,
+            icon,
+            state_class,
+            is_monitored,
+        )
 
-    def _load_stats_sensor(self,
-                           device_name: str,
-                           entity_name: str,
-                           state: str | int | float | None,
-                           unit_of_measurement: str,
-                           icon: str | None,
-                           state_class: SensorStateClass,
-                           is_monitored: bool):
+    def _load_stats_sensor(
+        self,
+        device_name: str,
+        entity_name: str,
+        state: str | int | float | None,
+        unit_of_measurement: str,
+        icon: str | None,
+        state_class: SensorStateClass,
+        is_monitored: bool,
+    ):
         try:
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
+            attributes = {ATTR_FRIENDLY_NAME: entity_name}
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
 
@@ -1090,21 +1211,25 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 native_unit_of_measurement=unit_of_measurement,
             )
 
-            if unit_of_measurement.lower() in [TRAFFIC_DATA_ERRORS, TRAFFIC_DATA_PACKETS, TRAFFIC_DATA_DROPPED]:
+            if unit_of_measurement.lower() in [
+                TRAFFIC_DATA_ERRORS,
+                TRAFFIC_DATA_PACKETS,
+                TRAFFIC_DATA_DROPPED,
+            ]:
                 state = self._format_number(state)
 
-            self.entity_manager.set_entity(DOMAIN_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           device_name,
-                                           entity_description,
-                                           destructors=[not is_monitored])
+            self.entity_manager.set_entity(
+                DOMAIN_SENSOR,
+                self.entry_id,
+                state,
+                attributes,
+                device_name,
+                entity_description,
+                destructors=[not is_monitored],
+            )
 
         except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
-            )
+            self.log_exception(ex, f"Failed to load sensor for {entity_name}")
 
     def _load_interface_status_switch(self, interface: EdgeOSInterfaceData):
         interface_name = self._get_interface_name(interface)
@@ -1115,7 +1240,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
-                ADDRESS_LIST: interface.address
+                ADDRESS_LIST: interface.address,
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SWITCH, entity_name)
@@ -1125,28 +1250,30 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 key=unique_id,
                 name=entity_name,
                 icon=icon,
-                entity_category=EntityCategory.CONFIG
+                entity_category=EntityCategory.CONFIG,
             )
 
-            details = {
-                ENTITY_UNIQUE_ID: interface.unique_id
-            }
+            details = {ENTITY_UNIQUE_ID: interface.unique_id}
 
-            self.set_action(unique_id, ACTION_CORE_ENTITY_TURN_ON, self._set_interface_enabled)
-            self.set_action(unique_id, ACTION_CORE_ENTITY_TURN_OFF, self._set_interface_disabled)
+            self.set_action(
+                unique_id, ACTION_CORE_ENTITY_TURN_ON, self._set_interface_enabled
+            )
+            self.set_action(
+                unique_id, ACTION_CORE_ENTITY_TURN_OFF, self._set_interface_disabled
+            )
 
-            self.entity_manager.set_entity(DOMAIN_SWITCH,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           interface_name,
-                                           entity_description,
-                                           details=details)
+            self.entity_manager.set_entity(
+                DOMAIN_SWITCH,
+                self.entry_id,
+                state,
+                attributes,
+                interface_name,
+                entity_description,
+                details=details,
+            )
 
         except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load switch for {entity_name}"
-            )
+            self.log_exception(ex, f"Failed to load switch for {entity_name}")
 
     def _load_interface_status_binary_sensor(self, interface: EdgeOSInterfaceData):
         interface_name = self._get_interface_name(interface)
@@ -1157,7 +1284,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
-                ADDRESS_LIST: interface.address
+                ADDRESS_LIST: interface.address,
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_BINARY_SENSOR, entity_name)
@@ -1165,20 +1292,20 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             entity_description = BinarySensorEntityDescription(
                 key=unique_id,
                 name=entity_name,
-                device_class=BinarySensorDeviceClass.CONNECTIVITY
+                device_class=BinarySensorDeviceClass.CONNECTIVITY,
             )
 
-            self.entity_manager.set_entity(DOMAIN_BINARY_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           interface_name,
-                                           entity_description)
+            self.entity_manager.set_entity(
+                DOMAIN_BINARY_SENSOR,
+                self.entry_id,
+                state,
+                attributes,
+                interface_name,
+                entity_description,
+            )
 
         except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load binary sensor for {entity_name}"
-            )
+            self.log_exception(ex, f"Failed to load binary sensor for {entity_name}")
 
     def _load_interface_connected_binary_sensor(self, interface: EdgeOSInterfaceData):
         interface_name = self._get_interface_name(interface)
@@ -1189,7 +1316,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
-                ADDRESS_LIST: interface.address
+                ADDRESS_LIST: interface.address,
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_BINARY_SENSOR, entity_name)
@@ -1197,31 +1324,31 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             entity_description = BinarySensorEntityDescription(
                 key=unique_id,
                 name=entity_name,
-                device_class=BinarySensorDeviceClass.CONNECTIVITY
+                device_class=BinarySensorDeviceClass.CONNECTIVITY,
             )
 
-            self.entity_manager.set_entity(DOMAIN_BINARY_SENSOR,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           interface_name,
-                                           entity_description)
+            self.entity_manager.set_entity(
+                DOMAIN_BINARY_SENSOR,
+                self.entry_id,
+                state,
+                attributes,
+                interface_name,
+                entity_description,
+            )
 
         except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load binary sensor for {entity_name}"
-            )
+            self.log_exception(ex, f"Failed to load binary sensor for {entity_name}")
 
     def _load_interface_monitor_switch(self, interface: EdgeOSInterfaceData):
         interface_name = self._get_interface_name(interface)
         entity_name = f"{interface_name} Monitored"
 
         try:
-            state = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
+            state = self.storage_api.monitored_interfaces.get(
+                interface.unique_id, False
+            )
 
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name
-            }
+            attributes = {ATTR_FRIENDLY_NAME: entity_name}
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SWITCH, entity_name)
             icon = None
@@ -1230,28 +1357,30 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 key=unique_id,
                 name=entity_name,
                 icon=icon,
-                entity_category=EntityCategory.CONFIG
+                entity_category=EntityCategory.CONFIG,
             )
 
-            details = {
-                ENTITY_UNIQUE_ID: interface.unique_id
-            }
+            details = {ENTITY_UNIQUE_ID: interface.unique_id}
 
-            self.set_action(unique_id, ACTION_CORE_ENTITY_TURN_ON, self._set_interface_monitored)
-            self.set_action(unique_id, ACTION_CORE_ENTITY_TURN_OFF, self._set_interface_unmonitored)
+            self.set_action(
+                unique_id, ACTION_CORE_ENTITY_TURN_ON, self._set_interface_monitored
+            )
+            self.set_action(
+                unique_id, ACTION_CORE_ENTITY_TURN_OFF, self._set_interface_unmonitored
+            )
 
-            self.entity_manager.set_entity(DOMAIN_SWITCH,
-                                           self.entry_id,
-                                           state,
-                                           attributes,
-                                           interface_name,
-                                           entity_description,
-                                           details=details)
+            self.entity_manager.set_entity(
+                DOMAIN_SWITCH,
+                self.entry_id,
+                state,
+                attributes,
+                interface_name,
+                entity_description,
+                details=details,
+            )
 
         except Exception as ex:
-            self.log_exception(
-                ex, f"Failed to load switch for {entity_name}"
-            )
+            self.log_exception(ex, f"Failed to load switch for {entity_name}")
 
     async def _set_interface_enabled(self, entity: EntityData):
         interface_item = self._get_interface_from_entity(entity)
@@ -1341,9 +1470,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         return result
 
     async def _reload_integration(self):
-        data = {
-            ENTITY_CONFIG_ENTRY_ID: self.entry_id
-        }
+        data = {ENTITY_CONFIG_ENTRY_ID: self.entry_id}
 
         await self._hass.services.async_call(HA_NAME, SERVICE_RELOAD, data)
 
@@ -1373,12 +1500,14 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
     async def _update_configuration_data(self, data: dict):
         result = False
 
-        storage_data_import_keys: dict[str, Callable[[int | bool | str], Awaitable[None]]] = {
+        storage_data_import_keys: dict[
+            str, Callable[[int | bool | str], Awaitable[None]]
+        ] = {
             STORAGE_DATA_CONSIDER_AWAY_INTERVAL: self.storage_api.set_consider_away_interval,
             STORAGE_DATA_UPDATE_ENTITIES_INTERVAL: self.storage_api.set_update_entities_interval,
             STORAGE_DATA_UPDATE_API_INTERVAL: self.storage_api.set_update_api_interval,
             STORAGE_DATA_LOG_INCOMING_MESSAGES: self.storage_api.set_log_incoming_messages,
-            STORAGE_DATA_UNIT: self.storage_api.set_unit
+            STORAGE_DATA_UNIT: self.storage_api.set_unit,
         }
 
         for key in storage_data_import_keys:

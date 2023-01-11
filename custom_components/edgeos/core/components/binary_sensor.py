@@ -14,6 +14,7 @@ from ..models.entity_data import EntityData
 
 class CoreBinarySensor(BinarySensorEntity, BaseEntity):
     """Representation a binary sensor that is updated."""
+
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""

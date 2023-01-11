@@ -26,9 +26,7 @@ async def async_set_ha(hass: HomeAssistant, entry: ConfigEntry):
             await instance.async_unload()
 
         entry.async_on_unload(
-            hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, _async_unload
-            )
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_unload)
         )
     except Exception as ex:
         exc_type, exc_obj, tb = sys.exc_info()

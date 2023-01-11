@@ -20,10 +20,10 @@ class DomainData:
     initializer: Callable[[HomeAssistant, EntityData], Any]
 
     def __init__(
-            self,
-            name,
-            async_add_devices: AddEntitiesCallback,
-            initializer: Callable[[HomeAssistant, EntityData], Any]
+        self,
+        name,
+        async_add_devices: AddEntitiesCallback,
+        initializer: Callable[[HomeAssistant, EntityData], Any],
     ):
         self.name = name
         self.async_add_devices = async_add_devices
@@ -32,9 +32,7 @@ class DomainData:
         _LOGGER.info(f"Creating domain data for {name}")
 
     def __repr__(self):
-        obj = {
-            CONF_NAME: self.name
-        }
+        obj = {CONF_NAME: self.name}
 
         to_string = f"{obj}"
 

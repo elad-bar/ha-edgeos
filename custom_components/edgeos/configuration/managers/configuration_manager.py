@@ -128,7 +128,9 @@ class ConfigurationManager:
 
         return fields
 
-    def remap_entry_data(self, entry: ConfigEntry, options: dict[str, Any]) -> dict[str, Any]:
+    def remap_entry_data(
+        self, entry: ConfigEntry, options: dict[str, Any]
+    ) -> dict[str, Any]:
         config_options = {}
         config_data = {}
 

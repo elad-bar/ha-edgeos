@@ -40,7 +40,7 @@ class ConfigData:
         obj = {
             CONF_HOST: self.host,
             CONF_USERNAME: self.username,
-            CONF_PASSWORD: self.password
+            CONF_PASSWORD: self.password,
         }
 
         return obj

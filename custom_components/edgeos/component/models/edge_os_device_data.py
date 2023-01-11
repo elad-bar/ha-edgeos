@@ -14,7 +14,9 @@ class EdgeOSDeviceData:
     is_leased: bool
     traffic: EdgeOSTrafficData
 
-    def __init__(self, hostname: str, ip: str, mac: str, domain: str | None, is_leased: bool):
+    def __init__(
+        self, hostname: str, ip: str, mac: str, domain: str | None, is_leased: bool
+    ):
         self.hostname = hostname
         self.ip = ip
         self.mac = mac
@@ -32,7 +34,7 @@ class EdgeOSDeviceData:
             RECEIVED_RATE_PREFIX: self.received.rate,
             RECEIVED_TRAFFIC_PREFIX: self.received.total,
             SENT_RATE_PREFIX: self.sent.rate,
-            SENT_TRAFFIC_PREFIX: self.sent.total
+            SENT_TRAFFIC_PREFIX: self.sent.total,
         }
 
         return data
@@ -42,7 +44,9 @@ class EdgeOSDeviceData:
         received_activity = self.received.last_activity
         sent_activity = self.sent.last_activity
 
-        last_activity = received_activity if received_activity > sent_activity else sent_activity
+        last_activity = (
+            received_activity if received_activity > sent_activity else sent_activity
+        )
 
         return last_activity
 
@@ -64,7 +68,7 @@ class EdgeOSDeviceData:
             DEVICE_DATA_RECEIVED: self.received.to_dict(),
             DEVICE_DATA_SENT: self.sent.to_dict(),
             ENTITY_UNIQUE_ID: self.unique_id,
-            DHCP_SERVER_LEASED: self.is_leased
+            DHCP_SERVER_LEASED: self.is_leased,
         }
 
         return obj

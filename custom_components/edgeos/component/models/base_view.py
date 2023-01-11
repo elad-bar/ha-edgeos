@@ -15,7 +15,13 @@ class EdgeOSBaseView(HomeAssistantView):
     _prefix: str
     _get_data_callback: Callable[[str], dict]
 
-    def __init__(self, hass, prefix: str, get_data_callback: Callable[[str], dict], entry_id: str | None = None):
+    def __init__(
+        self,
+        hass,
+        prefix: str,
+        get_data_callback: Callable[[str], dict],
+        entry_id: str | None = None,
+    ):
         self.data = None
         self._entry_id = entry_id
         self._hass = hass

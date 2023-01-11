@@ -23,11 +23,13 @@ class StorageAPI(BaseAPI):
     _config_data: ConfigData | None
     _data: dict
 
-    def __init__(self,
-                 hass: HomeAssistant | None,
-                 async_on_data_changed: Callable[[], Awaitable[None]] | None = None,
-                 async_on_status_changed: Callable[[ConnectivityStatus], Awaitable[None]] | None = None
-                 ):
+    def __init__(
+        self,
+        hass: HomeAssistant | None,
+        async_on_data_changed: Callable[[], Awaitable[None]] | None = None,
+        async_on_status_changed: Callable[[ConnectivityStatus], Awaitable[None]]
+        | None = None,
+    ):
 
         super().__init__(hass, async_on_data_changed, async_on_status_changed)
 
@@ -67,19 +69,28 @@ class StorageAPI(BaseAPI):
 
     @property
     def consider_away_interval(self):
-        result = self.data.get(STORAGE_DATA_CONSIDER_AWAY_INTERVAL, DEFAULT_CONSIDER_AWAY_INTERVAL.total_seconds())
+        result = self.data.get(
+            STORAGE_DATA_CONSIDER_AWAY_INTERVAL,
+            DEFAULT_CONSIDER_AWAY_INTERVAL.total_seconds(),
+        )
 
         return result
 
     @property
     def update_entities_interval(self):
-        result = self.data.get(STORAGE_DATA_UPDATE_ENTITIES_INTERVAL, DEFAULT_UPDATE_ENTITIES_INTERVAL.total_seconds())
+        result = self.data.get(
+            STORAGE_DATA_UPDATE_ENTITIES_INTERVAL,
+            DEFAULT_UPDATE_ENTITIES_INTERVAL.total_seconds(),
+        )
 
         return result
 
     @property
     def update_api_interval(self):
-        result = self.data.get(STORAGE_DATA_UPDATE_API_INTERVAL, DEFAULT_UPDATE_API_INTERVAL.total_seconds())
+        result = self.data.get(
+            STORAGE_DATA_UPDATE_API_INTERVAL,
+            DEFAULT_UPDATE_API_INTERVAL.total_seconds(),
+        )
 
         return result
 
@@ -99,7 +110,9 @@ class StorageAPI(BaseAPI):
         for storage_data_file in STORAGE_DATA_FILES:
             file_name = f"{DOMAIN}.{entry_id}.{storage_data_file}.json"
 
-            stores[storage_data_file] = Store(self.hass, STORAGE_VERSION, file_name, encoder=JSONEncoder)
+            stores[storage_data_file] = Store(
+                self.hass, STORAGE_VERSION, file_name, encoder=JSONEncoder
+            )
 
         self._stores = stores
 
@@ -129,7 +142,9 @@ class StorageAPI(BaseAPI):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to async_component_initialize, error: {ex}, line: {line_number}")
+            _LOGGER.error(
+                f"Failed to async_component_initialize, error: {ex}, line: {line_number}"
+            )
 
     async def _async_load_configuration(self):
         """Load the retained data from store and return de-serialized data."""
@@ -143,7 +158,7 @@ class StorageAPI(BaseAPI):
                 STORAGE_DATA_LOG_INCOMING_MESSAGES: False,
                 STORAGE_DATA_CONSIDER_AWAY_INTERVAL: DEFAULT_CONSIDER_AWAY_INTERVAL.total_seconds(),
                 STORAGE_DATA_UPDATE_ENTITIES_INTERVAL: DEFAULT_UPDATE_ENTITIES_INTERVAL.total_seconds(),
-                STORAGE_DATA_UPDATE_API_INTERVAL: DEFAULT_UPDATE_API_INTERVAL.total_seconds()
+                STORAGE_DATA_UPDATE_API_INTERVAL: DEFAULT_UPDATE_API_INTERVAL.total_seconds(),
             }
 
             await self._async_save()

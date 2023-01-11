@@ -14,7 +14,11 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the component."""
     await async_setup_base_entry(
-        hass, config_entry, async_add_devices, CoreSelect.get_domain(), CoreSelect.get_component
+        hass,
+        config_entry,
+        async_add_devices,
+        CoreSelect.get_domain(),
+        CoreSelect.get_component,
     )
 
 

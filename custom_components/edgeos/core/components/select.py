@@ -18,7 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class CoreSelect(SelectEntity, BaseEntity, ABC):
-    """  Core Select """
+    """Core Select"""
+
     def initialize(
         self,
         hass: HomeAssistant,
@@ -35,7 +36,9 @@ class CoreSelect(SelectEntity, BaseEntity, ABC):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to initialize CoreSelect instance, Error: {ex}, Line: {line_number}")
+            _LOGGER.error(
+                f"Failed to initialize CoreSelect instance, Error: {ex}, Line: {line_number}"
+            )
 
     @property
     def current_option(self) -> str:

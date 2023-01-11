@@ -64,7 +64,7 @@ class EdgeOSSystemData:
             SYSTEM_DATA_TRAFFIC_ANALYSIS_DPI: self.deep_packet_inspection,
             SYSTEM_DATA_TRAFFIC_ANALYSIS_EXPORT: self.traffic_analysis_export,
             DHCP_SERVER_LEASES: self.leased_devices,
-            SYSTEM_DATA_LOGIN_USER_LEVEL: self.user_level
+            SYSTEM_DATA_LOGIN_USER_LEVEL: self.user_level,
         }
 
         return obj

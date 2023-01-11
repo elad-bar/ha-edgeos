@@ -49,7 +49,7 @@ class EntityData:
             ENTITY_STATUS: self.status,
             ENTITY_DISABLED: self.disabled,
             ENTITY_DOMAIN: self.domain,
-            ENTITY_CONFIG_ENTRY_ID: self.entry_id
+            ENTITY_CONFIG_ENTRY_ID: self.entry_id,
         }
 
         to_string = f"{obj}"

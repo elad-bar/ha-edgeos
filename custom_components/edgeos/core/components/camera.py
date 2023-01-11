@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class CoreCamera(Camera, BaseEntity, ABC):
-    """  Camera """
+    """Camera"""
 
     def __init__(self, hass, device_info):
         super().__init__()
@@ -72,7 +72,9 @@ class CoreCamera(Camera, BaseEntity, ABC):
 
             stream_support = DOMAIN_STREAM in self.hass.data
 
-            stream_support_flag = SUPPORT_STREAM if stream_source and stream_support else 0
+            stream_support_flag = (
+                SUPPORT_STREAM if stream_source and stream_support else 0
+            )
 
             self._still_image_url = still_image_url_template
             self._still_image_url.hass = hass
@@ -90,7 +92,9 @@ class CoreCamera(Camera, BaseEntity, ABC):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to initialize CoreCamera instance, Error: {ex}, Line: {line_number}")
+            _LOGGER.error(
+                f"Failed to initialize CoreCamera instance, Error: {ex}, Line: {line_number}"
+            )
 
     @property
     def is_recording(self) -> bool:
@@ -110,18 +114,24 @@ class CoreCamera(Camera, BaseEntity, ABC):
         """Return the interval between frames of the mjpeg stream."""
         return self._frame_interval
 
-    def camera_image(self, width: int | None = None, height: int | None = None) -> bytes | None:
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
         return asyncio.run_coroutine_threadsafe(
             self.async_camera_image(), self.hass.loop
         ).result()
 
-    async def async_camera_image(self, width: int | None = None, height: int | None = None) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         try:
             url = self._still_image_url.async_render()
         except TemplateError as err:
-            _LOGGER.error(f"Error parsing template {self._still_image_url}, Error: {err}")
+            _LOGGER.error(
+                f"Error parsing template {self._still_image_url}, Error: {err}"
+            )
             return self._last_image
 
         try:
@@ -137,7 +147,9 @@ class CoreCamera(Camera, BaseEntity, ABC):
             return self._last_image
 
         except aiohttp.ClientError as err:
-            _LOGGER.error(f"Error getting new camera image from {self.name}, Error: {err}")
+            _LOGGER.error(
+                f"Error getting new camera image from {self.name}, Error: {err}"
+            )
             return self._last_image
 
         self._last_url = url

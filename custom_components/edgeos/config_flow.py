@@ -71,11 +71,7 @@ class DomainFlowHandler(config_entries.ConfigFlow):
 
         schema = vol.Schema(new_user_input)
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=schema,
-            errors=errors
-        )
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
 
 class DomainOptionsFlowHandler(config_entries.OptionsFlow):
@@ -104,9 +100,13 @@ class DomainOptionsFlowHandler(config_entries.OptionsFlow):
 
                 _LOGGER.debug("User inputs are valid")
 
-                options = self._config_manager.remap_entry_data(self._config_entry, user_input)
+                options = self._config_manager.remap_entry_data(
+                    self._config_entry, user_input
+                )
 
-                return self.async_create_entry(title=self._config_entry.title, data=options)
+                return self.async_create_entry(
+                    title=self._config_entry.title, data=options
+                )
             except LoginError as lex:
                 errors = lex.errors
 
@@ -121,12 +121,10 @@ class DomainOptionsFlowHandler(config_entries.OptionsFlow):
 
                 _LOGGER.warning(f"Failed to create integration, Error: {error_message}")
 
-        new_user_input = self._config_manager.get_options_fields(self._config_entry.data)
+        new_user_input = self._config_manager.get_options_fields(
+            self._config_entry.data
+        )
 
         schema = vol.Schema(new_user_input)
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=schema,
-            errors=errors
-        )
+        return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
