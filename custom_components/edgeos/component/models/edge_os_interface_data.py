@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from ...core.helpers.const import ENTITY_UNIQUE_ID
 from ..helpers.const import (
-    ENTITY_UNIQUE_ID,
     IGNORED_INTERFACES,
     INTERFACE_DATA_ADDRESS,
     INTERFACE_DATA_AGING,

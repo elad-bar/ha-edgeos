@@ -11,9 +11,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 
 from .component.api.api import IntegrationAPI
-from .component.helpers.const import DEFAULT_NAME, DOMAIN
+from .configuration.helpers.const import DEFAULT_NAME
 from .configuration.helpers.exceptions import AlreadyExistsError, LoginError
 from .configuration.managers.configuration_manager import ConfigurationManager
+from .core.helpers.const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

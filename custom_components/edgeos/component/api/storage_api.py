@@ -10,8 +10,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
 
+from ...configuration.helpers.const import MAIN_VIEW
 from ...configuration.models.config_data import ConfigData
 from ...core.api.base_api import BaseAPI
+from ...core.helpers.const import DOMAIN, STORAGE_VERSION
 from ...core.helpers.enums import ConnectivityStatus
 from ..helpers.const import (
     API_DATA_INTERFACES,
@@ -21,8 +23,6 @@ from ..helpers.const import (
     DEFAULT_UPDATE_API_INTERVAL,
     DEFAULT_UPDATE_ENTITIES_INTERVAL,
     DEVICE_LIST,
-    DOMAIN,
-    MAIN_VIEW,
     STORAGE_API_DATA,
     STORAGE_API_DATA_API,
     STORAGE_API_DATA_HA,
@@ -37,7 +37,6 @@ from ..helpers.const import (
     STORAGE_DATA_UNIT,
     STORAGE_DATA_UPDATE_API_INTERVAL,
     STORAGE_DATA_UPDATE_ENTITIES_INTERVAL,
-    STORAGE_VERSION,
 )
 from ..models.base_view import EdgeOSBaseView
 

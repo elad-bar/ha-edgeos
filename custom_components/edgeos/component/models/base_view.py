@@ -5,7 +5,7 @@ import logging
 
 from homeassistant.components.http import HomeAssistantView
 
-from ..helpers.const import DOMAIN
+from ...core.helpers.const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

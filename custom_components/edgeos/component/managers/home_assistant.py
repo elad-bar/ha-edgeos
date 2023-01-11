@@ -22,8 +22,24 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as async_get_device_registry
 from homeassistant.helpers.entity import EntityCategory, EntityDescription
 
+from ...configuration.helpers.const import DEFAULT_NAME, MANUFACTURER
 from ...configuration.managers.configuration_manager import ConfigurationManager
 from ...configuration.models.config_data import ConfigData
+from ...core.helpers.const import (
+    ACTION_CORE_ENTITY_SELECT_OPTION,
+    ACTION_CORE_ENTITY_TURN_OFF,
+    ACTION_CORE_ENTITY_TURN_ON,
+    DOMAIN,
+    DOMAIN_BINARY_SENSOR,
+    DOMAIN_DEVICE_TRACKER,
+    DOMAIN_SELECT,
+    DOMAIN_SENSOR,
+    DOMAIN_SWITCH,
+    ENTITY_CONFIG_ENTRY_ID,
+    ENTITY_UNIQUE_ID,
+    HA_NAME,
+    SERVICE_RELOAD,
+)
 from ...core.helpers.enums import ConnectivityStatus
 from ...core.managers.home_assistant import HomeAssistantManager
 from ...core.models.entity_data import EntityData
@@ -31,9 +47,6 @@ from ..api.api import IntegrationAPI
 from ..api.storage_api import StorageAPI
 from ..api.websocket import IntegrationWS
 from ..helpers.const import (
-    ACTION_CORE_ENTITY_SELECT_OPTION,
-    ACTION_CORE_ENTITY_TURN_OFF,
-    ACTION_CORE_ENTITY_TURN_ON,
     ADDRESS_LIST,
     API_DATA_DHCP_LEASES,
     API_DATA_DHCP_STATS,
@@ -46,7 +59,6 @@ from ..helpers.const import (
     DATA_SYSTEM_SERVICE,
     DATA_SYSTEM_SERVICE_DHCP_SERVER,
     DEFAULT_HEARTBEAT_INTERVAL,
-    DEFAULT_NAME,
     DEFAULT_UPDATE_API_INTERVAL,
     DEVICE_DATA_MAC,
     DEVICE_LIST,
@@ -61,17 +73,8 @@ from ..helpers.const import (
     DHCP_SERVER_SUBNET,
     DISCOVER_DATA_FW_VERSION,
     DISCOVER_DATA_PRODUCT,
-    DOMAIN,
-    DOMAIN_BINARY_SENSOR,
-    DOMAIN_DEVICE_TRACKER,
-    DOMAIN_SELECT,
-    DOMAIN_SENSOR,
-    DOMAIN_SWITCH,
-    ENTITY_CONFIG_ENTRY_ID,
-    ENTITY_UNIQUE_ID,
     FALSE_STR,
     FW_LATEST_STATE_CAN_UPGRADE,
-    HA_NAME,
     INTERFACE_DATA_ADDRESS,
     INTERFACE_DATA_AGING,
     INTERFACE_DATA_BRIDGE_GROUP,
@@ -89,9 +92,7 @@ from ..helpers.const import (
     INTERFACE_DATA_STP,
     INTERFACE_DATA_UP,
     LAST_ACTIVITY,
-    MANUFACTURER,
     MESSAGES_COUNTER_SECTION,
-    SERVICE_RELOAD,
     SERVICE_SCHEMA_UPDATE_CONFIGURATION,
     SERVICE_UPDATE_CONFIGURATION,
     STATS_ICONS,

@@ -7,12 +7,13 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from ...core.api.base_api import BaseAPI
-from ...core.helpers.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, DATA_KEYS
 from ...core.helpers.enums import ConnectivityStatus
 from ...core.managers.password_manager import PasswordManager
+from ..helpers.const import DATA_KEYS
 from ..helpers.exceptions import LoginError
 from ..models.config_data import ConfigData
 

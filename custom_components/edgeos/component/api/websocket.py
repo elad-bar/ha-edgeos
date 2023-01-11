@@ -33,7 +33,6 @@ from ...component.helpers.const import (
     TRAFFIC_DATA_DEVICE_ITEMS,
     TRAFFIC_DATA_DIRECTIONS,
     TRAFFIC_DATA_INTERFACE_ITEMS,
-    WEBSOCKET_URL_TEMPLATE,
     WS_CLOSING_MESSAGE,
     WS_COMPRESSION_DEFLATE,
     WS_DISCOVER_KEY,
@@ -49,6 +48,7 @@ from ...component.helpers.const import (
     WS_TOPIC_SUBSCRIBE,
     WS_TOPIC_UNSUBSCRIBE,
 )
+from ...configuration.helpers.const import WEBSOCKET_URL_TEMPLATE
 from ...configuration.models.config_data import ConfigData
 from ...core.api.base_api import BaseAPI
 from ...core.helpers.enums import ConnectivityStatus

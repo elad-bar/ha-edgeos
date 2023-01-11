@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
+from ...core.helpers.const import ENTITY_UNIQUE_ID
 from ..helpers.const import (
     DEVICE_DATA_DOMAIN,
     DEVICE_DATA_IP,
@@ -10,7 +11,6 @@ from ..helpers.const import (
     DEVICE_DATA_RECEIVED,
     DEVICE_DATA_SENT,
     DHCP_SERVER_LEASED,
-    ENTITY_UNIQUE_ID,
     RECEIVED_RATE_PREFIX,
     RECEIVED_TRAFFIC_PREFIX,
     SENT_RATE_PREFIX,
