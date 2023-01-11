@@ -16,7 +16,24 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import EntityRegistry, async_get
 from homeassistant.helpers.event import async_track_time_interval
 
-from ..helpers.const import *
+from ..helpers.const import (
+    ACTION_CORE_ENTITY_DISABLE_MOTION_DETECTION,
+    ACTION_CORE_ENTITY_ENABLE_MOTION_DETECTION,
+    ACTION_CORE_ENTITY_LOCATE,
+    ACTION_CORE_ENTITY_PAUSE,
+    ACTION_CORE_ENTITY_RETURN_TO_BASE,
+    ACTION_CORE_ENTITY_SELECT_OPTION,
+    ACTION_CORE_ENTITY_SEND_COMMAND,
+    ACTION_CORE_ENTITY_SET_FAN_SPEED,
+    ACTION_CORE_ENTITY_START,
+    ACTION_CORE_ENTITY_STOP,
+    ACTION_CORE_ENTITY_TOGGLE,
+    ACTION_CORE_ENTITY_TURN_OFF,
+    ACTION_CORE_ENTITY_TURN_ON,
+    DOMAIN,
+    PLATFORMS,
+    SUPPORTED_PLATFORMS,
+)
 from ..managers.device_manager import DeviceManager
 from ..managers.entity_manager import EntityManager
 from ..managers.storage_manager import StorageManager
@@ -102,35 +119,27 @@ class HomeAssistantManager:
 
     async def async_component_initialize(self, entry: ConfigEntry):
         """Component initialization"""
-        pass
 
     async def async_send_heartbeat(self):
         """Must be implemented to be able to send heartbeat to API"""
-        pass
 
     def register_services(self, entry: ConfigEntry | None = None):
         """Must be implemented to be able to expose services"""
-        pass
 
     async def async_initialize_data_providers(self):
         """Must be implemented to be able to send heartbeat to API"""
-        pass
 
     async def async_stop_data_providers(self):
         """Must be implemented to be able to send heartbeat to API"""
-        pass
 
     async def async_update_data_providers(self):
         """Must be implemented to be able to send heartbeat to API"""
-        pass
 
     def load_entities(self):
         """Must be implemented to be able to send heartbeat to API"""
-        pass
 
     def load_devices(self):
         """Must be implemented to be able to send heartbeat to API"""
-        pass
 
     async def async_init(self, entry: ConfigEntry):
         try:
@@ -212,7 +221,7 @@ class HomeAssistantManager:
         await self.async_initialize_data_providers()
 
     async def async_unload(self):
-        _LOGGER.info(f"HA was stopped")
+        _LOGGER.info("HA was stopped")
 
         for handler in self._async_track_time_handlers:
             if handler is not None:
@@ -223,7 +232,7 @@ class HomeAssistantManager:
         await self.async_stop_data_providers()
 
     async def async_remove(self, entry: ConfigEntry):
-        _LOGGER.info(f"Removing current integration - {entry.title}")
+        _LOGGER.info("Removing current integration - {entry.title}")
 
         await self.async_unload()
 
@@ -409,7 +418,7 @@ class HomeAssistantManager:
 
         try:
             __import__(f"custom_components.{DOMAIN}.{domain}")
-        except ModuleNotFoundError as mnfe:
+        except ModuleNotFoundError:
             is_supported = False
 
         return is_supported

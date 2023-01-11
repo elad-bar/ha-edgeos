@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
 
-from ..helpers.const import *
+from ..helpers.const import DOMAIN
 from ..helpers.enums import EntityStatus
 from ..models.domain_data import DomainData
 from ..models.entity_data import EntityData

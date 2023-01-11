@@ -1,4 +1,3 @@
-
 update_configuration:
   name: Update configuration
   description: Update configuration of EdgeOS integration

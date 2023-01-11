@@ -4,13 +4,14 @@ from __future__ import annotations
 import logging
 
 from cryptography.fernet import InvalidToken
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 
 from .component.api.api import IntegrationAPI
-from .component.helpers.const import *
+from .component.helpers.const import DEFAULT_NAME, DOMAIN
 from .configuration.helpers.exceptions import AlreadyExistsError, LoginError
 from .configuration.managers.configuration_manager import ConfigurationManager
 
@@ -56,10 +57,10 @@ class DomainFlowHandler(config_entries.ConfigFlow):
             except LoginError as lex:
                 errors = lex.errors
 
-            except InvalidToken as itex:
+            except InvalidToken:
                 errors = {"base": "corrupted_encryption_key"}
 
-            except AlreadyExistsError as aeex:
+            except AlreadyExistsError:
                 errors = {"base": "already_configured"}
 
             if errors is not None:
@@ -110,10 +111,10 @@ class DomainOptionsFlowHandler(config_entries.OptionsFlow):
             except LoginError as lex:
                 errors = lex.errors
 
-            except InvalidToken as itex:
+            except InvalidToken:
                 errors = {"base": "corrupted_encryption_key"}
 
-            except AlreadyExistsError as aeex:
+            except AlreadyExistsError:
                 errors = {"base": "already_configured"}
 
             if errors is not None:

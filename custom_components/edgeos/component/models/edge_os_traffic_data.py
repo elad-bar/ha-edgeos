@@ -1,8 +1,17 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from ..helpers.const import *
+from ..helpers.const import (
+    TRAFFIC_DATA_DIRECTION,
+    TRAFFIC_DATA_DROPPED,
+    TRAFFIC_DATA_ERRORS,
+    TRAFFIC_DATA_LAST_ACTIVITY,
+    TRAFFIC_DATA_LAST_ACTIVITY_IN_SECONDS,
+    TRAFFIC_DATA_PACKETS,
+    TRAFFIC_DATA_RATE,
+    TRAFFIC_DATA_TOTAL,
+)
 
 
 class EdgeOSTrafficData:

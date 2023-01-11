@@ -18,7 +18,17 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from ..helpers.const import *
+from ..helpers.const import (
+    ATTR_MODE_RECORD,
+    ATTR_STREAM_FPS,
+    CONF_MOTION_DETECTION,
+    CONF_STILL_IMAGE_URL,
+    CONF_STREAM_SOURCE,
+    DOMAIN_CAMERA,
+    DOMAIN_STREAM,
+    EMPTY_STRING,
+    SINGLE_FRAME_PS,
+)
 from ..models.base_entity import BaseEntity
 from ..models.entity_data import EntityData
 
@@ -52,7 +62,7 @@ class CoreCamera(Camera, BaseEntity, ABC):
 
         try:
             if self.ha is None:
-                _LOGGER.warning(f"Failed to initialize CoreCamera without HA manager")
+                _LOGGER.warning("Failed to initialize CoreCamera without HA manager")
                 return
 
             config_data = self.ha.config_data

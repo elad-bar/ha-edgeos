@@ -11,9 +11,44 @@ import re
 import sys
 from urllib.parse import urlparse
 
+import aiohttp
+
 from homeassistant.core import HomeAssistant
 
-from ...component.helpers.const import *
+from ...component.helpers.const import (
+    ADDRESS_HW_ADDR,
+    ADDRESS_IPV4,
+    ADDRESS_LIST,
+    API_DATA_COOKIES,
+    API_DATA_SESSION_ID,
+    BEGINS_WITH_SIX_DIGITS,
+    DEVICE_LIST,
+    DISCOVER_DEVICE_ITEMS,
+    EMPTY_STRING,
+    INTERFACE_DATA_MULTICAST,
+    INTERFACES_MAIN_MAP,
+    INTERFACES_STATS,
+    STRING_COLON,
+    STRING_COMMA,
+    TRAFFIC_DATA_DEVICE_ITEMS,
+    TRAFFIC_DATA_DIRECTIONS,
+    TRAFFIC_DATA_INTERFACE_ITEMS,
+    WEBSOCKET_URL_TEMPLATE,
+    WS_CLOSING_MESSAGE,
+    WS_COMPRESSION_DEFLATE,
+    WS_DISCOVER_KEY,
+    WS_EXPORT_KEY,
+    WS_IGNORED_MESSAGES,
+    WS_INTERFACES_KEY,
+    WS_MAX_MSG_SIZE,
+    WS_RECEIVED_MESSAGES,
+    WS_SESSION_ID,
+    WS_SYSTEM_STATS_KEY,
+    WS_TIMEOUT,
+    WS_TOPIC_NAME,
+    WS_TOPIC_SUBSCRIBE,
+    WS_TOPIC_UNSUBSCRIBE,
+)
 from ...configuration.models.config_data import ConfigData
 from ...core.api.base_api import BaseAPI
 from ...core.helpers.enums import ConnectivityStatus
@@ -72,12 +107,12 @@ class IntegrationWS(BaseAPI):
 
     async def initialize(self, config_data: ConfigData | None = None):
         if config_data is None:
-            _LOGGER.debug(f"Reinitializing WebSocket connection")
+            _LOGGER.debug("Reinitializing WebSocket connection")
 
         else:
             self._config_data = config_data
 
-            _LOGGER.debug(f"Initializing WebSocket connection")
+            _LOGGER.debug("Initializing WebSocket connection")
 
         try:
             self.data = {
@@ -106,7 +141,7 @@ class IntegrationWS(BaseAPI):
 
         except Exception as ex:
             if self.session is not None and self.session.closed:
-                _LOGGER.info(f"WS Session closed")
+                _LOGGER.info("WS Session closed")
 
                 await self.terminate()
 
@@ -139,7 +174,7 @@ class IntegrationWS(BaseAPI):
         self._ws = None
 
     async def async_send_heartbeat(self):
-        _LOGGER.debug(f"Keep alive message sent")
+        _LOGGER.debug("Keep alive message sent")
         if self.session is None or self.session.closed:
             await self.set_status(ConnectivityStatus.NotConnected)
 
@@ -164,7 +199,7 @@ class IntegrationWS(BaseAPI):
                 await self.set_status(ConnectivityStatus.Failed)
 
     async def _listen(self):
-        _LOGGER.info(f"Starting to listen connected")
+        _LOGGER.info("Starting to listen connected")
 
         subscription_data = self._get_subscription_data()
         await self._ws.send_str(subscription_data)
@@ -209,7 +244,7 @@ class IntegrationWS(BaseAPI):
 
             await sleep(1)
 
-        _LOGGER.info(f"Stop listening")
+        _LOGGER.info("Stop listening")
 
     async def parse_message(self, message):
         try:

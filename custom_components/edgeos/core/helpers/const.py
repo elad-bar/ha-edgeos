@@ -2,14 +2,12 @@ from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSO
 from homeassistant.components.camera import DOMAIN as DOMAIN_CAMERA
 from homeassistant.components.device_tracker import DOMAIN as DOMAIN_DEVICE_TRACKER
 from homeassistant.components.light import DOMAIN as DOMAIN_LIGHT
-from homeassistant.components.media_source import DOMAIN as DOMAIN_MEDIA_SOURCE
 from homeassistant.components.select import DOMAIN as DOMAIN_SELECT
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
-from homeassistant.components.stream import DOMAIN as DOMAIN_STREAM
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
 from homeassistant.components.vacuum import DOMAIN as DOMAIN_VACUUM
 
-from ...configuration.helpers.const import *
+from ...configuration.helpers.const import DOMAIN
 
 SUPPORTED_PLATFORMS = [
     DOMAIN_BINARY_SENSOR,

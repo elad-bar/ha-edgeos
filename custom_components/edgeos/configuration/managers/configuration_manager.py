@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from ...core.api.base_api import BaseAPI
-from ...core.helpers.const import *
+from ...core.helpers.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, DATA_KEYS
 from ...core.helpers.enums import ConnectivityStatus
 from ...core.managers.password_manager import PasswordManager
 from ..helpers.exceptions import LoginError

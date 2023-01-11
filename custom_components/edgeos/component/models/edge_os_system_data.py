@@ -2,7 +2,18 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from ..helpers.const import *
+from ..helpers.const import (
+    DHCP_SERVER_LEASES,
+    SYSTEM_DATA_DISABLE,
+    SYSTEM_DATA_ENABLE,
+    SYSTEM_DATA_HOSTNAME,
+    SYSTEM_DATA_LOGIN_USER_LEVEL,
+    SYSTEM_DATA_NTP,
+    SYSTEM_DATA_OFFLOAD_HW_NAT,
+    SYSTEM_DATA_TIME_ZONE,
+    SYSTEM_DATA_TRAFFIC_ANALYSIS_DPI,
+    SYSTEM_DATA_TRAFFIC_ANALYSIS_EXPORT,
+)
 
 
 class EdgeOSSystemData:

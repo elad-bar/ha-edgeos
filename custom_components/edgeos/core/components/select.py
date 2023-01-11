@@ -10,7 +10,7 @@ import sys
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 
-from ..helpers.const import *
+from ..helpers.const import ATTR_OPTIONS, DOMAIN_SELECT
 from ..models.base_entity import BaseEntity
 from ..models.entity_data import EntityData
 

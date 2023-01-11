@@ -8,7 +8,6 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 
-from ...core.helpers.const import *
 from .enums import InterfaceTypes
 
 ATTR_FRIENDLY_NAME = "friendly_name"

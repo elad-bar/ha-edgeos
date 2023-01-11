@@ -10,7 +10,7 @@ from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import ATTR_IP, ATTR_MAC
 from homeassistant.core import HomeAssistant
 
-from ..helpers.const import *
+from ..helpers.const import DOMAIN_DEVICE_TRACKER
 from ..models.base_entity import BaseEntity
 from ..models.entity_data import EntityData
 

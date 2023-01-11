@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components.vacuum import StateVacuumEntity
 from homeassistant.core import HomeAssistant
 
-from ..helpers.const import *
+from ..helpers.const import ATTR_FANS_SPEED_LIST, ATTR_FEATURES, DOMAIN_VACUUM
 from ..models.base_entity import BaseEntity
 from ..models.entity_data import EntityData
 

@@ -8,7 +8,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from ..helpers.const import *
 from ..models.entity_data import EntityData
 
 _LOGGER = logging.getLogger(__name__)

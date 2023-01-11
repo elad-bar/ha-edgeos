@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from asyncio import sleep
 from collections.abc import Awaitable, Callable
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import logging
 import sys
@@ -14,7 +14,44 @@ from homeassistant.core import HomeAssistant
 from ...configuration.models.config_data import ConfigData
 from ...core.api.base_api import BaseAPI
 from ...core.helpers.enums import ConnectivityStatus
-from ..helpers.const import *
+from ..helpers.const import (
+    API_DATA,
+    API_DATA_COOKIES,
+    API_DATA_INTERFACES,
+    API_DATA_LAST_UPDATE,
+    API_DATA_PRODUCT,
+    API_DATA_SAVE,
+    API_DATA_SESSION_ID,
+    API_DATA_SYSTEM,
+    API_DELETE,
+    API_GET,
+    API_SET,
+    API_URL_DATA,
+    API_URL_DATA_SUBSET,
+    API_URL_HEARTBEAT,
+    API_URL_PARAMETER_ACTION,
+    API_URL_PARAMETER_BASE_URL,
+    API_URL_PARAMETER_SUBSET,
+    API_URL_PARAMETER_TIMESTAMP,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    COOKIE_BEAKER_SESSION_ID,
+    COOKIE_CSRF_TOKEN,
+    COOKIE_PHPSESSID,
+    EMPTY_STRING,
+    HEADER_CSRF_TOKEN,
+    HEARTBEAT_MAX_AGE,
+    MAXIMUM_RECONNECT,
+    RESPONSE_ERROR_KEY,
+    RESPONSE_FAILURE_CODE,
+    RESPONSE_OUTPUT,
+    RESPONSE_SUCCESS_KEY,
+    STRING_DASH,
+    STRING_UNDERSCORE,
+    SYSTEM_DATA_DISABLE,
+    TRUE_STR,
+    UPDATE_DATE_ENDPOINTS,
+)
 from ..models.edge_os_interface_data import EdgeOSInterfaceData
 from ..models.exceptions import SessionTerminatedException
 
@@ -144,7 +181,7 @@ class IntegrationAPI(BaseAPI):
 
                             break
                 else:
-                    _LOGGER.error(f"Failed to login, Invalid credentials")
+                    _LOGGER.error("Failed to login, Invalid credentials")
 
                     if self.beaker_session_id is None and self.session_id is not None:
                         await self.set_status(ConnectivityStatus.Failed)
@@ -277,7 +314,7 @@ class IntegrationAPI(BaseAPI):
                         self._last_valid = ts
             else:
                 _LOGGER.debug(
-                    f"Ignoring request to send heartbeat, Reason: closed session"
+                    "Ignoring request to send heartbeat, Reason: closed session"
                 )
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -333,7 +370,7 @@ class IntegrationAPI(BaseAPI):
                         _LOGGER.error("Invalid response, not contain success status")
             else:
                 _LOGGER.debug(
-                    f"Ignoring request to get devices data, Reason: closed session"
+                    "Ignoring request to get devices data, Reason: closed session"
                 )
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()

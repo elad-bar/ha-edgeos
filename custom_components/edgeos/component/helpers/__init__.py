@@ -5,7 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 
-from ...component.helpers.const import *
+from ...component.helpers.const import DATA
 from ...component.managers.home_assistant import EdgeOSHomeAssistantManager
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ async def async_set_ha(hass: HomeAssistant, entry: ConfigEntry):
 
 
 def get_ha(hass: HomeAssistant, entry_id) -> EdgeOSHomeAssistantManager:
-    ha_data = hass.data.get(DATA, dict())
+    ha_data = hass.data.get(DATA, {})
     ha = ha_data.get(entry_id)
 
     return ha
@@ -44,6 +44,6 @@ def get_ha(hass: HomeAssistant, entry_id) -> EdgeOSHomeAssistantManager:
 
 def clear_ha(hass: HomeAssistant, entry_id):
     if DATA not in hass.data:
-        hass.data[DATA] = dict()
+        hass.data[DATA] = {}
 
     del hass.data[DATA][entry_id]
