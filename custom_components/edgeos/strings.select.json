@@ -1,9 +1,9 @@
 {
   "state": {
     "edgeos__unit": {
-      "B": "B",
-      "KB": "KB",
-      "MB": "MB"
+      "b": "B",
+      "kb": "KB",
+      "mb": "MB"
     }
   }
 }
