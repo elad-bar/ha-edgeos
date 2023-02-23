@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 import logging
-import sys
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
@@ -13,7 +12,6 @@ from ...configuration.models.config_data import ConfigData
 from ...core.api.base_api import BaseAPI
 from ...core.helpers.enums import ConnectivityStatus
 from ..helpers.const import *
-from ..models.base_view import EdgeOSBaseView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +53,7 @@ class StorageAPI(BaseAPI):
 
     @property
     def unit(self):
-        result = self.data.get(STORAGE_DATA_UNIT, ATTR_BYTE)
+        result = self.data.get(STORAGE_DATA_UNIT, ATTR_BYTE).replace(ATTR_BYTE[1:], "")
 
         return result
 
@@ -86,7 +84,6 @@ class StorageAPI(BaseAPI):
     async def initialize(self, config_data: ConfigData):
         self._config_data = config_data
 
-        self._initialize_routes()
         self._initialize_storages()
 
         await self._async_load_configuration()
@@ -102,34 +99,6 @@ class StorageAPI(BaseAPI):
             stores[storage_data_file] = Store(self.hass, STORAGE_VERSION, file_name, encoder=JSONEncoder)
 
         self._stores = stores
-
-    def _initialize_routes(self):
-        try:
-            main_view_data = {}
-            entry_id = self._config_data.entry.entry_id
-
-            for key in STORAGE_API_DATA:
-                view = EdgeOSBaseView(self.hass, key, self._get_data, entry_id)
-
-                main_view_data[key] = view.url
-
-                self.hass.http.register_view(view)
-
-            main_view = self.hass.data.get(MAIN_VIEW)
-
-            if main_view is None:
-                main_view = EdgeOSBaseView(self.hass, STORAGE_API_LIST, self._get_data)
-
-                self.hass.http.register_view(main_view)
-                self.hass.data[MAIN_VIEW] = main_view
-
-            self._data[STORAGE_API_LIST] = main_view_data
-
-        except Exception as ex:
-            exc_type, exc_obj, tb = sys.exc_info()
-            line_number = tb.tb_lineno
-
-            _LOGGER.error(f"Failed to async_component_initialize, error: {ex}, line: {line_number}")
 
     async def _async_load_configuration(self):
         """Load the retained data from store and return de-serialized data."""
@@ -209,53 +178,3 @@ class StorageAPI(BaseAPI):
         self.data[STORAGE_DATA_UPDATE_API_INTERVAL] = interval
 
         await self._async_save()
-
-    async def debug_log_api(self, data: dict):
-        self._data[STORAGE_API_DATA_API] = data
-
-    async def debug_log_ws(self, data: dict):
-        self._data[STORAGE_API_DATA_WS] = data
-
-    async def debug_log_ha(self, data: dict):
-        clean_data = {}
-        for key in data:
-            if key in [DEVICE_LIST, API_DATA_INTERFACES]:
-                new_item = {}
-                items = data.get(key, {})
-
-                for item_key in items:
-                    item = items.get(item_key)
-                    new_item[item_key] = item.to_dict()
-
-                clean_data[key] = new_item
-
-            elif key in [API_DATA_SYSTEM]:
-                item = data.get(key)
-                clean_data[key] = item.to_dict()
-
-            else:
-                clean_data[key] = data.get(key)
-
-        self._data[STORAGE_API_DATA_HA] = clean_data
-
-    def _get_data(self, key):
-        is_list = key == STORAGE_API_LIST
-
-        data = {} if is_list else self._data.get(key)
-
-        if is_list:
-            raw_data = self._data.get(key)
-            current_entry_id = self._config_data.entry.entry_id
-
-            for entry_id in self.hass.data[DATA].keys():
-                entry_data = {}
-
-                for raw_data_key in raw_data:
-                    url_raw = raw_data.get(raw_data_key)
-                    url = url_raw.replace(current_entry_id, entry_id)
-
-                    entry_data[raw_data_key] = url
-
-                data[entry_id] = entry_data
-
-        return data

@@ -270,16 +270,14 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
                 self._load_interface_stats_sensor(interface_item, stats_data_key, stats_data_item)
 
-    def _get_device_name(self, device: EdgeOSDeviceData):
+    def get_device_name(self, device: EdgeOSDeviceData):
         return f"{self.system_name} Device {device.hostname}"
 
-    def _get_interface_name(self, interface: EdgeOSInterfaceData):
+    def get_interface_name(self, interface: EdgeOSInterfaceData):
         return f"{self.system_name} Interface {interface.name.upper()}"
 
     async def _extract_ws_data(self):
         try:
-            await self.storage_api.debug_log_ws(self.ws.data)
-
             interfaces_data = self.ws.data.get(WS_INTERFACES_KEY, {})
             device_data = self.ws.data.get(WS_EXPORT_KEY, {})
 
@@ -305,8 +303,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
                 self._update_interface_stats(interface_item, stats)
 
-            await self._log_ha_data()
-
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -316,8 +312,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
     async def _extract_api_data(self):
         try:
             _LOGGER.debug("Extracting API Data")
-
-            await self.storage_api.debug_log_api(self.api.data)
 
             data = self.api.data.get(API_DATA_SYSTEM, {})
             system_info = self.api.data.get(API_DATA_SYS_INFO, {})
@@ -341,15 +335,13 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 warning_message = " and ".join(warning_messages)
 
                 _LOGGER.warning(f"Integration will not work correctly since {warning_message}")
-
-            await self._log_ha_data()
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
             _LOGGER.error(f"Failed to extract API data, Error: {ex}, Line: {line_number}")
 
-    async def _log_ha_data(self):
+    def get_debug_data(self) -> dict:
         messages = {}
 
         for key in WS_MESSAGES:
@@ -365,7 +357,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             MESSAGES_COUNTER_SECTION: messages
         }
 
-        await self.storage_api.debug_log_ha(data)
+        return data
 
     def _extract_system(self, data: dict, system_info: dict):
         try:
@@ -679,11 +671,11 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         self._set_ha_device(self.system_name, self._system.product, MANUFACTURER, self._system.fw_version)
 
     def _load_device_device(self, device: EdgeOSDeviceData):
-        name = self._get_device_name(device)
+        name = self.get_device_name(device)
         self._set_ha_device(name, "Device", DEFAULT_NAME)
 
     def _load_interface_device(self, interface: EdgeOSInterfaceData):
-        name = self._get_interface_name(interface)
+        name = self.get_interface_name(interface)
         self._set_ha_device(name, "Interface", DEFAULT_NAME)
 
     def _load_unit_select(self):
@@ -702,7 +694,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 key=unique_id,
                 name=entity_name,
                 device_class=f"{DOMAIN}__{STORAGE_DATA_UNIT}",
-                options=list(UNIT_OF_MEASUREMENT_MAPPING.keys()),
+                options=list([unit.replace(ATTR_BYTE[1:], "").upper() for unit in UNIT_MAPPING.keys()]),
                 entity_category=EntityCategory.CONFIG
             )
 
@@ -833,7 +825,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         entity_name = f"{device_name} Last Restart"
 
         try:
-            state = self._system.last_reset
+            state = self._system.uptime
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name
@@ -932,7 +924,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             )
 
     def _load_device_tracker(self, device: EdgeOSDeviceData):
-        device_name = self._get_device_name(device)
+        device_name = self.get_device_name(device)
         entity_name = f"{device_name}"
 
         try:
@@ -971,7 +963,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             )
 
     def _load_device_monitor_switch(self, device: EdgeOSDeviceData):
-        device_name = self._get_device_name(device)
+        device_name = self.get_device_name(device)
         entity_name = f"{device_name} Monitored"
 
         try:
@@ -1016,7 +1008,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                                   entity_suffix: str,
                                   state: str | int | float | None):
 
-        device_name = self._get_device_name(device)
+        device_name = self.get_device_name(device)
         entity_name = f"{device_name} {entity_suffix}"
 
         is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
@@ -1044,7 +1036,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                                      entity_suffix: str,
                                      state: str | int | float | None):
 
-        device_name = self._get_interface_name(interface)
+        device_name = self.get_interface_name(interface)
         entity_name = f"{device_name} {entity_suffix}"
 
         is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
@@ -1107,7 +1099,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             )
 
     def _load_interface_status_switch(self, interface: EdgeOSInterfaceData):
-        interface_name = self._get_interface_name(interface)
+        interface_name = self.get_interface_name(interface)
         entity_name = f"{interface_name} Status"
 
         try:
@@ -1149,7 +1141,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             )
 
     def _load_interface_status_binary_sensor(self, interface: EdgeOSInterfaceData):
-        interface_name = self._get_interface_name(interface)
+        interface_name = self.get_interface_name(interface)
         entity_name = f"{interface_name} Status"
 
         try:
@@ -1181,7 +1173,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             )
 
     def _load_interface_connected_binary_sensor(self, interface: EdgeOSInterfaceData):
-        interface_name = self._get_interface_name(interface)
+        interface_name = self.get_interface_name(interface)
         entity_name = f"{interface_name} Connected"
 
         try:
@@ -1213,7 +1205,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             )
 
     def _load_interface_monitor_switch(self, interface: EdgeOSInterfaceData):
-        interface_name = self._get_interface_name(interface)
+        interface_name = self.get_interface_name(interface)
         entity_name = f"{interface_name} Monitored"
 
         try:
@@ -1330,13 +1322,13 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         return result
 
     def _get_unit_of_measurement(self) -> str:
-        result = UNIT_OF_MEASUREMENT_MAPPING.get(self.storage_api.unit, "B")
+        result = self.storage_api.unit
 
         return result
 
     def _get_rate_unit_of_measurement(self) -> str:
         unit_of_measurement = self._get_unit_of_measurement()
-        result = f"{unit_of_measurement}/ps"
+        result = f"{unit_of_measurement}/s"
 
         return result
 

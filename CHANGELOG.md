@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.25
+
+- Add support for Home Assistant integration and device diagnostics
+- Removed debug API
+- Avoid sending ping when no active WebSockets connection
+- Fix warning message regarding of invalid unit's translation
+- Fix units format [#90](https://github.com/elad-bar/ha-edgeos/issues/90)
+- Fix last restart sensor, switched to uptime in seconds [#94](https://github.com/elad-bar/ha-edgeos/issues/94)
+
 ## 2.0.24
 
 - Change log level of warning to debug level for session closed on HA restart

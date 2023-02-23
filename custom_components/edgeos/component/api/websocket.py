@@ -3,7 +3,6 @@ websocket.
 """
 from __future__ import annotations
 
-from asyncio import sleep
 from collections.abc import Awaitable, Callable
 import json
 import logging
@@ -153,10 +152,13 @@ class IntegrationWS(BaseAPI):
 
             try:
                 await self._ws.send_str(data)
-            except ConnectionResetError as cre:
-                _LOGGER.warning(f"Connection reset error raise by the client, will try to reconnect soon, Error: {cre}")
 
-                await self.set_status(ConnectivityStatus.Failed)
+            except ConnectionResetError as crex:
+                _LOGGER.debug(f"Gracefully failed to send heartbeat - Restarting connection, Error: {crex}")
+                await self.set_status(ConnectivityStatus.NotConnected)
+
+            except Exception as ex:
+                _LOGGER.error(f"Failed to send heartbeat, Error: {ex}")
 
     async def _listen(self):
         _LOGGER.info(f"Starting to listen connected")
@@ -166,37 +168,27 @@ class IntegrationWS(BaseAPI):
 
         _LOGGER.info("Subscribed to WS payloads")
 
-        listening = True
+        async for msg in self._ws:
+            is_connected = self.status == ConnectivityStatus.Connected
+            is_closing_type = msg.type in WS_CLOSING_MESSAGE
+            is_error = msg.type == aiohttp.WSMsgType.ERROR
+            is_closing_data = False if is_closing_type or is_error else msg.data == "close"
+            session_is_closed = self.session is None or self.session.closed
 
-        while listening and self.status == ConnectivityStatus.Connected:
-            async for msg in self._ws:
-                is_connected = self.status == ConnectivityStatus.Connected
-                is_closing_type = msg.type in WS_CLOSING_MESSAGE
-                is_error = msg.type == aiohttp.WSMsgType.ERROR
-                is_closing_data = False if is_closing_type or is_error else msg.data == "close"
-                session_is_closed = self.session is None or self.session.closed
+            if is_closing_type or is_error or is_closing_data or session_is_closed or not is_connected:
+                _LOGGER.warning(
+                    f"WS stopped listening, "
+                    f"Message: {str(msg)}, "
+                    f"Exception: {self._ws.exception()}"
+                )
 
-                if is_closing_type or is_error or is_closing_data or session_is_closed or not is_connected:
-                    _LOGGER.warning(
-                        f"WS stopped listening, "
-                        f"Message: {str(msg)}, "
-                        f"Exception: {self._ws.exception()}"
-                    )
+                break
 
-                    listening = False
-                    break
+            else:
+                if self._can_log_messages:
+                    _LOGGER.debug(f"Message received: {str(msg)}")
 
-                else:
-                    if self._can_log_messages:
-                        _LOGGER.debug(f"Message received: {str(msg)}")
-
-                    await self.parse_message(msg.data)
-
-            _LOGGER.info("Message queue is empty, will try to resample in a second")
-
-            await sleep(1)
-
-        _LOGGER.info(f"Stop listening")
+                await self.parse_message(msg.data)
 
     async def parse_message(self, message):
         try:
