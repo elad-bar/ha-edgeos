@@ -53,7 +53,7 @@ class StorageAPI(BaseAPI):
 
     @property
     def unit(self):
-        result = self.data.get(STORAGE_DATA_UNIT, ATTR_BYTE).replace(ATTR_BYTE[1:], "")
+        result = self.data.get(STORAGE_DATA_UNIT, ATTR_BYTE).replace(ATTR_BYTE[1:], "").upper()
 
         return result
 
