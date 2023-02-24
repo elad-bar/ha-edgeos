@@ -7,13 +7,14 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 
-from ..helpers.const import *
+from ..helpers.const import DOMAIN_BINARY_SENSOR
 from ..models.base_entity import BaseEntity
 from ..models.entity_data import EntityData
 
 
 class CoreBinarySensor(BinarySensorEntity, BaseEntity):
     """Representation a binary sensor that is updated."""
+
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""

@@ -5,17 +5,13 @@ Following constants are mandatory for CORE:
     SUPPORTED_PLATFORMS - list of supported HA components to initialize
 """
 
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 DOMAIN = "edgeos"
 DEFAULT_NAME = "EdgeOS"
 MANUFACTURER = "Ubiquiti"
 
-DATA_KEYS = [
-    CONF_HOST,
-    CONF_USERNAME,
-    CONF_PASSWORD
-]
+DATA_KEYS = [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]
 
 MAXIMUM_RECONNECT = 3
 

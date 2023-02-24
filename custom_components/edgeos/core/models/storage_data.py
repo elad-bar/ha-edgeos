@@ -17,9 +17,7 @@ class StorageData:
         return data
 
     def to_dict(self):
-        obj = {
-            "key": self.key
-        }
+        obj = {"key": self.key}
 
         return obj
 

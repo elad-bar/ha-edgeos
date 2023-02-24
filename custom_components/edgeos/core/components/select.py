@@ -10,7 +10,7 @@ import sys
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 
-from ..helpers.const import *
+from ..helpers.const import ATTR_OPTIONS, DOMAIN_SELECT
 from ..models.base_entity import BaseEntity
 from ..models.entity_data import EntityData
 
@@ -18,7 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class CoreSelect(SelectEntity, BaseEntity, ABC):
-    """  Core Select """
+    """Core Select"""
+
     def initialize(
         self,
         hass: HomeAssistant,
@@ -35,7 +36,9 @@ class CoreSelect(SelectEntity, BaseEntity, ABC):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to initialize CoreSelect instance, Error: {ex}, Line: {line_number}")
+            _LOGGER.error(
+                f"Failed to initialize CoreSelect instance, Error: {ex}, Line: {line_number}"
+            )
 
     @property
     def current_option(self) -> str:

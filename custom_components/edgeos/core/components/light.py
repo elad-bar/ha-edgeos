@@ -10,7 +10,7 @@ from typing import Any
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
 
-from ..helpers.const import *
+from ..helpers.const import DOMAIN_LIGHT
 from ..models.base_entity import BaseEntity
 from ..models.entity_data import EntityData
 

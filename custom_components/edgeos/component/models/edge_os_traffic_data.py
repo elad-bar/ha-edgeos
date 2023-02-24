@@ -1,8 +1,17 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from ..helpers.const import *
+from ..helpers.const import (
+    TRAFFIC_DATA_DIRECTION,
+    TRAFFIC_DATA_DROPPED,
+    TRAFFIC_DATA_ERRORS,
+    TRAFFIC_DATA_LAST_ACTIVITY,
+    TRAFFIC_DATA_LAST_ACTIVITY_IN_SECONDS,
+    TRAFFIC_DATA_PACKETS,
+    TRAFFIC_DATA_RATE,
+    TRAFFIC_DATA_TOTAL,
+)
 
 
 class EdgeOSTrafficData:
@@ -32,18 +41,22 @@ class EdgeOSTrafficData:
 
         if self.rate > 0:
             now = datetime.now().timestamp()
-            self.last_activity = now
+            self.last_activity = int(now)
 
     def to_dict(self):
         now = datetime.now().timestamp()
-        diff = "N/A" if self.last_activity == 0 else timedelta(seconds=(int(now) - self.last_activity)).total_seconds()
+        diff = (
+            "N/A"
+            if self.last_activity == 0
+            else timedelta(seconds=(int(now) - self.last_activity)).total_seconds()
+        )
 
         obj = {
             TRAFFIC_DATA_DIRECTION: self.direction,
             TRAFFIC_DATA_RATE: self.rate,
             TRAFFIC_DATA_TOTAL: self.total,
             TRAFFIC_DATA_LAST_ACTIVITY: self.last_activity,
-            TRAFFIC_DATA_LAST_ACTIVITY_IN_SECONDS: diff
+            TRAFFIC_DATA_LAST_ACTIVITY_IN_SECONDS: diff,
         }
 
         if self.errors is not None:

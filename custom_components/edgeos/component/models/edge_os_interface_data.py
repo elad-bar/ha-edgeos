@@ -1,6 +1,40 @@
 from __future__ import annotations
 
-from ..helpers.const import *
+from ...core.helpers.const import ENTITY_UNIQUE_ID
+from ..helpers.const import (
+    IGNORED_INTERFACES,
+    INTERFACE_DATA_ADDRESS,
+    INTERFACE_DATA_AGING,
+    INTERFACE_DATA_BRIDGE_GROUP,
+    INTERFACE_DATA_BRIDGED_CONNTRACK,
+    INTERFACE_DATA_DESCRIPTION,
+    INTERFACE_DATA_DUPLEX,
+    INTERFACE_DATA_HANDLER,
+    INTERFACE_DATA_HELLO_TIME,
+    INTERFACE_DATA_MAX_AGE,
+    INTERFACE_DATA_MULTICAST,
+    INTERFACE_DATA_NAME,
+    INTERFACE_DATA_PRIORITY,
+    INTERFACE_DATA_PROMISCUOUS,
+    INTERFACE_DATA_RECEIVED,
+    INTERFACE_DATA_SENT,
+    INTERFACE_DATA_SPEED,
+    INTERFACE_DATA_STP,
+    INTERFACE_DATA_TYPE,
+    RECEIVED_DROPPED_PREFIX,
+    RECEIVED_ERRORS_PREFIX,
+    RECEIVED_PACKETS_PREFIX,
+    RECEIVED_RATE_PREFIX,
+    RECEIVED_TRAFFIC_PREFIX,
+    SENT_DROPPED_PREFIX,
+    SENT_ERRORS_PREFIX,
+    SENT_PACKETS_PREFIX,
+    SENT_RATE_PREFIX,
+    SENT_TRAFFIC_PREFIX,
+    SPECIAL_INTERFACES,
+    TRAFFIC_DATA_DIRECTION_RECEIVED,
+    TRAFFIC_DATA_DIRECTION_SENT,
+)
 from ..helpers.enums import InterfaceHandlers
 from .edge_os_traffic_data import EdgeOSTrafficData
 
@@ -76,7 +110,7 @@ class EdgeOSInterfaceData:
             INTERFACE_DATA_MULTICAST: self.multicast,
             INTERFACE_DATA_RECEIVED: self.received.to_dict(),
             INTERFACE_DATA_SENT: self.sent.to_dict(),
-            ENTITY_UNIQUE_ID: self.unique_id
+            ENTITY_UNIQUE_ID: self.unique_id,
         }
 
         return obj
@@ -110,7 +144,7 @@ class EdgeOSInterfaceData:
             SENT_TRAFFIC_PREFIX: self.sent.total,
             SENT_DROPPED_PREFIX: self.sent.dropped,
             SENT_ERRORS_PREFIX: self.sent.errors,
-            SENT_PACKETS_PREFIX: self.sent.packets
+            SENT_PACKETS_PREFIX: self.sent.packets,
         }
 
         return data

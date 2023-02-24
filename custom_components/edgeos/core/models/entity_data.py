@@ -5,7 +5,17 @@ from datetime import datetime
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import slugify
 
-from ..helpers.const import *
+from ..helpers.const import (
+    ENTITY_ATTRIBUTES,
+    ENTITY_CONFIG_ENTRY_ID,
+    ENTITY_DETAILS,
+    ENTITY_DEVICE_NAME,
+    ENTITY_DISABLED,
+    ENTITY_DOMAIN,
+    ENTITY_STATE,
+    ENTITY_STATUS,
+    ENTITY_UNIQUE_ID,
+)
 from ..helpers.enums import EntityStatus
 
 
@@ -49,7 +59,7 @@ class EntityData:
             ENTITY_STATUS: self.status,
             ENTITY_DISABLED: self.disabled,
             ENTITY_DOMAIN: self.domain,
-            ENTITY_CONFIG_ENTRY_ID: self.entry_id
+            ENTITY_CONFIG_ENTRY_ID: self.entry_id,
         }
 
         to_string = f"{obj}"

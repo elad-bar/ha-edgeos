@@ -10,8 +10,23 @@ from homeassistant.helpers.storage import Store
 
 from ...configuration.models.config_data import ConfigData
 from ...core.api.base_api import BaseAPI
+from ...core.helpers.const import DOMAIN, STORAGE_VERSION
 from ...core.helpers.enums import ConnectivityStatus
-from ..helpers.const import *
+from ..helpers.const import (
+    ATTR_BYTE,
+    DEFAULT_CONSIDER_AWAY_INTERVAL,
+    DEFAULT_UPDATE_API_INTERVAL,
+    DEFAULT_UPDATE_ENTITIES_INTERVAL,
+    STORAGE_DATA_CONSIDER_AWAY_INTERVAL,
+    STORAGE_DATA_FILE_CONFIG,
+    STORAGE_DATA_FILES,
+    STORAGE_DATA_LOG_INCOMING_MESSAGES,
+    STORAGE_DATA_MONITORED_DEVICES,
+    STORAGE_DATA_MONITORED_INTERFACES,
+    STORAGE_DATA_UNIT,
+    STORAGE_DATA_UPDATE_API_INTERVAL,
+    STORAGE_DATA_UPDATE_ENTITIES_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,12 +36,13 @@ class StorageAPI(BaseAPI):
     _config_data: ConfigData | None
     _data: dict
 
-    def __init__(self,
-                 hass: HomeAssistant | None,
-                 async_on_data_changed: Callable[[], Awaitable[None]] | None = None,
-                 async_on_status_changed: Callable[[ConnectivityStatus], Awaitable[None]] | None = None
-                 ):
-
+    def __init__(
+        self,
+        hass: HomeAssistant | None,
+        async_on_data_changed: Callable[[], Awaitable[None]] | None = None,
+        async_on_status_changed: Callable[[ConnectivityStatus], Awaitable[None]]
+        | None = None,
+    ):
         super().__init__(hass, async_on_data_changed, async_on_status_changed)
 
         self._config_data = None
@@ -53,7 +69,7 @@ class StorageAPI(BaseAPI):
 
     @property
     def unit(self):
-        result = self.data.get(STORAGE_DATA_UNIT, ATTR_BYTE).replace(ATTR_BYTE[1:], "").upper()
+        result = self.data.get(STORAGE_DATA_UNIT, ATTR_BYTE)
 
         return result
 
@@ -65,19 +81,28 @@ class StorageAPI(BaseAPI):
 
     @property
     def consider_away_interval(self):
-        result = self.data.get(STORAGE_DATA_CONSIDER_AWAY_INTERVAL, DEFAULT_CONSIDER_AWAY_INTERVAL.total_seconds())
+        result = self.data.get(
+            STORAGE_DATA_CONSIDER_AWAY_INTERVAL,
+            DEFAULT_CONSIDER_AWAY_INTERVAL.total_seconds(),
+        )
 
         return result
 
     @property
     def update_entities_interval(self):
-        result = self.data.get(STORAGE_DATA_UPDATE_ENTITIES_INTERVAL, DEFAULT_UPDATE_ENTITIES_INTERVAL.total_seconds())
+        result = self.data.get(
+            STORAGE_DATA_UPDATE_ENTITIES_INTERVAL,
+            DEFAULT_UPDATE_ENTITIES_INTERVAL.total_seconds(),
+        )
 
         return result
 
     @property
     def update_api_interval(self):
-        result = self.data.get(STORAGE_DATA_UPDATE_API_INTERVAL, DEFAULT_UPDATE_API_INTERVAL.total_seconds())
+        result = self.data.get(
+            STORAGE_DATA_UPDATE_API_INTERVAL,
+            DEFAULT_UPDATE_API_INTERVAL.total_seconds(),
+        )
 
         return result
 
@@ -96,7 +121,9 @@ class StorageAPI(BaseAPI):
         for storage_data_file in STORAGE_DATA_FILES:
             file_name = f"{DOMAIN}.{entry_id}.{storage_data_file}.json"
 
-            stores[storage_data_file] = Store(self.hass, STORAGE_VERSION, file_name, encoder=JSONEncoder)
+            stores[storage_data_file] = Store(
+                self.hass, STORAGE_VERSION, file_name, encoder=JSONEncoder
+            )
 
         self._stores = stores
 
@@ -112,7 +139,7 @@ class StorageAPI(BaseAPI):
                 STORAGE_DATA_LOG_INCOMING_MESSAGES: False,
                 STORAGE_DATA_CONSIDER_AWAY_INTERVAL: DEFAULT_CONSIDER_AWAY_INTERVAL.total_seconds(),
                 STORAGE_DATA_UPDATE_ENTITIES_INTERVAL: DEFAULT_UPDATE_ENTITIES_INTERVAL.total_seconds(),
-                STORAGE_DATA_UPDATE_API_INTERVAL: DEFAULT_UPDATE_API_INTERVAL.total_seconds()
+                STORAGE_DATA_UPDATE_API_INTERVAL: DEFAULT_UPDATE_API_INTERVAL.total_seconds(),
             }
 
             await self._async_save()

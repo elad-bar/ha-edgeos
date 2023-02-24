@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from ..helpers.const import *
+from ..helpers.const import DATA, PLATFORMS
 from ..managers.device_manager import DeviceManager
 from ..managers.entity_manager import EntityManager
 from ..models.entity_data import EntityData
@@ -39,7 +39,7 @@ class BaseEntity(Entity):
             self.remove_dispatcher = None
             self.current_domain = current_domain
 
-            ha_data = hass.data.get(DATA, dict())
+            ha_data = hass.data.get(DATA, {})
 
             self.ha = ha_data.get(entity.entry_id)
 
@@ -55,7 +55,9 @@ class BaseEntity(Entity):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to initialize BaseEntity, Error: {ex}, Line: {line_number}")
+            _LOGGER.error(
+                f"Failed to initialize BaseEntity, Error: {ex}, Line: {line_number}"
+            )
 
     @property
     def entry_id(self) -> str | None:

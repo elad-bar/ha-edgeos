@@ -10,12 +10,47 @@ import re
 import sys
 from urllib.parse import urlparse
 
+import aiohttp
+
 from homeassistant.core import HomeAssistant
 
-from ...component.helpers.const import *
+from ...configuration.helpers.const import WEBSOCKET_URL_TEMPLATE
 from ...configuration.models.config_data import ConfigData
 from ...core.api.base_api import BaseAPI
+from ...core.helpers.const import EMPTY_STRING
 from ...core.helpers.enums import ConnectivityStatus
+from ..helpers.const import (
+    ADDRESS_HW_ADDR,
+    ADDRESS_IPV4,
+    ADDRESS_LIST,
+    API_DATA_COOKIES,
+    API_DATA_SESSION_ID,
+    BEGINS_WITH_SIX_DIGITS,
+    DEVICE_LIST,
+    DISCOVER_DEVICE_ITEMS,
+    INTERFACE_DATA_MULTICAST,
+    INTERFACES_MAIN_MAP,
+    INTERFACES_STATS,
+    STRING_COLON,
+    STRING_COMMA,
+    TRAFFIC_DATA_DEVICE_ITEMS,
+    TRAFFIC_DATA_DIRECTIONS,
+    TRAFFIC_DATA_INTERFACE_ITEMS,
+    WS_CLOSING_MESSAGE,
+    WS_COMPRESSION_DEFLATE,
+    WS_DISCOVER_KEY,
+    WS_EXPORT_KEY,
+    WS_IGNORED_MESSAGES,
+    WS_INTERFACES_KEY,
+    WS_MAX_MSG_SIZE,
+    WS_RECEIVED_MESSAGES,
+    WS_SESSION_ID,
+    WS_SYSTEM_STATS_KEY,
+    WS_TIMEOUT,
+    WS_TOPIC_NAME,
+    WS_TOPIC_SUBSCRIBE,
+    WS_TOPIC_UNSUBSCRIBE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,12 +62,13 @@ class IntegrationWS(BaseAPI):
     _previous_message: dict | None
     _ws_handlers: dict
 
-    def __init__(self,
-                 hass: HomeAssistant | None,
-                 async_on_data_changed: Callable[[], Awaitable[None]] | None = None,
-                 async_on_status_changed: Callable[[ConnectivityStatus], Awaitable[None]] | None = None
-                 ):
-
+    def __init__(
+        self,
+        hass: HomeAssistant | None,
+        async_on_data_changed: Callable[[], Awaitable[None]] | None = None,
+        async_on_status_changed: Callable[[ConnectivityStatus], Awaitable[None]]
+        | None = None,
+    ):
         super().__init__(hass, async_on_data_changed, async_on_status_changed)
 
         self._config_data = None
@@ -69,12 +105,12 @@ class IntegrationWS(BaseAPI):
 
     async def initialize(self, config_data: ConfigData | None = None):
         if config_data is None:
-            _LOGGER.debug(f"Reinitializing WebSocket connection")
+            _LOGGER.debug("Reinitializing WebSocket connection")
 
         else:
             self._config_data = config_data
 
-            _LOGGER.debug(f"Initializing WebSocket connection")
+            _LOGGER.debug("Initializing WebSocket connection")
 
         try:
             self.data = {
@@ -90,9 +126,8 @@ class IntegrationWS(BaseAPI):
                 autoclose=True,
                 max_msg_size=WS_MAX_MSG_SIZE,
                 timeout=WS_TIMEOUT,
-                compress=WS_COMPRESSION_DEFLATE
+                compress=WS_COMPRESSION_DEFLATE,
             ) as ws:
-
                 await self.set_status(ConnectivityStatus.Connected)
 
                 self._ws = ws
@@ -103,7 +138,7 @@ class IntegrationWS(BaseAPI):
 
         except Exception as ex:
             if self.session is not None and self.session.closed:
-                _LOGGER.info(f"WS Session closed")
+                _LOGGER.info("WS Session closed")
 
                 await self.terminate()
 
@@ -112,10 +147,14 @@ class IntegrationWS(BaseAPI):
                 line_number = tb.tb_lineno
 
                 if self.status == ConnectivityStatus.Connected:
-                    _LOGGER.info(f"WS got disconnected will try to recover, Error: {ex}, Line: {line_number}")
+                    _LOGGER.info(
+                        f"WS got disconnected will try to recover, Error: {ex}, Line: {line_number}"
+                    )
 
                 else:
-                    _LOGGER.warning(f"Failed to connect WS, Error: {ex}, Line: {line_number}")
+                    _LOGGER.warning(
+                        f"Failed to connect WS, Error: {ex}, Line: {line_number}"
+                    )
 
                 await self.set_status(ConnectivityStatus.Failed)
 
@@ -132,17 +171,14 @@ class IntegrationWS(BaseAPI):
         self._ws = None
 
     async def async_send_heartbeat(self):
-        _LOGGER.debug(f"Keep alive message sent")
+        _LOGGER.debug("Keep alive message sent")
         if self.session is None or self.session.closed:
             await self.set_status(ConnectivityStatus.NotConnected)
 
             return
 
         if self.status == ConnectivityStatus.Connected:
-            content = {
-                "CLIENT_PING": "",
-                "SESSION_ID": self._api_session_id
-            }
+            content = {"CLIENT_PING": "", "SESSION_ID": self._api_session_id}
 
             content_str = json.dumps(content)
             data = f"{len(content_str)}\n{content_str}"
@@ -154,14 +190,16 @@ class IntegrationWS(BaseAPI):
                 await self._ws.send_str(data)
 
             except ConnectionResetError as crex:
-                _LOGGER.debug(f"Gracefully failed to send heartbeat - Restarting connection, Error: {crex}")
+                _LOGGER.debug(
+                    f"Gracefully failed to send heartbeat - Restarting connection, Error: {crex}"
+                )
                 await self.set_status(ConnectivityStatus.NotConnected)
 
             except Exception as ex:
                 _LOGGER.error(f"Failed to send heartbeat, Error: {ex}")
 
     async def _listen(self):
-        _LOGGER.info(f"Starting to listen connected")
+        _LOGGER.info("Starting to listen connected")
 
         subscription_data = self._get_subscription_data()
         await self._ws.send_str(subscription_data)
@@ -172,10 +210,18 @@ class IntegrationWS(BaseAPI):
             is_connected = self.status == ConnectivityStatus.Connected
             is_closing_type = msg.type in WS_CLOSING_MESSAGE
             is_error = msg.type == aiohttp.WSMsgType.ERROR
-            is_closing_data = False if is_closing_type or is_error else msg.data == "close"
+            is_closing_data = (
+                False if is_closing_type or is_error else msg.data == "close"
+            )
             session_is_closed = self.session is None or self.session.closed
 
-            if is_closing_type or is_error or is_closing_data or session_is_closed or not is_connected:
+            if (
+                is_closing_type
+                or is_error
+                or is_closing_data
+                or session_is_closed
+                or not is_connected
+            ):
                 _LOGGER.warning(
                     f"WS stopped listening, "
                     f"Message: {str(msg)}, "
@@ -218,10 +264,7 @@ class IntegrationWS(BaseAPI):
             else:
                 length = int(previous_messages[0])
 
-                self._previous_message = {
-                    "Length": length,
-                    "Content": message
-                }
+                self._previous_message = {"Length": length, "Content": message}
 
                 _LOGGER.debug("Store partial message for later processing")
 
@@ -229,7 +272,9 @@ class IntegrationWS(BaseAPI):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.warning(f"Parse message failed, Data: {message}, Error: {ex}, Line: {line_number}")
+            _LOGGER.warning(
+                f"Parse message failed, Data: {message}, Error: {ex}, Line: {line_number}"
+            )
 
     def _get_corrected_message(self, message):
         original_message = message
@@ -379,7 +424,9 @@ class IntegrationWS(BaseAPI):
                         interface[item] = item_data
 
                     elif INTERFACES_STATS == item:
-                        interface[INTERFACE_DATA_MULTICAST] = float(item_data.get(INTERFACE_DATA_MULTICAST))
+                        interface[INTERFACE_DATA_MULTICAST] = float(
+                            item_data.get(INTERFACE_DATA_MULTICAST)
+                        )
 
                         for direction in TRAFFIC_DATA_DIRECTIONS:
                             for key in TRAFFIC_DATA_INTERFACE_ITEMS:

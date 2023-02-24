@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 
-from ..helpers.const import *
+from ..helpers.const import DOMAIN_SWITCH
 from ..models.base_entity import BaseEntity
 from ..models.entity_data import EntityData
 

@@ -1,7 +1,7 @@
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 
-from ..helpers.const import *
+from ..helpers.const import DOMAIN_SENSOR
 from ..models.base_entity import BaseEntity
 from ..models.entity_data import EntityData
 

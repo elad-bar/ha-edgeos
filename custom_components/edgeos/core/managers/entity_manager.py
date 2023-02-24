@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
 
-from ..helpers.const import *
+from ..helpers.const import DOMAIN
 from ..helpers.enums import EntityStatus
 from ..models.domain_data import DomainData
 from ..models.entity_data import EntityData
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EntityManager:
-    """ Entity Manager is agnostic to component - PLEASE DON'T CHANGE """
+    """Entity Manager is agnostic to component - PLEASE DON'T CHANGE"""
 
     hass: HomeAssistant
     domain_component_manager: dict[str, DomainData]
@@ -56,8 +56,9 @@ class EntityManager:
             if entity.disabled:
                 _LOGGER.info(f"Disabling entity, Data: {entity}")
 
-                self.entity_registry.async_update_entity(entity_id,
-                                                         disabled_by=RegistryEntryDisabler.INTEGRATION)
+                self.entity_registry.async_update_entity(
+                    entity_id, disabled_by=RegistryEntryDisabler.INTEGRATION
+                )
 
             else:
                 entity.disabled = entity_item.disabled
@@ -169,19 +170,19 @@ class EntityManager:
             line_number = tb.tb_lineno
 
             _LOGGER.error(
-                f"Failed to update, "
-                f"Error: {str(ex)}, "
-                f"Line: {line_number}"
+                f"Failed to update, " f"Error: {str(ex)}, " f"Line: {line_number}"
             )
 
-    def _compare_data(self,
-                      entity_name: str,
-                      entity: EntityData,
-                      state: str | int | float | bool,
-                      attributes: dict,
-                      device_name: str,
-                      entity_description: EntityDescription | None = None,
-                      details: dict | None = None):
+    def _compare_data(
+        self,
+        entity_name: str,
+        entity: EntityData,
+        state: str | int | float | bool,
+        attributes: dict,
+        device_name: str,
+        entity_description: EntityDescription | None = None,
+        details: dict | None = None,
+    ):
         msgs = []
 
         if str(entity.state) != str(state):
@@ -196,8 +197,13 @@ class EntityManager:
         if entity.device_name != device_name:
             msgs.append(f"Device name {entity.device_name} -> {device_name}")
 
-        if entity_description is not None and entity.entity_description != entity_description:
-            msgs.append(f"Description {str(entity.entity_description)} -> {str(entity_description)}")
+        if (
+            entity_description is not None
+            and entity.entity_description != entity_description
+        ):
+            msgs.append(
+                f"Description {str(entity.entity_description)} -> {str(entity_description)}"
+            )
 
         if details is not None and entity.details != details:
             from_details = self._get_attributes_json(entity.details)
@@ -230,17 +236,17 @@ class EntityManager:
 
         return entity
 
-    def set_entity(self,
-                   domain: str,
-                   entry_id: str,
-                   state: str | int | float | bool | datetime,
-                   attributes: dict,
-                   device_name: str,
-                   entity_description: EntityDescription | None,
-                   details: dict | None = None,
-                   destructors: list[bool] = None
-                   ):
-
+    def set_entity(
+        self,
+        domain: str,
+        entry_id: str,
+        state: str | int | float | bool | datetime,
+        attributes: dict,
+        device_name: str,
+        entity_description: EntityDescription | None,
+        details: dict | None = None,
+        destructors: list[bool] = None,
+    ):
         try:
             entity = self.entities.get(entity_description.key)
             entity_name = entity_description.name
@@ -260,17 +266,21 @@ class EntityManager:
                     entity.status = EntityStatus.CREATED
                     entity.domain = domain
 
-                    self._compare_data(entity_name, entity, state, attributes, device_name)
+                    self._compare_data(
+                        entity_name, entity, state, attributes, device_name
+                    )
 
                 else:
                     original_status = entity.status
-                    was_modified = self._compare_data(entity_name,
-                                                      entity,
-                                                      state,
-                                                      attributes,
-                                                      device_name,
-                                                      entity_description,
-                                                      details)
+                    was_modified = self._compare_data(
+                        entity_name,
+                        entity,
+                        state,
+                        attributes,
+                        device_name,
+                        entity_description,
+                        details,
+                    )
 
                     if was_modified:
                         entity.status = EntityStatus.UPDATED

@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-from ..helpers.const import *
+from ..helpers.const import API_URL_TEMPLATE
 
 
 class ConfigData:
@@ -40,7 +41,7 @@ class ConfigData:
         obj = {
             CONF_HOST: self.host,
             CONF_USERNAME: self.username,
-            CONF_PASSWORD: self.password
+            CONF_PASSWORD: self.password,
         }
 
         return obj

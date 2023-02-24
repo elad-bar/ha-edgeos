@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components.vacuum import StateVacuumEntity
 from homeassistant.core import HomeAssistant
 
-from ..helpers.const import *
+from ..helpers.const import ATTR_FANS_SPEED_LIST, ATTR_FEATURES, DOMAIN_VACUUM
 from ..models.base_entity import BaseEntity
 from ..models.entity_data import EntityData
 
@@ -28,16 +28,22 @@ class CoreVacuum(StateVacuumEntity, BaseEntity, ABC):
 
         try:
             if hasattr(self.entity_description, ATTR_FEATURES):
-                self._attr_supported_features = getattr(self.entity_description, ATTR_FEATURES)
+                self._attr_supported_features = getattr(
+                    self.entity_description, ATTR_FEATURES
+                )
 
             if hasattr(self.entity_description, ATTR_FANS_SPEED_LIST):
-                self._attr_fan_speed_list = getattr(self.entity_description, ATTR_FANS_SPEED_LIST)
+                self._attr_fan_speed_list = getattr(
+                    self.entity_description, ATTR_FANS_SPEED_LIST
+                )
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to initialize CoreSelect instance, Error: {ex}, Line: {line_number}")
+            _LOGGER.error(
+                f"Failed to initialize CoreSelect instance, Error: {ex}, Line: {line_number}"
+            )
 
     @property
     def state(self) -> str | None:
@@ -75,10 +81,10 @@ class CoreVacuum(StateVacuumEntity, BaseEntity, ABC):
         await self.ha.async_core_entity_toggle(self.entity)
 
     async def async_send_command(
-            self,
-            command: str,
-            params: dict[str, Any] | list[Any] | None = None,
-            **kwargs: Any,
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send a command to a vacuum cleaner."""
         await self.ha.async_core_entity_send_command(self.entity, command, params)

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.26
+
+Configuration breaking change
+
+- Change units from Bytes, KBytes and MBytes to B, KB and MB, if the configured unit was other than Bytes, please re-configure it
+- Last activity as seconds to return without milliseconds
+- Upgrade pre-commit-configuration by [@tetienne](https://github.com/tetienne) [PR #91](https://github.com/elad-bar/ha-edgeos/pull/91)
+- Fix integration reload after changing configuration
+
 ## 2.0.25
 
 - Add support for Home Assistant integration and device diagnostics
@@ -30,7 +39,7 @@
 
 **Version requires HA v2022.11.0 and above**
 
-- Aligned *Core Select* according to new HA *SelectEntityDescription* object
+- Aligned _Core Select_ according to new HA _SelectEntityDescription_ object
 
 ## 2.0.20
 
@@ -66,12 +75,13 @@ For now, special interface do not support to turn on / off
 ## 2.0.14
 
 **Debugging became easier (less IO and Disk Space)**
+
 - Removed `Store Debug Data` switch (Moved to the API endpoints below)
 - Removed WebSocket messages sensors (Moved to the API endpoints below)
 - Add endpoints to expose the data was previously stored to files and the messages counters
 
 | Endpoint Name              | Method | Description                                                                                         |
-|----------------------------|--------|-----------------------------------------------------------------------------------------------------|
+| -------------------------- | ------ | --------------------------------------------------------------------------------------------------- |
 | /api/edgeos/list           | GET    | List all the endpoints available (supporting multiple integrations), available once for integration |
 | /api/edgeos/{ENTRY_ID}/ha  | GET    | JSON of all HA processed data before sent to entities including messages counters, per integration  |
 | /api/edgeos/{ENTRY_ID}/api | GET    | JSON of all raw data from the EdgeOS API, per integration                                           |
@@ -144,9 +154,11 @@ For now, special interface do not support to turn on / off
 - Fix missing validation of entry
 
 ## 2.0.0
+
 Component refactored to allow faster future integration for additional features.
 
 New features:
+
 - Enable / Disable interface (Ethernet / Bridge) using a new switch per interface
 - Enable / Disable interface monitoring for received and sent data / rate / errors / packets and dropped packets using a switch per interface
 - Enable / Disable device monitoring for received and sent data and rate (including device tracker) using a switch per interface
@@ -157,6 +169,7 @@ New features:
 - New service: `Update configuration` allows to edit configuration of unit, store debug data, log incoming messages and consider away interval
 
 **Breaking Changes!**
+
 - Most of the configurations moved to be regular components of HA (Log incoming messages, Unit of measurement, Store debug data)
 - Configuration UI will hold EdgeOS URL and credentials only:
   - Hostname
@@ -167,7 +180,7 @@ New features:
 **System**
 
 | Entity Name                         | Type          | Description                                                               | Additional information                        |
-|-------------------------------------|---------------|---------------------------------------------------------------------------|-----------------------------------------------|
+| ----------------------------------- | ------------- | ------------------------------------------------------------------------- | --------------------------------------------- |
 | {Router Name} Unit                  | Select        | Sets whether to monitor device and create all the components below or not |                                               |
 | {Router Name} Unknown devices       | Sensor        | Represents number of devices leased by the DHCP server                    | Attributes holds the leased hostname and IPs  |
 | {Router Name} CPU                   | Sensor        | Represents CPU usage                                                      | Attributes holds the leased hostname and IPs  |
@@ -177,11 +190,10 @@ New features:
 | {Router Name} Log incoming messages | Switch        | Sets whether to log WebSocket incoming messages for debugging             |                                               |
 | {Router Name} Store Debug Data      | Switch        | Sets whether to store API and WebSocket latest data for debugging         |                                               |
 
-
 **Per device**
 
 | Entity Name                                  | Type           | Description                                                                     | Additional information      |
-|----------------------------------------------|----------------|---------------------------------------------------------------------------------|-----------------------------|
+| -------------------------------------------- | -------------- | ------------------------------------------------------------------------------- | --------------------------- |
 | {Router Name} {Device Name} Monitored        | Sensor         | Sets whether to monitor device and create all the components below or not       |                             |
 | {Router Name} {Device Name} Received Rate    | Sensor         | Received Rate per second                                                        | Statistics: Measurement     |
 | {Router Name} {Device Name} Received Traffic | Sensor         | Received total traffic                                                          | Statistics: Total Increment |
@@ -189,11 +201,10 @@ New features:
 | {Router Name} {Device Name} Sent Traffic     | Sensor         | Sent total traffic                                                              | Statistics: Total Increment |
 | {Router Name} {Device Name}                  | Device Tracker | Indication whether the device is or was connected over the configured timeframe |                             |
 
-
 **Per interface**
 
 | Entity Name                                             | Type   | Description                                                                  | Additional information      |
-|---------------------------------------------------------|--------|------------------------------------------------------------------------------|-----------------------------|
+| ------------------------------------------------------- | ------ | ---------------------------------------------------------------------------- | --------------------------- |
 | {Router Name} {Interface Name} Status                   | Switch | Sets whether to interface is active or not                                   |                             |
 | {Router Name} {Interface Name} Monitored                | Switch | Sets whether to monitor interface and create all the components below or not |                             |
 | {Router Name} {Interface Name} Received Rate            | Sensor | Received Rate per second                                                     | Statistics: Measurement     |
@@ -206,7 +217,6 @@ New features:
 | {Router Name} {Interface Name} Sent Dropped Packets     | Sensor | Sent packets lost                                                            | Statistics: Total Increment |
 | {Router Name} {Interface Name} Sent Errors              | Sensor | Sent errors                                                                  | Statistics: Total Increment |
 | {Router Name} {Interface Name} Sent Packets             | Sensor | Sent packets                                                                 | Statistics: Total Increment |
-
 
 ## 1.2.6
 

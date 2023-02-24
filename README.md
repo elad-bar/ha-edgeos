@@ -16,8 +16,9 @@ Provides an integration between EdgeOS (Ubiquiti) routers to Home Assistant.
 - To enable / disable interfaces an `admin` role is a required
 
 #### Installations via HACS
+
 - In HACS, look for "Ubiquiti EdgeOS Routers" and install and restart
-- In Settings  --> Devices & Services - (Lower Right) "Add Integration"
+- In Settings --> Devices & Services - (Lower Right) "Add Integration"
 
 #### Setup
 
@@ -25,7 +26,7 @@ To add integration use Configuration -> Integrations -> Add `EdgeOS`
 Integration supports **multiple** EdgeOS devices
 
 | Fields name | Type    | Required | Default | Description                                                                                                                                      |
-|-------------|---------|----------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| ----------- | ------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Host        | Textbox | +        | -       | Hostname or IP address to access EdgeOS device, can hold also port (HOST:PORT), default port is 443                                              |
 | Username    | Textbox | +        | -       | Username of user with `Operator` level access or higher, better to create a dedicated user for that integration for faster issues identification |
 | Password    | Textbox | +        | -       |                                                                                                                                                  |
@@ -33,7 +34,7 @@ Integration supports **multiple** EdgeOS devices
 ###### EdgeOS Device validation errors
 
 | Errors                                                                             |
-|------------------------------------------------------------------------------------|
+| ---------------------------------------------------------------------------------- |
 | Cannot reach device (404)                                                          |
 | Invalid credentials (403)                                                          |
 | General authentication error (when failed to get valid response from device)       |
@@ -58,7 +59,7 @@ Please remove the integration and re-add it to make it work again.
 _Configuration -> Integrations -> {Integration} -> Options_ <br />
 
 | Fields name       | Type      | Required | Default   | Description                                                                                                                                      |
-|-------------------|-----------|----------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| ----------------- | --------- | -------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Host              | Textbox   | +        | -         | Hostname or IP address to access EdgeOS device, can hold also port (HOST:PORT), default port is 443                                              |
 | Username          | Textbox   | +        | -         | Username of user with `Operator` level access or higher, better to create a dedicated user for that integration for faster issues identification |
 | Password          | Textbox   | +        | -         |                                                                                                                                                  |
@@ -78,8 +79,9 @@ logger:
 ## Components
 
 ### System
+
 | Entity Name                         | Type          | Description                                                               | Additional information                        |
-|-------------------------------------|---------------|---------------------------------------------------------------------------|-----------------------------------------------|
+| ----------------------------------- | ------------- | ------------------------------------------------------------------------- | --------------------------------------------- |
 | {Router Name} Unit                  | Select        | Sets whether to monitor device and create all the components below or not |                                               |
 | {Router Name} CPU                   | Sensor        | Represents CPU usage                                                      |                                               |
 | {Router Name} RAM                   | Sensor        | Represents RAM usage                                                      |                                               |
@@ -88,11 +90,12 @@ logger:
 | {Router Name} Firmware Updates      | Binary Sensor | New firmware available indication                                         | Attributes holds the url and new release name |
 | {Router Name} Log incoming messages | Switch        | Sets whether to log WebSocket incoming messages for debugging             |                                               |
 
-*Changing the unit will reload the integration*
+_Changing the unit will reload the integration_
 
 ### Per device
+
 | Entity Name                                  | Type           | Description                                                                     | Additional information      |
-|----------------------------------------------|----------------|---------------------------------------------------------------------------------|-----------------------------|
+| -------------------------------------------- | -------------- | ------------------------------------------------------------------------------- | --------------------------- |
 | {Router Name} {Device Name} Monitored        | Sensor         | Sets whether to monitor device and create all the components below or not       |                             |
 | {Router Name} {Device Name} Received Rate    | Sensor         | Received Rate per second                                                        | Statistics: Measurement     |
 | {Router Name} {Device Name} Received Traffic | Sensor         | Received total traffic                                                          | Statistics: Total Increment |
@@ -100,10 +103,10 @@ logger:
 | {Router Name} {Device Name} Sent Traffic     | Sensor         | Sent total traffic                                                              | Statistics: Total Increment |
 | {Router Name} {Device Name}                  | Device Tracker | Indication whether the device is or was connected over the configured timeframe |                             |
 
-
 ### Per interface
+
 | Entity Name                                             | Type          | Description                                                                  | Additional information                      |
-|---------------------------------------------------------|---------------|------------------------------------------------------------------------------|---------------------------------------------|
+| ------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------- | ------------------------------------------- |
 | {Router Name} {Interface Name} Status                   | Switch        | Sets whether to interface is active or not                                   | Available only if user level is `admin`     |
 | {Router Name} {Interface Name} Status                   | Binary Sensor | Indicates whether interface is active or not                                 | Available only if user level is not `admin` |
 | {Router Name} {Interface Name} Connected                | Binary Sensor | Indicates whether interface's port is connected or not                       |                                             |
@@ -119,13 +122,14 @@ logger:
 | {Router Name} {Interface Name} Sent Errors              | Sensor        | Sent errors                                                                  | Statistics: Total Increment                 |
 | {Router Name} {Interface Name} Sent Packets             | Sensor        | Sent packets                                                                 | Statistics: Total Increment                 |
 
-
 _Unit of measurement for `Traffic` and `Rate` are according to the unit settings of the integration_
 
 ## Services
 
 ### Update configuration
+
 Allows to set:
+
 - Consider away interval - Time to consider a device without activity as AWAY (any value between 10 and 1800 in seconds)
 - Log incoming messages - Enable / Disable logging of incoming WebSocket messages for debug
 - Store debug data - Enable / Disable store debug data to './storage' directory of HA for API (edgeos.debug.api.json) and WS (edgeos.debug.ws.json) data for faster debugging or just to get more ideas for additional features
@@ -138,7 +142,7 @@ More details available in `Developer tools` -> `Services` -> `edgeos.update_conf
 ```yaml
 service: edgeos.update_configuration
 data:
-  device_id: {Main device ID}
+  device_id: { Main device ID }
   unit: Bytes
   log_incoming_messages: true
   consider_away_interval: 180
@@ -146,4 +150,4 @@ data:
   update_entities_interval: 1
 ```
 
-*Changing the unit will reload the integration*
+_Changing the unit will reload the integration_

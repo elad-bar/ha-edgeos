@@ -10,13 +10,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from . import (
+from .component.helpers import get_ha
+from .component.helpers.const import (
     API_DATA_INTERFACES,
     API_DATA_SYSTEM,
     DEVICE_LIST,
     MESSAGES_COUNTER_SECTION,
 )
-from .component.helpers import get_ha
 from .component.managers.home_assistant import EdgeOSHomeAssistantManager
 from .configuration.helpers.const import DOMAIN
 
@@ -85,9 +85,13 @@ def _async_get_diagnostics(
                 network_device = device_list.get(network_device_id)
 
                 if manager.get_device_name(network_device) == device_name:
-                    _LOGGER.debug(f"Getting diagnostic information for device #{network_device.unique_id}")
+                    _LOGGER.debug(
+                        f"Getting diagnostic information for device #{network_device.unique_id}"
+                    )
 
-                    data |= _async_device_as_dict(hass, network_device.to_dict(), network_device.unique_id)
+                    data |= _async_device_as_dict(
+                        hass, network_device.to_dict(), network_device.unique_id
+                    )
 
                     break
 
@@ -96,9 +100,13 @@ def _async_get_diagnostics(
                 interface = interfaces.get(unique_id)
 
                 if manager.get_interface_name(interface) == device_name:
-                    _LOGGER.debug(f"Getting diagnostic information for interface #{interface.unique_id}")
+                    _LOGGER.debug(
+                        f"Getting diagnostic information for interface #{interface.unique_id}"
+                    )
 
-                    data |= _async_device_as_dict(hass, interface.to_dict(), interface.unique_id)
+                    data |= _async_device_as_dict(
+                        hass, interface.to_dict(), interface.unique_id
+                    )
 
                     break
     else:
@@ -106,14 +114,22 @@ def _async_get_diagnostics(
 
         data.update(
             devices=[
-                _async_device_as_dict(hass, device_list[device_id].to_dict(), device_list[device_id].unique_id)
+                _async_device_as_dict(
+                    hass,
+                    device_list[device_id].to_dict(),
+                    device_list[device_id].unique_id,
+                )
                 for device_id in device_list
             ],
             interfaces=[
-                _async_device_as_dict(hass, interfaces[interface_id].to_dict(), interfaces[interface_id].unique_id)
+                _async_device_as_dict(
+                    hass,
+                    interfaces[interface_id].to_dict(),
+                    interfaces[interface_id].unique_id,
+                )
                 for interface_id in interfaces
             ],
-            system=_async_device_as_dict(hass, system.to_dict(), manager.system_name)
+            system=_async_device_as_dict(hass, system.to_dict(), manager.system_name),
         )
 
     return data
@@ -121,10 +137,8 @@ def _async_get_diagnostics(
 
 @callback
 def _async_device_as_dict(
-        hass: HomeAssistant,
-        data: dict,
-        unique_id: str) -> dict[str, Any]:
-
+    hass: HomeAssistant, data: dict, unique_id: str
+) -> dict[str, Any]:
     """Represent a Shinobi monitor as a dictionary."""
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)

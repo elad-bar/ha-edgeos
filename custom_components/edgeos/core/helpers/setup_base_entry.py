@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from ..helpers.const import *
+from ..helpers.const import DATA
 from ..models.domain_data import DomainData
 from ..models.entity_data import EntityData
 
@@ -25,7 +25,7 @@ async def async_setup_base_entry(
     _LOGGER.debug(f"Starting async_setup_entry {domain}")
 
     try:
-        ha_data = hass.data.get(DATA, dict())
+        ha_data = hass.data.get(DATA, {})
 
         ha = ha_data.get(entry.entry_id)
 

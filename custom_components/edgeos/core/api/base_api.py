@@ -24,12 +24,13 @@ class BaseAPI:
     onDataChangedAsync: Callable[[], Awaitable[None]] | None = None
     onStatusChangedAsync: Callable[[ConnectivityStatus], Awaitable[None]] | None = None
 
-    def __init__(self,
-                 hass: HomeAssistant | None,
-                 async_on_data_changed: Callable[[], Awaitable[None]] | None = None,
-                 async_on_status_changed: Callable[[ConnectivityStatus], Awaitable[None]] | None = None
-                 ):
-
+    def __init__(
+        self,
+        hass: HomeAssistant | None,
+        async_on_data_changed: Callable[[], Awaitable[None]] | None = None,
+        async_on_status_changed: Callable[[ConnectivityStatus], Awaitable[None]]
+        | None = None,
+    ):
         self.hass = hass
         self.status = ConnectivityStatus.NotConnected
         self.data = {}
@@ -45,7 +46,9 @@ class BaseAPI:
     async def initialize_session(self, cookies=None, cookie_jar=None):
         try:
             if self.is_home_assistant:
-                self.session = async_create_clientsession(hass=self.hass, cookies=cookies, cookie_jar=cookie_jar)
+                self.session = async_create_clientsession(
+                    hass=self.hass, cookies=cookies, cookie_jar=cookie_jar
+                )
 
             else:
                 self.session = ClientSession(cookies=cookies, cookie_jar=cookie_jar)
@@ -56,7 +59,9 @@ class BaseAPI:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.warning(f"Failed to initialize session, Error: {str(ex)}, Line: {line_number}")
+            _LOGGER.warning(
+                f"Failed to initialize session, Error: {str(ex)}, Line: {line_number}"
+            )
 
             await self.set_status(ConnectivityStatus.Failed)
 

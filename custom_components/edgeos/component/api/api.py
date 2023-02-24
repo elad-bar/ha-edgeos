@@ -2,19 +2,57 @@ from __future__ import annotations
 
 from asyncio import sleep
 from collections.abc import Awaitable, Callable
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import logging
 import sys
 
 from aiohttp import CookieJar
 
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from ...configuration.helpers.const import (
+    COOKIE_BEAKER_SESSION_ID,
+    COOKIE_CSRF_TOKEN,
+    COOKIE_PHPSESSID,
+    HEADER_CSRF_TOKEN,
+    MAXIMUM_RECONNECT,
+)
 from ...configuration.models.config_data import ConfigData
 from ...core.api.base_api import BaseAPI
+from ...core.helpers.const import EMPTY_STRING
 from ...core.helpers.enums import ConnectivityStatus
-from ..helpers.const import *
+from ..helpers.const import (
+    API_DATA,
+    API_DATA_COOKIES,
+    API_DATA_INTERFACES,
+    API_DATA_LAST_UPDATE,
+    API_DATA_PRODUCT,
+    API_DATA_SAVE,
+    API_DATA_SESSION_ID,
+    API_DATA_SYSTEM,
+    API_DELETE,
+    API_GET,
+    API_SET,
+    API_URL_DATA,
+    API_URL_DATA_SUBSET,
+    API_URL_HEARTBEAT,
+    API_URL_PARAMETER_ACTION,
+    API_URL_PARAMETER_BASE_URL,
+    API_URL_PARAMETER_SUBSET,
+    API_URL_PARAMETER_TIMESTAMP,
+    HEARTBEAT_MAX_AGE,
+    RESPONSE_ERROR_KEY,
+    RESPONSE_FAILURE_CODE,
+    RESPONSE_OUTPUT,
+    RESPONSE_SUCCESS_KEY,
+    STRING_DASH,
+    STRING_UNDERSCORE,
+    SYSTEM_DATA_DISABLE,
+    TRUE_STR,
+    UPDATE_DATE_ENDPOINTS,
+)
 from ..models.edge_os_interface_data import EdgeOSInterfaceData
 from ..models.exceptions import SessionTerminatedException
 
@@ -26,12 +64,13 @@ class IntegrationAPI(BaseAPI):
 
     _config_data: ConfigData | None
 
-    def __init__(self,
-                 hass: HomeAssistant | None,
-                 async_on_data_changed: Callable[[], Awaitable[None]] | None = None,
-                 async_on_status_changed: Callable[[ConnectivityStatus], Awaitable[None]] | None = None
-                 ):
-
+    def __init__(
+        self,
+        hass: HomeAssistant | None,
+        async_on_data_changed: Callable[[], Awaitable[None]] | None = None,
+        async_on_status_changed: Callable[[ConnectivityStatus], Awaitable[None]]
+        | None = None,
+    ):
         super().__init__(hass, async_on_data_changed, async_on_status_changed)
 
         try:
@@ -45,9 +84,7 @@ class IntegrationAPI(BaseAPI):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(
-                f"Failed to load API, error: {ex}, line: {line_number}"
-            )
+            _LOGGER.error(f"Failed to load API, error: {ex}, line: {line_number}")
 
     @property
     def session_id(self):
@@ -85,9 +122,7 @@ class IntegrationAPI(BaseAPI):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(
-                f"Failed to initialize API, error: {ex}, line: {line_number}"
-            )
+            _LOGGER.error(f"Failed to initialize API, error: {ex}, line: {line_number}")
 
     async def validate(self, data: dict | None = None):
         config_data = ConfigData.from_dict(data)
@@ -125,8 +160,8 @@ class IntegrationAPI(BaseAPI):
                 response.raise_for_status()
 
                 logged_in = (
-                        self.beaker_session_id is not None
-                        and self.beaker_session_id == self.session_id
+                    self.beaker_session_id is not None
+                    and self.beaker_session_id == self.session_id
                 )
 
                 if logged_in:
@@ -136,7 +171,9 @@ class IntegrationAPI(BaseAPI):
                         if "EDGE.DeviceModel" in line:
                             line_parts = line.split(" = ")
                             value = line_parts[len(line_parts) - 1]
-                            self.data[API_DATA_PRODUCT] = value.replace("'", EMPTY_STRING)
+                            self.data[API_DATA_PRODUCT] = value.replace(
+                                "'", EMPTY_STRING
+                            )
                             self.data[API_DATA_SESSION_ID] = self.session_id
                             self.data[API_DATA_COOKIES] = self._cookies
 
@@ -144,7 +181,7 @@ class IntegrationAPI(BaseAPI):
 
                             break
                 else:
-                    _LOGGER.error(f"Failed to login, Invalid credentials")
+                    _LOGGER.error("Failed to login, Invalid credentials")
 
                     if self.beaker_session_id is None and self.session_id is not None:
                         await self.set_status(ConnectivityStatus.Failed)
@@ -164,13 +201,13 @@ class IntegrationAPI(BaseAPI):
 
             await self.set_status(ConnectivityStatus.NotFound)
 
-    async def _async_get(self,
-                         endpoint,
-                         timestamp: str | None = None,
-                         action: str | None = None,
-                         subset: str | None = None
-                         ):
-
+    async def _async_get(
+        self,
+        endpoint,
+        timestamp: str | None = None,
+        action: str | None = None,
+        subset: str | None = None,
+    ):
         result = None
         message = None
         status = 404
@@ -240,7 +277,9 @@ class IntegrationAPI(BaseAPI):
                 headers = self._get_post_headers()
                 data_json = json.dumps(data)
 
-                async with self.session.post(url, headers=headers, data=data_json, ssl=False) as response:
+                async with self.session.post(
+                    url, headers=headers, data=data_json, ssl=False
+                ) as response:
                     response.raise_for_status()
 
                     result = await response.json()
@@ -264,14 +303,18 @@ class IntegrationAPI(BaseAPI):
                 if current_invocation > timedelta(seconds=max_age):
                     current_ts = str(int(ts.timestamp()))
 
-                    response = await self._async_get(API_URL_HEARTBEAT, timestamp=current_ts)
+                    response = await self._async_get(
+                        API_URL_HEARTBEAT, timestamp=current_ts
+                    )
 
                     if response is not None:
                         _LOGGER.debug(f"Heartbeat response: {response}")
 
                         self._last_valid = ts
             else:
-                _LOGGER.debug(f"Ignoring request to send heartbeat, Reason: closed session")
+                _LOGGER.debug(
+                    "Ignoring request to send heartbeat, Reason: closed session"
+                )
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -299,7 +342,9 @@ class IntegrationAPI(BaseAPI):
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
-            _LOGGER.error(f"Failed to extract WS data, Error: {ex}, Line: {line_number}")
+            _LOGGER.error(
+                f"Failed to extract WS data, Error: {ex}, Line: {line_number}"
+            )
 
     async def _load_system_data(self):
         try:
@@ -314,14 +359,18 @@ class IntegrationAPI(BaseAPI):
 
                         if success_key == TRUE_STR:
                             if API_GET.upper() in result_json:
-                                self.data[API_DATA_SYSTEM] = result_json.get(API_GET.upper(), {})
+                                self.data[API_DATA_SYSTEM] = result_json.get(
+                                    API_GET.upper(), {}
+                                )
                         else:
                             error_message = result_json[RESPONSE_ERROR_KEY]
                             _LOGGER.error(f"Failed, Error: {error_message}")
                     else:
                         _LOGGER.error("Invalid response, not contain success status")
             else:
-                _LOGGER.debug(f"Ignoring request to get devices data, Reason: closed session")
+                _LOGGER.debug(
+                    "Ignoring request to get devices data, Reason: closed session"
+                )
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -337,7 +386,9 @@ class IntegrationAPI(BaseAPI):
 
                 clean_item = key.replace(STRING_DASH, STRING_UNDERSCORE)
 
-                data = await self._async_get(API_URL_DATA_SUBSET, action=API_DATA, subset=clean_item)
+                data = await self._async_get(
+                    API_URL_DATA_SUBSET, action=API_DATA, subset=clean_item
+                )
 
                 if data is not None:
                     if RESPONSE_SUCCESS_KEY in data:
@@ -348,7 +399,9 @@ class IntegrationAPI(BaseAPI):
                         else:
                             self.data[key] = data.get(RESPONSE_OUTPUT)
             else:
-                _LOGGER.debug(f"Ignoring request to get data of {key}, Reason: closed session")
+                _LOGGER.debug(
+                    f"Ignoring request to get data of {key}, Reason: closed session"
+                )
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -356,7 +409,9 @@ class IntegrationAPI(BaseAPI):
 
             _LOGGER.error(f"Failed to load {key}, Error: {ex}, Line: {line_number}")
 
-    async def set_interface_state(self, interface: EdgeOSInterfaceData, is_enabled: bool):
+    async def set_interface_state(
+        self, interface: EdgeOSInterfaceData, is_enabled: bool
+    ):
         _LOGGER.info(f"Set state of interface {interface.name} to {is_enabled}")
 
         modified = False
@@ -364,11 +419,7 @@ class IntegrationAPI(BaseAPI):
 
         data = {
             API_DATA_INTERFACES: {
-                interface.interface_type: {
-                    interface.name: {
-                        SYSTEM_DATA_DISABLE: None
-                    }
-                }
+                interface.interface_type: {interface.name: {SYSTEM_DATA_DISABLE: None}}
             }
         }
 
@@ -385,14 +436,22 @@ class IntegrationAPI(BaseAPI):
                 modified = success_key != RESPONSE_FAILURE_CODE
 
         if not modified:
-            _LOGGER.error(f"Failed to set state of interface {interface.name} to {is_enabled}")
+            _LOGGER.error(
+                f"Failed to set state of interface {interface.name} to {is_enabled}"
+            )
 
-    def _build_endpoint(self, endpoint, timestamp: str | None = None, action: str | None = None, subset: str | None = None):
+    def _build_endpoint(
+        self,
+        endpoint,
+        timestamp: str | None = None,
+        action: str | None = None,
+        subset: str | None = None,
+    ):
         data = {
             API_URL_PARAMETER_BASE_URL: self._config_data.url,
             API_URL_PARAMETER_TIMESTAMP: timestamp,
             API_URL_PARAMETER_ACTION: action,
-            API_URL_PARAMETER_SUBSET: subset
+            API_URL_PARAMETER_SUBSET: subset,
         }
 
         url = endpoint.format(**data)
