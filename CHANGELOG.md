@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.27
+
+Configuration breaking change
+
+- Adopt Unit of Data & Information from HA Core [#90](https://github.com/elad-bar/ha-edgeos/issues/90) [#84](https://github.com/elad-bar/ha-edgeos/issues/84)
+
+  Changing the units will be available per entity instead of maintaining it with select component, native unit is bytes - B (information) or B/s (traffic)
+
 ## 2.0.26
 
 Configuration breaking change

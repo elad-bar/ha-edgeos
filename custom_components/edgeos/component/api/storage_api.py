@@ -13,7 +13,6 @@ from ...core.api.base_api import BaseAPI
 from ...core.helpers.const import DOMAIN, STORAGE_VERSION
 from ...core.helpers.enums import ConnectivityStatus
 from ..helpers.const import (
-    ATTR_BYTE,
     DEFAULT_CONSIDER_AWAY_INTERVAL,
     DEFAULT_UPDATE_API_INTERVAL,
     DEFAULT_UPDATE_ENTITIES_INTERVAL,
@@ -23,7 +22,6 @@ from ..helpers.const import (
     STORAGE_DATA_LOG_INCOMING_MESSAGES,
     STORAGE_DATA_MONITORED_DEVICES,
     STORAGE_DATA_MONITORED_INTERFACES,
-    STORAGE_DATA_UNIT,
     STORAGE_DATA_UPDATE_API_INTERVAL,
     STORAGE_DATA_UPDATE_ENTITIES_INTERVAL,
 )
@@ -64,12 +62,6 @@ class StorageAPI(BaseAPI):
     @property
     def monitored_devices(self):
         result = self.data.get(STORAGE_DATA_MONITORED_DEVICES, {})
-
-        return result
-
-    @property
-    def unit(self):
-        result = self.data.get(STORAGE_DATA_UNIT, ATTR_BYTE)
 
         return result
 
@@ -135,7 +127,6 @@ class StorageAPI(BaseAPI):
             self.data = {
                 STORAGE_DATA_MONITORED_INTERFACES: {},
                 STORAGE_DATA_MONITORED_DEVICES: {},
-                STORAGE_DATA_UNIT: ATTR_BYTE,
                 STORAGE_DATA_LOG_INCOMING_MESSAGES: False,
                 STORAGE_DATA_CONSIDER_AWAY_INTERVAL: DEFAULT_CONSIDER_AWAY_INTERVAL.total_seconds(),
                 STORAGE_DATA_UPDATE_ENTITIES_INTERVAL: DEFAULT_UPDATE_ENTITIES_INTERVAL.total_seconds(),
@@ -168,13 +159,6 @@ class StorageAPI(BaseAPI):
         _LOGGER.debug(f"Set monitored interface {device_name} to {is_enabled}")
 
         self.data[STORAGE_DATA_MONITORED_DEVICES][device_name] = is_enabled
-
-        await self._async_save()
-
-    async def set_unit(self, unit: str):
-        _LOGGER.debug(f"Set unit to {unit}")
-
-        self.data[STORAGE_DATA_UNIT] = unit
 
         await self._async_save()
 

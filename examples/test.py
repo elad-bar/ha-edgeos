@@ -9,9 +9,9 @@ import sys
 
 from custom_components.edgeos.component.api.api import IntegrationAPI
 from custom_components.edgeos.component.api.websocket import IntegrationWS
-from custom_components.edgeos.component.helpers.const import *
 from custom_components.edgeos.configuration.models.config_data import ConfigData
 from custom_components.edgeos.core.helpers.enums import ConnectivityStatus
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 DATA_KEYS = [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]
 

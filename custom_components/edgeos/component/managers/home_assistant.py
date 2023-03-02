@@ -14,11 +14,20 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.components.homeassistant import SERVICE_RELOAD_CONFIG_ENTRY
-from homeassistant.components.select import SelectEntityDescription
-from homeassistant.components.sensor import SensorEntityDescription, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    STATE_OFF,
+    STATE_ON,
+    UnitOfDataRate,
+    UnitOfInformation,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as async_get_device_registry
 from homeassistant.helpers.entity import EntityCategory, EntityDescription
@@ -27,12 +36,10 @@ from ...configuration.helpers.const import DEFAULT_NAME, DOMAIN, MANUFACTURER
 from ...configuration.managers.configuration_manager import ConfigurationManager
 from ...configuration.models.config_data import ConfigData
 from ...core.helpers.const import (
-    ACTION_CORE_ENTITY_SELECT_OPTION,
     ACTION_CORE_ENTITY_TURN_OFF,
     ACTION_CORE_ENTITY_TURN_ON,
     DOMAIN_BINARY_SENSOR,
     DOMAIN_DEVICE_TRACKER,
-    DOMAIN_SELECT,
     DOMAIN_SENSOR,
     DOMAIN_SWITCH,
     ENTITY_CONFIG_ENTRY_ID,
@@ -52,7 +59,6 @@ from ..helpers.const import (
     API_DATA_INTERFACES,
     API_DATA_SYS_INFO,
     API_DATA_SYSTEM,
-    BYTE,
     CONF_DEVICE_ID,
     DATA_SYSTEM_SERVICE,
     DATA_SYSTEM_SERVICE_DHCP_SERVER,
@@ -93,13 +99,12 @@ from ..helpers.const import (
     MESSAGES_COUNTER_SECTION,
     SERVICE_SCHEMA_UPDATE_CONFIGURATION,
     SERVICE_UPDATE_CONFIGURATION,
+    STATS_DATA_RATE,
+    STATS_DATA_SIZE,
     STATS_ICONS,
-    STATS_RATE,
-    STATS_TRAFFIC,
     STATS_UNITS,
     STORAGE_DATA_CONSIDER_AWAY_INTERVAL,
     STORAGE_DATA_LOG_INCOMING_MESSAGES,
-    STORAGE_DATA_UNIT,
     STORAGE_DATA_UPDATE_API_INTERVAL,
     STORAGE_DATA_UPDATE_ENTITIES_INTERVAL,
     STRING_DASH,
@@ -132,7 +137,6 @@ from ..helpers.const import (
     TRAFFIC_DATA_INTERFACE_ITEMS,
     TRAFFIC_DATA_PACKETS,
     TRUE_STR,
-    UNIT_MAPPING,
     USER_LEVEL_ADMIN,
     WS_DISCOVER_KEY,
     WS_EXPORT_KEY,
@@ -285,11 +289,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 for option_key in entry_options:
                     migration_data[option_key] = entry_options.get(option_key)
 
-            if self._entry.data is not None:
-                migration_data[STORAGE_DATA_UNIT] = self._entry.data.get(
-                    STORAGE_DATA_UNIT
-                )
-
             updated = await self._update_configuration_data(migration_data)
 
         if updated:
@@ -297,9 +296,8 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             data = {}
             for key in self._entry.data.keys():
-                if key != STORAGE_DATA_UNIT:
-                    value = self._entry.data.get(key)
-                    data[key] = value
+                value = self._entry.data.get(key)
+                data[key] = value
 
             options = {}
 
@@ -359,7 +357,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
         is_admin = self._system.user_level == USER_LEVEL_ADMIN
 
-        self._load_unit_select()
         self._load_unknown_devices_sensor()
         self._load_cpu_sensor()
         self._load_ram_sensor()
@@ -380,9 +377,14 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             for stats_data_key in stats_data:
                 stats_data_item = stats_data.get(stats_data_key)
+                device_name = self.get_device_name(device_item)
 
-                self._load_device_stats_sensor(
-                    device_item, stats_data_key, stats_data_item
+                self._load_stats_sensor(
+                    device_item.unique_id,
+                    device_name,
+                    stats_data_key,
+                    stats_data_item,
+                    self.storage_api.monitored_devices,
                 )
 
         for unique_id in self._interfaces:
@@ -404,9 +406,14 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             for stats_data_key in stats_data:
                 stats_data_item = stats_data.get(stats_data_key)
+                interface_name = self.get_interface_name(interface_item)
 
-                self._load_interface_stats_sensor(
-                    interface_item, stats_data_key, stats_data_item
+                self._load_stats_sensor(
+                    interface_item.unique_id,
+                    interface_name,
+                    stats_data_key,
+                    stats_data_item,
+                    self.storage_api.monitored_interfaces,
                 )
 
     def get_device_name(self, device: EdgeOSDeviceData):
@@ -871,40 +878,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         name = self.get_interface_name(interface)
         self._set_ha_device(name, "Interface", DEFAULT_NAME)
 
-    def _load_unit_select(self):
-        try:
-            device_name = self.system_name
-            entity_name = f"{device_name} Data Unit"
-
-            attributes = {
-                ATTR_FRIENDLY_NAME: entity_name,
-            }
-
-            unique_id = EntityData.generate_unique_id(DOMAIN_SELECT, entity_name)
-            state = self.storage_api.unit
-
-            entity_description = SelectEntityDescription(
-                key=unique_id,
-                name=entity_name,
-                device_class=f"{DOMAIN}__{STORAGE_DATA_UNIT}",
-                options=list(UNIT_MAPPING.keys()),
-                entity_category=EntityCategory.CONFIG,
-            )
-
-            self.set_action(unique_id, ACTION_CORE_ENTITY_SELECT_OPTION, self._set_unit)
-
-            self.entity_manager.set_entity(
-                DOMAIN_SELECT,
-                self.entry_id,
-                state,
-                attributes,
-                device_name,
-                entity_description,
-            )
-
-        except Exception as ex:
-            self.log_exception(ex, "Failed to load select for Data Unit")
-
     def _load_unknown_devices_sensor(self):
         device_name = self.system_name
         entity_name = f"{device_name} Unknown Devices"
@@ -1204,104 +1177,37 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         except Exception as ex:
             self.log_exception(ex, f"Failed to load switch for {entity_name}")
 
-    def _load_device_stats_sensor(
-        self,
-        device: EdgeOSDeviceData,
-        entity_suffix: str,
-        state: str | int | float | None,
-    ):
-        device_name = self.get_device_name(device)
-        entity_name = f"{device_name} {entity_suffix}"
-
-        is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
-        icon = STATS_ICONS.get(entity_suffix)
-
-        is_rate_stats = entity_suffix in STATS_RATE
-
-        if is_rate_stats:
-            unit_of_measurement = self._get_rate_unit_of_measurement()
-            state = self._convert_unit(state)
-
-        elif entity_suffix in STATS_TRAFFIC:
-            unit_of_measurement = self._get_unit_of_measurement()
-            state = self._convert_unit(state)
-
-        else:
-            unit_of_measurement = str(STATS_UNITS.get(entity_suffix)).capitalize()
-
-        state_class = (
-            SensorStateClass.MEASUREMENT
-            if is_rate_stats
-            else SensorStateClass.TOTAL_INCREASING
-        )
-
-        self._load_stats_sensor(
-            device_name,
-            entity_name,
-            state,
-            unit_of_measurement,
-            icon,
-            state_class,
-            is_monitored,
-        )
-
-    def _load_interface_stats_sensor(
-        self,
-        interface: EdgeOSInterfaceData,
-        entity_suffix: str,
-        state: str | int | float | None,
-    ):
-        device_name = self.get_interface_name(interface)
-        entity_name = f"{device_name} {entity_suffix}"
-
-        is_monitored = self.storage_api.monitored_interfaces.get(
-            interface.unique_id, False
-        )
-
-        is_rate_stats = entity_suffix in STATS_RATE
-        icon = STATS_ICONS.get(entity_suffix)
-
-        if is_rate_stats:
-            unit_of_measurement = self._get_rate_unit_of_measurement()
-            state = self._convert_unit(state)
-
-        elif entity_suffix in STATS_TRAFFIC:
-            unit_of_measurement = self._get_unit_of_measurement()
-            state = self._convert_unit(state)
-
-        else:
-            unit_of_measurement = str(STATS_UNITS.get(entity_suffix)).capitalize()
-
-        state_class = (
-            SensorStateClass.MEASUREMENT
-            if is_rate_stats
-            else SensorStateClass.TOTAL_INCREASING
-        )
-
-        self._load_stats_sensor(
-            device_name,
-            entity_name,
-            state,
-            unit_of_measurement,
-            icon,
-            state_class,
-            is_monitored,
-        )
-
     def _load_stats_sensor(
         self,
+        item_unique_id: str,
         device_name: str,
-        entity_name: str,
+        entity_suffix: str,
         state: str | int | float | None,
-        unit_of_measurement: str,
-        icon: str | None,
-        state_class: SensorStateClass,
-        is_monitored: bool,
+        monitored_items: dict,
     ):
+        entity_name = f"{device_name} {entity_suffix}"
+
         try:
             attributes = {ATTR_FRIENDLY_NAME: entity_name}
-
             unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
+
+            icon = STATS_ICONS.get(entity_suffix)
+            is_monitored = monitored_items.get(item_unique_id, False)
+
+            device_class: SensorDeviceClass | None = None
+            state_class = SensorStateClass.MEASUREMENT
+
+            if entity_suffix in STATS_DATA_RATE:
+                unit_of_measurement = UnitOfDataRate.BYTES_PER_SECOND
+                device_class = SensorDeviceClass.DATA_RATE
+                state_class = SensorStateClass.TOTAL_INCREASING
+
+            elif entity_suffix in STATS_DATA_SIZE:
+                unit_of_measurement = UnitOfInformation.BYTES
+                device_class = SensorDeviceClass.DATA_SIZE
+
+            else:
+                unit_of_measurement = str(STATS_UNITS.get(entity_suffix)).capitalize()
 
             entity_description = SensorEntityDescription(
                 key=unique_id,
@@ -1309,6 +1215,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 icon=icon,
                 state_class=state_class,
                 native_unit_of_measurement=unit_of_measurement,
+                device_class=device_class,
             )
 
             if unit_of_measurement.lower() in [
@@ -1518,11 +1425,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
     async def _disable_log_incoming_messages(self, entity: EntityData):
         await self.storage_api.set_log_incoming_messages(False)
 
-    async def _set_unit(self, entity: EntityData, option: str):
-        await self.storage_api.set_unit(option)
-
-        await self._reload_integration()
-
     def _get_device_from_entity(self, entity: EntityData) -> EdgeOSDeviceData:
         unique_id = entity.details.get(ENTITY_UNIQUE_ID)
         device_item = self._get_device(unique_id)
@@ -1535,19 +1437,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
         return interface_item
 
-    def _convert_unit(self, value: float) -> float:
-        unit_factor = UNIT_MAPPING.get(self.storage_api.unit, BYTE)
-        result = value
-
-        if result > 0:
-            result = result / unit_factor
-
-        digits = 0 if unit_factor == BYTE else 3
-
-        result = self._format_number(result, digits)
-
-        return result
-
     @staticmethod
     def _format_number(value: int | float | None, digits: int = 0) -> int | float:
         if value is None:
@@ -1555,17 +1444,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
         value_str = f"{value:.{digits}f}"
         result = int(value_str) if digits == 0 else float(value_str)
-
-        return result
-
-    def _get_unit_of_measurement(self) -> str:
-        result = self.storage_api.unit
-
-        return result
-
-    def _get_rate_unit_of_measurement(self) -> str:
-        unit_of_measurement = self._get_unit_of_measurement()
-        result = f"{unit_of_measurement}/s"
 
         return result
 
@@ -1607,7 +1485,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             STORAGE_DATA_UPDATE_ENTITIES_INTERVAL: self.storage_api.set_update_entities_interval,
             STORAGE_DATA_UPDATE_API_INTERVAL: self.storage_api.set_update_api_interval,
             STORAGE_DATA_LOG_INCOMING_MESSAGES: self.storage_api.set_log_incoming_messages,
-            STORAGE_DATA_UNIT: self.storage_api.set_unit,
         }
 
         for key in storage_data_import_keys:
