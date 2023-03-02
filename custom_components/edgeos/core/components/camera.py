@@ -12,7 +12,11 @@ import sys
 import aiohttp
 import async_timeout
 
-from homeassistant.components.camera import DEFAULT_CONTENT_TYPE, SUPPORT_STREAM, Camera
+from homeassistant.components.camera import (
+    DEFAULT_CONTENT_TYPE,
+    Camera,
+    CameraEntityFeature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -80,20 +84,19 @@ class CoreCamera(Camera, BaseEntity, ABC):
 
             still_image_url_template = cv.template(snapshot)
 
-            stream_support = DOMAIN_STREAM in self.hass.data
-
-            stream_support_flag = (
-                SUPPORT_STREAM if stream_source and stream_support else 0
-            )
-
             self._still_image_url = still_image_url_template
             self._still_image_url.hass = hass
 
             self._stream_source = stream_source
             self._frame_interval = SINGLE_FRAME_PS / fps
-            self._supported_features = stream_support_flag
 
             self._is_recording_state = self.entity.details.get(ATTR_MODE_RECORD)
+            self._attr_is_streaming = stream_source is not None
+
+            if self._stream_source:
+                self._attr_supported_features = CameraEntityFeature.STREAM
+            else:
+                self._attr_supported_features = CameraEntityFeature(0)
 
             if username and password:
                 self._auth = aiohttp.BasicAuth(username, password=password)
@@ -113,11 +116,6 @@ class CoreCamera(Camera, BaseEntity, ABC):
     @property
     def motion_detection_enabled(self):
         return self.entity.details.get(CONF_MOTION_DETECTION, False)
-
-    @property
-    def supported_features(self):
-        """Return supported features for this camera."""
-        return self._supported_features
 
     @property
     def frame_interval(self):
