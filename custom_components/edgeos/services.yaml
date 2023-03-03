@@ -51,17 +51,3 @@ update_configuration:
       example: "false"
       selector:
         boolean:
-    unit:
-      name: Unit
-      description: Unit of measurement
-      required: false
-      example: "Bytes"
-      selector:
-        select:
-          options:
-            - label: Bytes
-              value: Bytes
-            - label: KBytes
-              value: KBytes
-            - label: MBytes
-              value: MBytes
