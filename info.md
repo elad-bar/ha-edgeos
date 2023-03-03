@@ -90,8 +90,6 @@ logger:
 | {Router Name} Firmware Updates      | Binary Sensor | New firmware available indication                                         | Attributes holds the url and new release name |
 | {Router Name} Log incoming messages | Switch        | Sets whether to log WebSocket incoming messages for debugging             |                                               |
 
-_Changing the unit will reload the integration_
-
 ### Per device
 
 | Entity Name                                  | Type           | Description                                                                     | Additional information      |
@@ -122,8 +120,6 @@ _Changing the unit will reload the integration_
 | {Router Name} {Interface Name} Sent Errors              | Sensor        | Sent errors                                                                  | Statistics: Total Increment                 |
 | {Router Name} {Interface Name} Sent Packets             | Sensor        | Sent packets                                                                 | Statistics: Total Increment                 |
 
-_Unit of measurement for `Traffic` and `Rate` are according to the unit settings of the integration_
-
 ## Services
 
 ### Update configuration
@@ -133,7 +129,6 @@ Allows to set:
 - Consider away interval - Time to consider a device without activity as AWAY (any value between 10 and 1800 in seconds)
 - Log incoming messages - Enable / Disable logging of incoming WebSocket messages for debug
 - Store debug data - Enable / Disable store debug data to './storage' directory of HA for API (edgeos.debug.api.json) and WS (edgeos.debug.ws.json) data for faster debugging or just to get more ideas for additional features
-- Unit of measurement
 - Update API interval - Interval in seconds to update API data
 - Update Entities interval - Interval in seconds to update entities
 
@@ -143,11 +138,8 @@ More details available in `Developer tools` -> `Services` -> `edgeos.update_conf
 service: edgeos.update_configuration
 data:
   device_id: { Main device ID }
-  unit: Bytes
   log_incoming_messages: true
   consider_away_interval: 180
   update_api_interval: 30
   update_entities_interval: 1
 ```
-
-_Changing the unit will reload the integration_
