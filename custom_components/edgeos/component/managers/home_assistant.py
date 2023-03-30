@@ -1200,12 +1200,12 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             if entity_suffix in STATS_DATA_RATE:
                 unit_of_measurement = UnitOfDataRate.BYTES_PER_SECOND
                 device_class = SensorDeviceClass.DATA_RATE
-                state_class = SensorStateClass.TOTAL_INCREASING
 
             elif entity_suffix in STATS_DATA_SIZE:
                 unit_of_measurement = UnitOfInformation.BYTES
                 device_class = SensorDeviceClass.DATA_SIZE
-
+                state_class = SensorStateClass.TOTAL_INCREASING
+                
             else:
                 unit_of_measurement = str(STATS_UNITS.get(entity_suffix)).capitalize()
 
