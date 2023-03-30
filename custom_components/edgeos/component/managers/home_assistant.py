@@ -1205,7 +1205,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 unit_of_measurement = UnitOfInformation.BYTES
                 device_class = SensorDeviceClass.DATA_SIZE
                 state_class = SensorStateClass.TOTAL_INCREASING
-                
+
             else:
                 unit_of_measurement = str(STATS_UNITS.get(entity_suffix)).capitalize()
 
