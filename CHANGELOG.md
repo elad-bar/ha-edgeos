@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.28
+
+- Fix 'TOTAL_INCREASING' for rate sensors by [@Dude4Linux](https://github.com/Dude4Linux)
+
 ## 2.0.27
 
 Configuration breaking change
