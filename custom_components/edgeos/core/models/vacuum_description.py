@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from homeassistant.components.vacuum import StateVacuumEntityDescription
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class VacuumDescription(StateVacuumEntityDescription):
     """A class that describes vacuum entities."""
 
