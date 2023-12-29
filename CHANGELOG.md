@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.29
+
+_Minimum HA Version: 2024.1.0_
+
+- Adjust code to HA 2024.1.0
+- Update pre-commit packages
+
 ## 2.0.28
 
 - Fix 'TOTAL_INCREASING' for rate sensors by [@Dude4Linux](https://github.com/Dude4Linux)
