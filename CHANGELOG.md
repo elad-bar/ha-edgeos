@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.30
+
+_Minimum HA Version: 2024.1.0b0_
+
+- Set minimum HA version for component to 2024.1.0b0
+
 ## 2.0.29
 
 _Minimum HA Version: 2024.1.0_
