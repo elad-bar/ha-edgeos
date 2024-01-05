@@ -5,9 +5,9 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.components.device_tracker.const import ATTR_IP, ATTR_MAC
+from homeassistant.components.device_tracker.const import ATTR_IP, ATTR_MAC, SourceType
 from homeassistant.core import HomeAssistant
 
 from ..helpers.const import DOMAIN_DEVICE_TRACKER
@@ -38,7 +38,7 @@ class CoreScanner(BaseEntity, ScannerEntity):
     @property
     def source_type(self):
         """Return the source type."""
-        return self.entity.attributes.get(ATTR_SOURCE_TYPE, SOURCE_TYPE_ROUTER)
+        return self.entity.attributes.get(ATTR_SOURCE_TYPE, SourceType.ROUTER)
 
     @staticmethod
     def get_component(hass: HomeAssistant, entity: EntityData):
