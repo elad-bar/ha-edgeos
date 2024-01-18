@@ -885,13 +885,13 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         try:
             state = self._system.leased_devices
 
-            leased_devices = []
+            leased_devices = {}
 
             for unique_id in self._devices:
                 device = self._devices.get(unique_id)
 
                 if device.is_leased:
-                    leased_devices.append(f"{device.hostname} ({device.ip})")
+                    leased_devices[device.ip] = { "name": device.hostname, "MAC": device.mac }
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
