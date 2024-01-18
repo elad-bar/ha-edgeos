@@ -1107,7 +1107,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
-                LAST_ACTIVITY: device.last_activity_in_seconds,
             }
 
             unique_id = EntityData.generate_unique_id(
