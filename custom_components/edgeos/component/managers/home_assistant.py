@@ -591,11 +591,12 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             for interface_type in interface_types:
                 interfaces = interface_types.get(interface_type)
 
-                for interface_name in interfaces:
-                    interface_data = interfaces.get(interface_name, {})
-                    self._extract_interface(
-                        interface_name, interface_data, interface_type
-                    )
+                if interfaces is not None:
+                    for interface_name in interfaces:
+                        interface_data = interfaces.get(interface_name, {})
+                        self._extract_interface(
+                            interface_name, interface_data, interface_type
+                        )
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()

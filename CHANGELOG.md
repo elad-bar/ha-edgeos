@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.32
+
+- Ignore interfaces that were removed
+
 ## 2.0.31
 
 - Replaced soon (2025) to get deprecated SUPPORT\_\* constant with SourceType
