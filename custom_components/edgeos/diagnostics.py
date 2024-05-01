@@ -139,7 +139,7 @@ def _async_get_diagnostics(
 def _async_device_as_dict(
     hass: HomeAssistant, data: dict, unique_id: str
 ) -> dict[str, Any]:
-    """Represent a Shinobi monitor as a dictionary."""
+    """Represent a Device as a dictionary."""
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
     ha_device = device_registry.async_get_device(identifiers={(DOMAIN, unique_id)})

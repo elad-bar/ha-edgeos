@@ -4,3 +4,8 @@ voluptuous
 aiohttp
 cryptography
 numpy
+
+flatten_json
+googletrans==4.0.0rc1
+translators~= 5.4
+deep-translator~=1.9

@@ -48,5 +48,114 @@
       "already_configured": "EdgeOS integration already configured with the name",
       "incompatible_version": "Unsupported firmware version"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "firmware": {
+        "name": "Firmware Upgrade"
+      },
+      "interface_connected": {
+        "name": "Connected"
+      }
+    },
+    "number": {
+      "consider_away_interval": {
+        "name": "Consider Away Interval"
+      },
+      "update_entities_interval": {
+        "name": "Update Entities Interval"
+      },
+      "update_api_interval": {
+        "name": "Update API Interval"
+      }
+    },
+    "sensor": {
+      "cpu_usage": {
+        "name": "CPU Usage",
+        "icon": "mdi:chip"
+      },
+      "ram_usage": {
+        "name": "RAM Usage",
+        "icon": "mdi:memory"
+      },
+      "unknown_devices": {
+        "name": "Unknown Devices",
+        "icon": "mdi:help-network-outline"
+      },
+      "interface_received_dropped": {
+        "name": "Received Dropped",
+        "icon": "mdi:package-variant-minus"
+      },
+      "interface_sent_dropped": {
+        "name": "Sent Dropped",
+        "icon": "mdi:package-variant-minus"
+      },
+      "interface_received_errors": {
+        "name": "Received Errors",
+        "icon": "mdi:timeline-alert"
+      },
+      "interface_sent_errors": {
+        "name": "Sent Errors",
+        "icon": "mdi:timeline-alert"
+      },
+      "interface_received_packets": {
+        "name": "Received Packets",
+        "icon": "mdi:package-up"
+      },
+      "interface_sent_packets": {
+        "name": "Sent Packets",
+        "icon": "mdi:package-up"
+      },
+      "interface_received_rate": {
+        "name": "Received Rate",
+        "icon": "mdi:download-network-outline"
+      },
+      "interface_sent_rate": {
+        "name": "Sent Rate",
+        "icon": "mdi:upload-network-outline"
+      },
+      "interface_received_traffic": {
+        "name": "Received Traffic",
+        "icon": "mdi:download-network-outline"
+      },
+      "interface_sent_traffic": {
+        "name": "Sent Traffic",
+        "icon": "mdi:upload-network-outline"
+      },
+      "device_received_rate": {
+        "name": "Received Rate",
+        "icon": "mdi:download-network-outline"
+      },
+      "device_sent_rate": {
+        "name": "Sent Rate",
+        "icon": "mdi:upload-network-outline"
+      },
+      "device_received_traffic": {
+        "name": "Received Traffic",
+        "icon": "mdi:download-network-outline"
+      },
+      "device_sent_traffic": {
+        "name": "device_sent_traffic",
+        "icon": "mdi:upload-network-outline"
+      }
+    },
+    "switch": {
+      "log_incoming_messages": {
+        "name": "Log Incoming Messages",
+        "icon": "mdi:math-log"
+      },
+      "interface_monitored": {
+        "name": "Monitored",
+        "icon": "mdi:monitor-eye"
+      },
+      "interface_status": {
+        "name": "Status",
+        "icon": "mdi:eye-settings"
+      },
+      "device_monitored": {
+        "name": "Monitored",
+        "icon": "mdi:monitor-eye"
+      }
+    }
   }
 }

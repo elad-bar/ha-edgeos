@@ -1,52 +1,161 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Configurar Roteador EdgeOS",
-        "description": "Configure seu roteador EdgeOS, observe que a integração se comunicará usando a conexão HTTPS",
-        "data": {
-          "host": "Host",
-          "username": "Nome de usuário",
-          "password": "Senha"
-        }
-      }
-    },
     "abort": {
-      "already_configured": "Integração EdgeOS ({name}) já configurada"
+      "already_configured": "Integra\u00c3\u00a7\u00c3\u00a3o EdgeOS ({name}) j\u00c3\u00a1 configurada"
     },
     "error": {
-      "invalid_credentials": "Credenciais inválidas para o roteador EdgeOS",
-      "auth_general_error": "Falha geral, tente novamente",
-      "not_found": "URL do EdgeOS não encontrada",
-      "invalid_export_configuration": "A configuração de exportação (análise de tráfego) está desativada, ative",
-      "invalid_dpi_configuration": "A configuração de inspeção profunda de pacotes (análise de tráfego) está desativada, ative",
-      "empty_device_data": "Não foi possível recuperar os dados do dispositivo do roteador EdgeOS",
       "already_configured": "EdgeOS integration already configured with the name",
-      "incompatible_version": "Versão de firmware não suportada"
+      "auth_general_error": "Falha geral, tente novamente",
+      "empty_device_data": "N\u00c3\u00a3o foi poss\u00c3\u00advel recuperar os dados do dispositivo do roteador EdgeOS",
+      "incompatible_version": "Vers\u00c3\u00a3o de firmware n\u00c3\u00a3o suportada",
+      "invalid_credentials": "Credenciais inv\u00c3\u00a1lidas para o roteador EdgeOS",
+      "invalid_dpi_configuration": "A configura\u00c3\u00a7\u00c3\u00a3o de inspe\u00c3\u00a7\u00c3\u00a3o profunda de pacotes (an\u00c3\u00a1lise de tr\u00c3\u00a1fego) est\u00c3\u00a1 desativada, ative",
+      "invalid_export_configuration": "A configura\u00c3\u00a7\u00c3\u00a3o de exporta\u00c3\u00a7\u00c3\u00a3o (an\u00c3\u00a1lise de tr\u00c3\u00a1fego) est\u00c3\u00a1 desativada, ative",
+      "not_found": "URL do EdgeOS n\u00c3\u00a3o encontrada"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host",
+          "password": "Senha",
+          "username": "Nome de usu\u00c3\u00a1rio"
+        },
+        "description": "Configure seu roteador EdgeOS, observe que a integra\u00c3\u00a7\u00c3\u00a3o se comunicar\u00c3\u00a1 usando a conex\u00c3\u00a3o HTTPS",
+        "title": "Configurar Roteador EdgeOS"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "firmware": {
+        "name": "Atualiza\u00e7\u00e3o de firmware"
+      },
+      "interface_connected": {
+        "name": "Conectada Conectado"
+      }
+    },
+    "number": {
+      "consider_away_interval": {
+        "name": "Considere o intervalo fora"
+      },
+      "update_api_interval": {
+        "name": "Atualizar intervalo da API"
+      },
+      "update_entities_interval": {
+        "name": "Atualizar intervalos de entidades"
+      }
+    },
+    "sensor": {
+      "cpu_usage": {
+        "icon": "MDI: Chip",
+        "name": "Utiliza\u00e7\u00e3o do CPU"
+      },
+      "device_received_rate": {
+        "icon": "MDI: Download-Network-Outline",
+        "name": "Taxa recebeu"
+      },
+      "device_received_traffic": {
+        "icon": "MDI: Download-Network-Outline",
+        "name": "Tr\u00e1fego recebeu"
+      },
+      "device_sent_rate": {
+        "icon": "MDI: Upload-Network-Outline",
+        "name": "Taxa enviada"
+      },
+      "device_sent_traffic": {
+        "icon": "MDI: Upload-Network-Outline",
+        "name": "Device_Sent_traffic"
+      },
+      "interface_received_dropped": {
+        "icon": "MDI: Pacote-Variante-Minus",
+        "name": "Recebido caiu"
+      },
+      "interface_received_errors": {
+        "icon": "MDI: Linha do tempo Alert",
+        "name": "Erros recebidos"
+      },
+      "interface_received_packets": {
+        "icon": "MD: Pachkage-up",
+        "name": "Pacotes recebidos"
+      },
+      "interface_received_rate": {
+        "icon": "MDI: Download-Network-Outline",
+        "name": "Taxa recebeu"
+      },
+      "interface_received_traffic": {
+        "icon": "MDI: Download-Network-Outline",
+        "name": "Tr\u00e1fego recebeu"
+      },
+      "interface_sent_dropped": {
+        "icon": "MDI: Pacote-Variante-Minus",
+        "name": "Enviado caiu"
+      },
+      "interface_sent_errors": {
+        "icon": "MDI: Linha do tempo Alert",
+        "name": "Erros enviados"
+      },
+      "interface_sent_packets": {
+        "icon": "MD: Pachkage-up",
+        "name": "Pacotes enviados"
+      },
+      "interface_sent_rate": {
+        "icon": "MDI: Upload-Network-Outline",
+        "name": "Taxa enviada"
+      },
+      "interface_sent_traffic": {
+        "icon": "MDI: Upload-Network-Outline",
+        "name": "Enviou tr\u00e1fego"
+      },
+      "ram_usage": {
+        "icon": "MDI: Mem\u00f3ria",
+        "name": "Uso da RAM"
+      },
+      "unknown_devices": {
+        "icon": "MDI: Help-Network-Outline",
+        "name": "Dispositivos desconhecidos"
+      }
+    },
+    "switch": {
+      "device_monitored": {
+        "icon": "MDI: Monitor-Eye",
+        "name": "Monitorou"
+      },
+      "interface_monitored": {
+        "icon": "MDI: Monitor-Eye",
+        "name": "Monitorou"
+      },
+      "interface_status": {
+        "icon": "MDI: Olhos",
+        "name": "Status"
+      },
+      "log_incoming_messages": {
+        "icon": "MDI: Math-Log",
+        "name": "Registrar mensagens recebidas"
+      }
     }
   },
   "options": {
+    "error": {
+      "already_configured": "Integra\u00c3\u00a7\u00c3\u00a3o EdgeOS j\u00c3\u00a1 configurada com o nome",
+      "auth_general_error": "Falha geral, tente novamente",
+      "empty_device_data": "N\u00c3\u00a3o foi poss\u00c3\u00advel recuperar os dados do dispositivo do roteador EdgeOS",
+      "incompatible_version": "Vers\u00c3\u00a3o de firmware n\u00c3\u00a3o suportada",
+      "invalid_credentials": "Credenciais inv\u00c3\u00a1lidas para o roteador EdgeOS",
+      "invalid_dpi_configuration": "A configura\u00c3\u00a7\u00c3\u00a3o de inspe\u00c3\u00a7\u00c3\u00a3o profunda de pacotes (an\u00c3\u00a1lise de tr\u00c3\u00a1fego) est\u00c3\u00a1 desativada, ative",
+      "invalid_export_configuration": "A configura\u00c3\u00a7\u00c3\u00a3o de exporta\u00c3\u00a7\u00c3\u00a3o (an\u00c3\u00a1lise de tr\u00c3\u00a1fego) est\u00c3\u00a1 desativada, ative",
+      "not_found": "URL do EdgeOS n\u00c3\u00a3o encontrado"
+    },
     "step": {
       "edge_os_additional_settings": {
-        "title": "Opções para EdgeOS.",
-        "description": "Configure seus dispositivos / interfaces monitorados e dispositivos rastreados, use valores separados por vírgulas, para limpar o valor existente, use a caixa de seleção.",
         "data": {
+          "clear-credentials": "Limpar credenciais",
           "host": "Host",
-          "username": "Nome de usuário",
           "password": "Senha",
-          "clear-credentials": "Limpar credenciais"
-        }
+          "username": "Nome de usu\u00c3\u00a1rio"
+        },
+        "description": "Configure seus dispositivos / interfaces monitorados e dispositivos rastreados, use valores separados por v\u00c3\u00adrgulas, para limpar o valor existente, use a caixa de sele\u00c3\u00a7\u00c3\u00a3o.",
+        "title": "Op\u00c3\u00a7\u00c3\u00b5es para EdgeOS."
       }
-    },
-    "error": {
-      "invalid_credentials": "Credenciais inválidas para o roteador EdgeOS",
-      "auth_general_error": "Falha geral, tente novamente",
-      "not_found": "URL do EdgeOS não encontrado",
-      "invalid_export_configuration": "A configuração de exportação (análise de tráfego) está desativada, ative",
-      "invalid_dpi_configuration": "A configuração de inspeção profunda de pacotes (análise de tráfego) está desativada, ative",
-      "empty_device_data": "Não foi possível recuperar os dados do dispositivo do roteador EdgeOS",
-      "already_configured": "Integração EdgeOS já configurada com o nome",
-      "incompatible_version": "Versão de firmware não suportada"
     }
   }
 }

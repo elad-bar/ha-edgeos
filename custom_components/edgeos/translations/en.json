@@ -1,51 +1,161 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Set up EdgeOS Router",
-        "description": "Set up your EdgeOS Router, note that integration will communicate using HTTPS connection",
-        "data": {
-          "host": "Host",
-          "username": "Username",
-          "password": "Password"
-        }
-      }
-    },
     "abort": {
       "already_configured": "EdgeOS integration ({name}) already configured"
     },
     "error": {
-      "invalid_credentials": "Invalid credentials to EdgeOS Router",
-      "auth_general_error": "General failure, please try again",
-      "not_found": "EdgeOS URL not found",
-      "invalid_export_configuration": "Export (traffic-analysis) configuration is disabled, please enable",
-      "invalid_dpi_configuration": "Deep Packet Inspection (traffic-analysis) configuration is disabled, please enable",
-      "empty_device_data": "Could not retrieve device data from EdgeOS Router",
       "already_configured": "EdgeOS integration already configured with the name",
-      "incompatible_version": "Unsupported firmware version"
+      "auth_general_error": "General failure, please try again",
+      "empty_device_data": "Could not retrieve device data from EdgeOS Router",
+      "incompatible_version": "Unsupported firmware version",
+      "invalid_credentials": "Invalid credentials to EdgeOS Router",
+      "invalid_dpi_configuration": "Deep Packet Inspection (traffic-analysis) configuration is disabled, please enable",
+      "invalid_export_configuration": "Export (traffic-analysis) configuration is disabled, please enable",
+      "not_found": "EdgeOS URL not found"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host",
+          "password": "Password",
+          "username": "Username"
+        },
+        "description": "Set up your EdgeOS Router, note that integration will communicate using HTTPS connection",
+        "title": "Set up EdgeOS Router"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "firmware": {
+        "name": "Firmware Upgrade"
+      },
+      "interface_connected": {
+        "name": "Connected"
+      }
+    },
+    "number": {
+      "consider_away_interval": {
+        "name": "Consider Away Interval"
+      },
+      "update_api_interval": {
+        "name": "Update API Interval"
+      },
+      "update_entities_interval": {
+        "name": "Update Entities Interval"
+      }
+    },
+    "sensor": {
+      "cpu_usage": {
+        "icon": "mdi:chip",
+        "name": "CPU Usage"
+      },
+      "device_received_rate": {
+        "icon": "mdi:download-network-outline",
+        "name": "Received Rate"
+      },
+      "device_received_traffic": {
+        "icon": "mdi:download-network-outline",
+        "name": "Received Traffic"
+      },
+      "device_sent_rate": {
+        "icon": "mdi:upload-network-outline",
+        "name": "device_sent_rate"
+      },
+      "device_sent_traffic": {
+        "icon": "mdi:upload-network-outline",
+        "name": "device_sent_traffic"
+      },
+      "interface_received_dropped": {
+        "icon": "mdi:package-variant-minus",
+        "name": "Received Dropped"
+      },
+      "interface_received_errors": {
+        "icon": "mdi:timeline-alert",
+        "name": "Received Errors"
+      },
+      "interface_received_packets": {
+        "icon": "mdi:package-up",
+        "name": "Received Packets"
+      },
+      "interface_received_rate": {
+        "icon": "mdi:download-network-outline",
+        "name": "Received Rate"
+      },
+      "interface_received_traffic": {
+        "icon": "mdi:download-network-outline",
+        "name": "Received Traffic"
+      },
+      "interface_sent_dropped": {
+        "icon": "mdi:package-variant-minus",
+        "name": "interface_sent_dropped"
+      },
+      "interface_sent_errors": {
+        "icon": "mdi:timeline-alert",
+        "name": "interface_sent_errors"
+      },
+      "interface_sent_packets": {
+        "icon": "mdi:package-up",
+        "name": "interface_sent_packets"
+      },
+      "interface_sent_rate": {
+        "icon": "mdi:upload-network-outline",
+        "name": "interface_sent_rate"
+      },
+      "interface_sent_traffic": {
+        "icon": "mdi:upload-network-outline",
+        "name": "interface_sent_traffic"
+      },
+      "ram_usage": {
+        "icon": "mdi:memory",
+        "name": "RAM Usage"
+      },
+      "unknown_devices": {
+        "icon": "mdi:help-network-outline",
+        "name": "Unknown Devices"
+      }
+    },
+    "switch": {
+      "device_monitored": {
+        "icon": "mdi:monitor-eye",
+        "name": "Monitored"
+      },
+      "interface_monitored": {
+        "icon": "mdi:monitor-eye",
+        "name": "Monitored"
+      },
+      "interface_status": {
+        "icon": "mdi:eye-settings",
+        "name": "Status"
+      },
+      "log_incoming_messages": {
+        "icon": "mdi:math-log",
+        "name": "Log Incoming Messages"
+      }
     }
   },
   "options": {
+    "error": {
+      "already_configured": "EdgeOS integration already configured with the name",
+      "auth_general_error": "General failure, please try again",
+      "empty_device_data": "Could not retrieve device data from EdgeOS Router",
+      "incompatible_version": "Unsupported firmware version",
+      "invalid_credentials": "Invalid credentials to EdgeOS Router",
+      "invalid_dpi_configuration": "Deep Packet Inspection (traffic-analysis) configuration is disabled, please enable",
+      "invalid_export_configuration": "Export (traffic-analysis) configuration is disabled, please enable",
+      "not_found": "EdgeOS URL not found"
+    },
     "step": {
       "edge_os_additional_settings": {
-        "title": "Options for EdgeOS.",
-        "description": "Set up your monitored devices / interfaces and tracked devices, use comma separated values, to clear existing value, use the checkbox.",
         "data": {
+          "clear-credentials": "Clear credentials",
           "host": "Host",
-          "username": "Username",
-          "password": "Password"
-        }
+          "password": "Password",
+          "username": "Username"
+        },
+        "description": "Set up your monitored devices / interfaces and tracked devices, use comma separated values, to clear existing value, use the checkbox.",
+        "title": "Options for EdgeOS."
       }
-    },
-    "error": {
-      "invalid_credentials": "Invalid credentials to EdgeOS Router",
-      "auth_general_error": "General failure, please try again",
-      "not_found": "EdgeOS URL not found",
-      "invalid_export_configuration": "Export (traffic-analysis) configuration is disabled, please enable",
-      "invalid_dpi_configuration": "Deep Packet Inspection (traffic-analysis) configuration is disabled, please enable",
-      "empty_device_data": "Could not retrieve device data from EdgeOS Router",
-      "already_configured": "EdgeOS integration already configured with the name",
-      "incompatible_version": "Unsupported firmware version"
     }
   }
 }
