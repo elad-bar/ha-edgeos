@@ -152,7 +152,7 @@ class RestAPI:
 
         cookie_jar = CookieJar(unsafe=True)
 
-        await self._initialize_session(cookies=self._cookies, cookie_jar=cookie_jar)
+        await self._initialize_session(cookie_jar)
 
         await self.login()
 
@@ -208,8 +208,8 @@ class RestAPI:
             retry_attempt = retry_attempt + 1
 
             try:
-                if self.session is not None:
-                    async with self.session.get(url, ssl=False) as response:
+                if self._session is not None:
+                    async with self._session.get(url, ssl=False) as response:
                         status = response.status
 
                         message = (
@@ -220,7 +220,7 @@ class RestAPI:
                             result = await response.json()
                             break
                         elif status == 403:
-                            self.session = None
+                            self._session = None
                             self._cookies = {}
 
                             break
@@ -243,8 +243,8 @@ class RestAPI:
 
     def _get_post_headers(self):
         headers = {}
-        for header_key in self.session.headers:
-            header = self.session.headers.get(header_key)
+        for header_key in self._session.headers:
+            header = self._session.headers.get(header_key)
 
             if header is not None:
                 headers[header_key] = header
@@ -259,11 +259,11 @@ class RestAPI:
         try:
             url = self._build_endpoint(endpoint)
 
-            if self.session is not None:
+            if self._session is not None:
                 headers = self._get_post_headers()
                 data_json = json.dumps(data)
 
-                async with self.session.post(
+                async with self._session.post(
                     url, headers=headers, data=data_json, ssl=False
                 ) as response:
                     response.raise_for_status()

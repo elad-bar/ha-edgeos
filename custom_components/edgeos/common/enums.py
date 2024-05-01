@@ -1,6 +1,4 @@
-from enum import Enum
-
-from homeassistant.backports.enum import StrEnum
+from enum import Enum, StrEnum
 
 
 class DeviceTypes(StrEnum):
@@ -22,6 +20,8 @@ class InterfaceTypes(StrEnum):
     INTERMEDIATE_QUEUEING_DEVICE_PREFIX = "imq"
     NETWORK_PROGRAMMING_INTERFACE_PREFIX = "npi"
     LOOPBACK_PREFIX = "lo"
+    BRIDGE_PREFIX = "br"
+    ETH_PREFIX = "eth"
 
 
 class EntityKeys(StrEnum):

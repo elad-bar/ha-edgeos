@@ -1,5 +1,31 @@
 # Changelog
 
+## 2.1.0
+
+Major refactor:
+
+- Code cleanup
+- Fix thread safe issues
+- Fix typos
+- Improve performance
+- Add util for translations
+- Removed service of update configuration
+
+New components:
+
+- Consider Away Interval - Number
+- Update API Interval - Number
+- Update Entities Interval - Number
+- Log Incoming Messages - Switch
+
+TODO:
+
+- Data processors not retrieving HOSTNAME
+- Devices are not loaded
+- Check ignored interfaces
+- Monitored state doesn't control which entities to open
+- Configuration update without reloading integration
+
 ## 2.0.32
 
 - Ignore interfaces that were removed

@@ -1,27 +1,27 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Integra\u00c3\u00a7\u00c3\u00a3o EdgeOS ({name}) j\u00c3\u00a1 configurada"
+      "already_configured": "Integra\u00e7\u00e3o de Edgeos ({nome}) j\u00e1 configurado"
     },
     "error": {
-      "already_configured": "EdgeOS integration already configured with the name",
-      "auth_general_error": "Falha geral, tente novamente",
-      "empty_device_data": "N\u00c3\u00a3o foi poss\u00c3\u00advel recuperar os dados do dispositivo do roteador EdgeOS",
-      "incompatible_version": "Vers\u00c3\u00a3o de firmware n\u00c3\u00a3o suportada",
-      "invalid_credentials": "Credenciais inv\u00c3\u00a1lidas para o roteador EdgeOS",
-      "invalid_dpi_configuration": "A configura\u00c3\u00a7\u00c3\u00a3o de inspe\u00c3\u00a7\u00c3\u00a3o profunda de pacotes (an\u00c3\u00a1lise de tr\u00c3\u00a1fego) est\u00c3\u00a1 desativada, ative",
-      "invalid_export_configuration": "A configura\u00c3\u00a7\u00c3\u00a3o de exporta\u00c3\u00a7\u00c3\u00a3o (an\u00c3\u00a1lise de tr\u00c3\u00a1fego) est\u00c3\u00a1 desativada, ative",
-      "not_found": "URL do EdgeOS n\u00c3\u00a3o encontrada"
+      "already_configured": "Integra\u00e7\u00e3o Edgeos j\u00e1 configurada com o nome",
+      "auth_general_error": "Falha geral, por favor tente novamente",
+      "empty_device_data": "N\u00e3o foi poss\u00edvel recuperar os dados do dispositivo do roteador Edgeos",
+      "incompatible_version": "Vers\u00e3o de firmware n\u00e3o suportada",
+      "invalid_credentials": "Credenciais inv\u00e1lidas para o roteador Edgeos",
+      "invalid_dpi_configuration": "A configura\u00e7\u00e3o profunda da inspe\u00e7\u00e3o de pacotes (an\u00e1lise de tr\u00e1fego) est\u00e1 desativada, ative",
+      "invalid_export_configuration": "A configura\u00e7\u00e3o de exporta\u00e7\u00e3o (an\u00e1lise de tr\u00e1fego) est\u00e1 desativada, ative",
+      "not_found": "Edgeos url n\u00e3o encontrado"
     },
     "step": {
       "user": {
         "data": {
-          "host": "Host",
+          "host": "Hospedar",
           "password": "Senha",
-          "username": "Nome de usu\u00c3\u00a1rio"
+          "username": "Nome de usu\u00e1rio"
         },
-        "description": "Configure seu roteador EdgeOS, observe que a integra\u00c3\u00a7\u00c3\u00a3o se comunicar\u00c3\u00a1 usando a conex\u00c3\u00a3o HTTPS",
-        "title": "Configurar Roteador EdgeOS"
+        "description": "Configure seu roteador Edgeos, observe que a integra\u00e7\u00e3o se comunicar\u00e1 usando a conex\u00e3o HTTPS",
+        "title": "Configurar o roteador Edgeos"
       }
     }
   },
@@ -106,6 +106,9 @@
         "icon": "MDI: Upload-Network-Outline",
         "name": "Enviou tr\u00e1fego"
       },
+      "last_restart": {
+        "name": "\u00daltima reinicializa\u00e7\u00e3o"
+      },
       "ram_usage": {
         "icon": "MDI: Mem\u00f3ria",
         "name": "Uso da RAM"
@@ -136,25 +139,25 @@
   },
   "options": {
     "error": {
-      "already_configured": "Integra\u00c3\u00a7\u00c3\u00a3o EdgeOS j\u00c3\u00a1 configurada com o nome",
-      "auth_general_error": "Falha geral, tente novamente",
-      "empty_device_data": "N\u00c3\u00a3o foi poss\u00c3\u00advel recuperar os dados do dispositivo do roteador EdgeOS",
-      "incompatible_version": "Vers\u00c3\u00a3o de firmware n\u00c3\u00a3o suportada",
-      "invalid_credentials": "Credenciais inv\u00c3\u00a1lidas para o roteador EdgeOS",
-      "invalid_dpi_configuration": "A configura\u00c3\u00a7\u00c3\u00a3o de inspe\u00c3\u00a7\u00c3\u00a3o profunda de pacotes (an\u00c3\u00a1lise de tr\u00c3\u00a1fego) est\u00c3\u00a1 desativada, ative",
-      "invalid_export_configuration": "A configura\u00c3\u00a7\u00c3\u00a3o de exporta\u00c3\u00a7\u00c3\u00a3o (an\u00c3\u00a1lise de tr\u00c3\u00a1fego) est\u00c3\u00a1 desativada, ative",
-      "not_found": "URL do EdgeOS n\u00c3\u00a3o encontrado"
+      "already_configured": "Integra\u00e7\u00e3o Edgeos j\u00e1 configurada com o nome",
+      "auth_general_error": "Falha geral, por favor tente novamente",
+      "empty_device_data": "N\u00e3o foi poss\u00edvel recuperar os dados do dispositivo do roteador Edgeos",
+      "incompatible_version": "Vers\u00e3o de firmware n\u00e3o suportada",
+      "invalid_credentials": "Credenciais inv\u00e1lidas para o roteador Edgeos",
+      "invalid_dpi_configuration": "A configura\u00e7\u00e3o profunda da inspe\u00e7\u00e3o de pacotes (an\u00e1lise de tr\u00e1fego) est\u00e1 desativada, ative",
+      "invalid_export_configuration": "A configura\u00e7\u00e3o de exporta\u00e7\u00e3o (an\u00e1lise de tr\u00e1fego) est\u00e1 desativada, ative",
+      "not_found": "Edgeos url n\u00e3o encontrado"
     },
     "step": {
       "edge_os_additional_settings": {
         "data": {
-          "clear-credentials": "Limpar credenciais",
-          "host": "Host",
+          "clear-credentials": "Credenciais claras",
+          "host": "Hospedar",
           "password": "Senha",
-          "username": "Nome de usu\u00c3\u00a1rio"
+          "username": "Nome de usu\u00e1rio"
         },
-        "description": "Configure seus dispositivos / interfaces monitorados e dispositivos rastreados, use valores separados por v\u00c3\u00adrgulas, para limpar o valor existente, use a caixa de sele\u00c3\u00a7\u00c3\u00a3o.",
-        "title": "Op\u00c3\u00a7\u00c3\u00b5es para EdgeOS."
+        "description": "Configure seus dispositivos / interfaces monitorados e dispositivos rastreados, use valores separados por v\u00edrgula, para limpar o valor existente, use a caixa de sele\u00e7\u00e3o.",
+        "title": "Op\u00e7\u00f5es para Edgeos."
       }
     }
   }

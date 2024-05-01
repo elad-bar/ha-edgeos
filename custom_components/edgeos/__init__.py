@@ -29,24 +29,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     initialized = False
 
     try:
+        _LOGGER.debug("Setting up")
         entry_config = {key: entry.data[key] for key in entry.data}
 
+        _LOGGER.debug("Starting up password manager")
         await PasswordManager.decrypt(hass, entry_config, entry.entry_id)
 
+        _LOGGER.debug("Starting up configuration manager")
         config_manager = ConfigManager(hass, entry)
         await config_manager.initialize(entry_config)
 
         is_initialized = config_manager.is_initialized
 
         if is_initialized:
+            _LOGGER.debug("Starting up coordinator")
             coordinator = Coordinator(hass, config_manager)
 
             hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
             if hass.is_running:
+                _LOGGER.debug("Initializing coordinator")
                 await coordinator.initialize()
 
             else:
+                _LOGGER.debug("Registering listener for HA started event")
                 hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_START, coordinator.on_home_assistant_start
                 )
@@ -54,6 +60,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.info("Finished loading integration")
 
         initialized = is_initialized
+
+        _LOGGER.debug(f"Setup status: {is_initialized}")
 
     except LoginError:
         _LOGGER.info(f"Failed to login {DEFAULT_NAME} API, cannot log integration")

@@ -70,6 +70,9 @@
       }
     },
     "sensor": {
+      "last_restart": {
+        "name": "Last Restart"
+      },
       "cpu_usage": {
         "name": "CPU Usage",
         "icon": "mdi:chip"

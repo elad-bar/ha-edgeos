@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from .common.base_entity import IntegrationBaseEntity, async_setup_base_entry
 from .common.consts import ATTR_ATTRIBUTES, ATTR_IS_ON
 from .common.entity_descriptions import IntegrationDeviceTrackerEntityDescription
+from .common.enums import DeviceTypes
 from .managers.coordinator import Coordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,9 +43,10 @@ class IntegrationCoreScannerEntity(IntegrationBaseEntity, ScannerEntity):
         hass: HomeAssistant,
         entity_description: IntegrationDeviceTrackerEntityDescription,
         coordinator: Coordinator,
+        device_type: DeviceTypes,
         item_id: str | None,
     ):
-        super().__init__(hass, entity_description, coordinator, item_id)
+        super().__init__(hass, entity_description, coordinator, device_type, item_id)
 
         self._attr_ip_address: str | None = None
         self._attr_mac_address: str | None = None

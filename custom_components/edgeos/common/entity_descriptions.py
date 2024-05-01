@@ -1,5 +1,6 @@
 from copy import copy
 from dataclasses import dataclass
+from typing import Callable
 
 from custom_components.edgeos.common.enums import (
     DeviceTypes,
@@ -20,6 +21,7 @@ from homeassistant.components.sensor import (
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     Platform,
     UnitOfDataRate,
     UnitOfInformation,
@@ -31,6 +33,7 @@ from homeassistant.helpers.entity import EntityDescription
 @dataclass(frozen=True, kw_only=True)
 class IntegrationEntityDescription(EntityDescription):
     platform: Platform | None = None
+    filter: Callable[[bool], bool] | None = lambda is_monitored: True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -100,82 +103,96 @@ ENTITY_DESCRIPTIONS: list[IntegrationEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     IntegrationSwitchEntityDescription(
-        key=EntityKeys.LOG_INCOMING_MESSAGES,
+        key=EntityKeys.LOG_INCOMING_MESSAGES, entity_category=EntityCategory.CONFIG
     ),
     IntegrationNumberEntityDescription(
         key=EntityKeys.CONSIDER_AWAY_INTERVAL,
         native_max_value=600,
         native_min_value=0,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_category=EntityCategory.CONFIG,
     ),
     IntegrationNumberEntityDescription(
         key=EntityKeys.UPDATE_ENTITIES_INTERVAL,
         native_max_value=600,
         native_min_value=0,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_category=EntityCategory.CONFIG,
     ),
     IntegrationNumberEntityDescription(
         key=EntityKeys.UPDATE_API_INTERVAL,
         native_max_value=600,
         native_min_value=0,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_category=EntityCategory.CONFIG,
     ),
     IntegrationBinarySensorEntityDescription(
         key=EntityKeys.INTERFACE_CONNECTED,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        filter=lambda is_monitored: is_monitored,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_RECEIVED_DROPPED,
         native_unit_of_measurement=UnitOfInterface.DROPPED,
         state_class=SensorStateClass.MEASUREMENT,
+        filter=lambda is_monitored: is_monitored,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_SENT_DROPPED,
         native_unit_of_measurement=UnitOfInterface.DROPPED,
         state_class=SensorStateClass.MEASUREMENT,
+        filter=lambda is_monitored: is_monitored,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_RECEIVED_ERRORS,
         native_unit_of_measurement=UnitOfInterface.ERRORS,
         state_class=SensorStateClass.MEASUREMENT,
+        filter=lambda is_monitored: is_monitored,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_SENT_ERRORS,
         native_unit_of_measurement=UnitOfInterface.ERRORS,
         state_class=SensorStateClass.MEASUREMENT,
+        filter=lambda is_monitored: is_monitored,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_RECEIVED_PACKETS,
         native_unit_of_measurement=UnitOfInterface.PACKETS,
         state_class=SensorStateClass.MEASUREMENT,
+        filter=lambda is_monitored: is_monitored,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_SENT_PACKETS,
         native_unit_of_measurement=UnitOfInterface.PACKETS,
         state_class=SensorStateClass.MEASUREMENT,
+        filter=lambda is_monitored: is_monitored,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_RECEIVED_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
+        filter=lambda is_monitored: is_monitored,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_SENT_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
+        filter=lambda is_monitored: is_monitored,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_RECEIVED_TRAFFIC,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        filter=lambda is_monitored: is_monitored,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_SENT_TRAFFIC,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        filter=lambda is_monitored: is_monitored,
     ),
     IntegrationSwitchEntityDescription(
-        key=EntityKeys.INTERFACE_MONITORED,
+        key=EntityKeys.INTERFACE_MONITORED, entity_category=EntityCategory.CONFIG
     ),
     IntegrationSwitchEntityDescription(
         key=EntityKeys.INTERFACE_STATUS,
@@ -184,27 +201,31 @@ ENTITY_DESCRIPTIONS: list[IntegrationEntityDescription] = [
         key=EntityKeys.DEVICE_RECEIVED_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
+        filter=lambda is_monitored: is_monitored,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.DEVICE_SENT_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
+        filter=lambda is_monitored: is_monitored,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.DEVICE_RECEIVED_TRAFFIC,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        filter=lambda is_monitored: is_monitored,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.DEVICE_SENT_TRAFFIC,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        filter=lambda is_monitored: is_monitored,
     ),
     IntegrationDeviceTrackerEntityDescription(
-        key=EntityKeys.DEVICE_TRACKER,
+        key=EntityKeys.DEVICE_TRACKER, filter=lambda is_monitored: is_monitored
     ),
     IntegrationSwitchEntityDescription(
-        key=EntityKeys.DEVICE_MONITORED,
+        key=EntityKeys.DEVICE_MONITORED, entity_category=EntityCategory.CONFIG
     ),
 ]
 
@@ -241,7 +262,7 @@ ENTITY_DEVICE_MAPPING = {
 
 
 def get_entity_descriptions(
-    platform: Platform, device_type: DeviceTypes
+    platform: Platform, device_type: DeviceTypes, is_monitored: bool
 ) -> list[IntegrationEntityDescription]:
     entity_descriptions = copy(ENTITY_DESCRIPTIONS)
 
@@ -250,6 +271,7 @@ def get_entity_descriptions(
         for entity_description in entity_descriptions
         if entity_description.platform == platform
         and ENTITY_DEVICE_MAPPING.get(entity_description.key) == device_type
+        and entity_description.filter(is_monitored)
     ]
 
     return result

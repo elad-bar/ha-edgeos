@@ -12,6 +12,7 @@ from homeassistant.util import slugify
 from ..managers.coordinator import Coordinator
 from .consts import ADD_COMPONENT_SIGNALS, DOMAIN
 from .entity_descriptions import IntegrationEntityDescription, get_entity_descriptions
+from .enums import DeviceTypes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,17 +25,32 @@ async def async_setup_base_entry(
     async_add_entities,
 ):
     @callback
-    def _async_handle_device(entry_id: str, item_id: str | None = None):
+    def _async_handle_device(
+        entry_id: str, device_type: DeviceTypes, item_id: str | None = None
+    ):
         if entry.entry_id != entry_id:
             return
 
         try:
             coordinator = hass.data[DOMAIN][entry.entry_id]
 
-            entity_descriptions = get_entity_descriptions(platform, item_id)
+            if device_type == DeviceTypes.DEVICE:
+                is_monitored = coordinator.config_manager.get_monitored_device(item_id)
+
+            elif device_type == DeviceTypes.INTERFACE:
+                is_monitored = coordinator.config_manager.get_monitored_interface(
+                    item_id
+                )
+
+            else:
+                is_monitored = True
+
+            entity_descriptions = get_entity_descriptions(
+                platform, device_type, is_monitored
+            )
 
             entities = [
-                entity_type(hass, entity_description, coordinator, item_id)
+                entity_type(hass, entity_description, coordinator, device_type, item_id)
                 for entity_description in entity_descriptions
             ]
 
@@ -64,13 +80,15 @@ class IntegrationBaseEntity(CoordinatorEntity):
         hass: HomeAssistant,
         entity_description: IntegrationEntityDescription,
         coordinator: Coordinator,
+        device_type: DeviceTypes,
         item_id: str | None,
     ):
         super().__init__(coordinator)
 
         try:
             self.hass = hass
-            self.item_id = item_id
+            self._item_id = item_id
+            self._device_type = device_type
 
             device_info = coordinator.get_device_info(entity_description, item_id)
 
@@ -85,7 +103,13 @@ class IntegrationBaseEntity(CoordinatorEntity):
                 item_id,
             ]
 
-            unique_id = slugify("_".join(unique_id_parts))
+            unique_id_parts_clean = [
+                unique_id_part
+                for unique_id_part in unique_id_parts
+                if unique_id_part is not None
+            ]
+
+            unique_id = slugify("_".join(unique_id_parts_clean))
 
             self.entity_description = entity_description
             self._entity_description = entity_description
@@ -114,16 +138,14 @@ class IntegrationBaseEntity(CoordinatorEntity):
 
     async def async_execute_device_action(self, key: str, *kwargs: Any):
         async_device_action = self._local_coordinator.get_device_action(
-            self._entity_description, self.monitor_id, key
+            self._entity_description, self._item_id, key
         )
 
-        if self.monitor_id is None:
+        if self._item_id is None:
             await async_device_action(self._entity_description, *kwargs)
 
         else:
-            await async_device_action(
-                self._entity_description, self.monitor_id, *kwargs
-            )
+            await async_device_action(self._entity_description, self._item_id, *kwargs)
 
         await self.coordinator.async_request_refresh()
 
@@ -134,7 +156,7 @@ class IntegrationBaseEntity(CoordinatorEntity):
         """Fetch new state parameters for the sensor."""
         try:
             new_data = self._local_coordinator.get_data(
-                self._entity_description, self.monitor_id
+                self._entity_description, self._item_id
             )
 
             if self._data != new_data:

@@ -2,10 +2,13 @@ from datetime import datetime
 import logging
 import sys
 
+from homeassistant.helpers.device_registry import DeviceInfo
+
 from ..common.consts import (
     API_DATA_DHCP_STATS,
     API_DATA_SYS_INFO,
     API_DATA_SYSTEM,
+    DEFAULT_NAME,
     DHCP_SERVER_LEASED,
     DHCP_SERVER_STATS,
     DISCOVER_DATA_FW_VERSION,
@@ -55,6 +58,17 @@ class SystemProcessor(BaseProcessor):
 
     def get(self) -> EdgeOSSystemData:
         return self._system
+
+    def get_device_info(self, item_id: str | None = None) -> DeviceInfo:
+        device_info = DeviceInfo(
+            identifiers={(DEFAULT_NAME, self._system.hostname)},
+            name=self._system.hostname,
+            model=self._system.product,
+            manufacturer=DEFAULT_NAME,
+            hw_version=self._system.fw_version,
+        )
+
+        return device_info
 
     def _process_api_data(self):
         super()._process_api_data()
@@ -203,7 +217,7 @@ class SystemProcessor(BaseProcessor):
     @staticmethod
     def _get_last_reset(uptime):
         now = datetime.now().timestamp()
-        last_reset = int(now) - uptime
+        last_reset = now - uptime
 
         result = datetime.fromtimestamp(last_reset)
 

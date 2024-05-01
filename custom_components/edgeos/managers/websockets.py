@@ -12,6 +12,10 @@ from typing import Any, Callable
 import aiohttp
 from aiohttp import ClientSession
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+
 from ..common.connectivity_status import ConnectivityStatus
 from ..common.consts import (
     ADDRESS_HW_ADDR,
@@ -55,6 +59,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class WebSockets:
+    _hass: HomeAssistant | None
     _session: ClientSession | None
     _triggered_sensors: dict
     _api_data: dict
@@ -65,8 +70,11 @@ class WebSockets:
     _on_status_changed: Callable[[ConnectivityStatus], Awaitable[None]]
     _previous_message: dict | None
 
-    def __init__(self, config_data: ConfigData, entry_id: str | None = None):
+    def __init__(
+        self, hass: HomeAssistant, config_data: ConfigData, entry_id: str | None = None
+    ):
         try:
+            self._hass = hass
             self._config_data = config_data
             self._entry_id = entry_id
 
@@ -108,6 +116,14 @@ class WebSockets:
         status = self._status
 
         return status
+
+    @property
+    def _is_home_assistant(self):
+        return self._hass is not None
+
+    @property
+    def _has_running_loop(self):
+        return self._hass.loop is not None and not self._hass.loop.is_closed()
 
     @property
     def _api_session_id(self):
@@ -177,7 +193,11 @@ class WebSockets:
 
     async def _initialize_session(self):
         try:
-            self._session = ClientSession()
+            if self._is_home_assistant:
+                self._session = async_create_clientsession(hass=self._hass)
+
+            else:
+                self._session = ClientSession()
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -217,7 +237,11 @@ class WebSockets:
     async def _listen(self):
         _LOGGER.info("Starting to listen connected")
 
+        subscription_data = self._get_subscription_data()
+        await self._ws.send_str(subscription_data)
+
         async for msg in self._ws:
+            is_ha_running = self._hass.is_running
             is_connected = self.status == ConnectivityStatus.Connected
             is_closing_type = msg.type in WS_CLOSING_MESSAGE
             is_error = msg.type == aiohttp.WSMsgType.ERROR
@@ -234,6 +258,10 @@ class WebSockets:
                 session_is_closed,
                 not is_connected,
             ]
+
+            if not is_ha_running:
+                self._set_status(ConnectivityStatus.Disconnected)
+                return
 
             if not_connected:
                 _LOGGER.warning(
@@ -368,7 +396,11 @@ class WebSockets:
         self._local_async_dispatcher_send = dispatcher_send
 
     def _async_dispatcher_send(self, signal: str, *args: Any) -> None:
-        self._local_async_dispatcher_send(signal, self._entry_id, *args)
+        if self._hass is None:
+            self._local_async_dispatcher_send(signal, self._entry_id, *args)
+
+        else:
+            async_dispatcher_send(self._hass, signal, self._entry_id, *args)
 
     def _increase_counter(self, key):
         counter = self.data.get(key, 0)

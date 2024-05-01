@@ -60,7 +60,7 @@
       },
       "device_sent_rate": {
         "icon": "mdi:upload-network-outline",
-        "name": "device_sent_rate"
+        "name": "Sent Rate"
       },
       "device_sent_traffic": {
         "icon": "mdi:upload-network-outline",
@@ -88,23 +88,26 @@
       },
       "interface_sent_dropped": {
         "icon": "mdi:package-variant-minus",
-        "name": "interface_sent_dropped"
+        "name": "Sent Dropped"
       },
       "interface_sent_errors": {
         "icon": "mdi:timeline-alert",
-        "name": "interface_sent_errors"
+        "name": "Sent Errors"
       },
       "interface_sent_packets": {
         "icon": "mdi:package-up",
-        "name": "interface_sent_packets"
+        "name": "Sent Packets"
       },
       "interface_sent_rate": {
         "icon": "mdi:upload-network-outline",
-        "name": "interface_sent_rate"
+        "name": "Sent Rate"
       },
       "interface_sent_traffic": {
         "icon": "mdi:upload-network-outline",
-        "name": "interface_sent_traffic"
+        "name": "Sent Traffic"
+      },
+      "last_restart": {
+        "name": "Last Restart"
       },
       "ram_usage": {
         "icon": "mdi:memory",

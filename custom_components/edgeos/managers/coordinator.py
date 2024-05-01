@@ -1,5 +1,5 @@
 from asyncio import sleep
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import sys
 from typing import Callable
@@ -20,7 +20,6 @@ from ..common.consts import (
     ACTION_ENTITY_SET_NATIVE_VALUE,
     ACTION_ENTITY_TURN_OFF,
     ACTION_ENTITY_TURN_ON,
-    ADDRESS_LIST,
     API_RECONNECT_INTERVAL,
     ATTR_ACTIONS,
     ATTR_ATTRIBUTES,
@@ -31,6 +30,8 @@ from ..common.consts import (
     ENTITY_CONFIG_ENTRY_ID,
     HA_NAME,
     HEARTBEAT_INTERVAL,
+    INTERFACE_DATA_RECEIVED,
+    INTERFACE_DATA_SENT,
     SIGNAL_API_STATUS,
     SIGNAL_DEVICE_ADDED,
     SIGNAL_INTERFACE_ADDED,
@@ -81,17 +82,21 @@ class Coordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=config_manager.entry_title,
-            update_interval=config_manager.update_entities_interval,
+            update_interval=timedelta(seconds=config_manager.update_entities_interval),
             update_method=self._async_update_data,
         )
+
+        _LOGGER.debug("Initializing")
 
         entry = config_manager.entry
 
         signal_handlers = {
             SIGNAL_API_STATUS: self._on_api_status_changed,
             SIGNAL_WS_STATUS: self._on_ws_status_changed,
-            SIGNAL_SYSTEM_DISCOVERED: self._on_unit_discovered,
+            SIGNAL_SYSTEM_DISCOVERED: self._on_system_discovered,
         }
+
+        _LOGGER.debug(f"Registering signals for {signal_handlers.keys()}")
 
         for signal in signal_handlers:
             handler = signal_handlers[signal]
@@ -101,8 +106,11 @@ class Coordinator(DataUpdateCoordinator):
         config_data = config_manager.config_data
         entry_id = config_manager.entry_id
 
+        _LOGGER.debug("Initializing API")
         self._api = RestAPI(self.hass, config_data, entry_id)
-        self._websockets = WebSockets(config_data, entry_id)
+
+        _LOGGER.debug("Initializing WS")
+        self._websockets = WebSockets(self.hass, config_data, entry_id)
 
         self._config_manager = config_manager
 
@@ -114,6 +122,7 @@ class Coordinator(DataUpdateCoordinator):
         self._can_load_components: bool = False
         self._unique_messages: list[str] = []
 
+        _LOGGER.debug("Setting up data processors")
         self._system_processor = SystemProcessor(config_manager.config_data)
         self._device_processor = DeviceProcessor(config_manager.config_data)
         self._interface_processor = InterfaceProcessor(config_manager.config_data)
@@ -125,6 +134,8 @@ class Coordinator(DataUpdateCoordinator):
             DeviceTypes.DEVICE: self._device_processor,
             DeviceTypes.INTERFACE: self._interface_processor,
         }
+
+        _LOGGER.debug("Initializing done")
 
     @property
     def api(self) -> RestAPI:
@@ -180,7 +191,9 @@ class Coordinator(DataUpdateCoordinator):
         if status == ConnectivityStatus.Connected:
             await self._api.update()
 
-            await self._websockets.update_api_data(self._api.data)
+            await self._websockets.update_api_data(
+                self._api.data, self._config_manager.log_incoming_messages
+            )
 
             await self._websockets.initialize()
 
@@ -213,7 +226,9 @@ class Coordinator(DataUpdateCoordinator):
             if key not in self._discovered_objects:
                 self._discovered_objects.append(key)
 
-                async_dispatcher_send(self.hass, SIGNAL_SYSTEM_ADDED, entry_id)
+                async_dispatcher_send(
+                    self.hass, SIGNAL_SYSTEM_ADDED, entry_id, DeviceTypes.SYSTEM
+                )
 
     def _on_device_discovered(self, device_mac: str) -> None:
         key = f"{DeviceTypes.DEVICE} {device_mac}"
@@ -225,6 +240,7 @@ class Coordinator(DataUpdateCoordinator):
                 self.hass,
                 SIGNAL_DEVICE_ADDED,
                 self._config_manager.entry_id,
+                DeviceTypes.DEVICE,
                 device_mac,
             )
 
@@ -238,6 +254,7 @@ class Coordinator(DataUpdateCoordinator):
                 self.hass,
                 SIGNAL_INTERFACE_ADDED,
                 self._config_manager.entry_id,
+                DeviceTypes.INTERFACE,
                 interface_name,
             )
 
@@ -248,6 +265,8 @@ class Coordinator(DataUpdateCoordinator):
         so entities can quickly look up their parameters.
         """
         try:
+            _LOGGER.debug("Updating data")
+
             api_connected = self._api.status == ConnectivityStatus.Connected
             aws_client_connected = (
                 self._websockets.status == ConnectivityStatus.Connected
@@ -272,14 +291,17 @@ class Coordinator(DataUpdateCoordinator):
                     processor = self._processors[processor_type]
                     processor.update(self._api.data, self._websockets.data)
 
-                devices = self._device_processor.get_devices()
-                interfaces = self._interface_processor.get_interfaces()
+                if self._api.data is not None and self._websockets.data is not None:
+                    devices = self._device_processor.get_devices()
+                    print(devices)
+                    interfaces = self._interface_processor.get_interfaces()
+                    print(interfaces)
 
-                for device_mac in devices:
-                    self._on_device_discovered(device_mac)
+                    for device_mac in devices:
+                        self._on_device_discovered(device_mac)
 
-                for interface_name in interfaces:
-                    self._on_interface_discovered(interface_name)
+                    for interface_name in interfaces:
+                        self._on_interface_discovered(interface_name)
 
             return {}
 
@@ -287,6 +309,8 @@ class Coordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Error communicating with API: {err}")
 
     def _build_data_mapping(self):
+        _LOGGER.debug("Building data mappers")
+
         data_mapping = {
             EntityKeys.CPU_USAGE: self._get_cpu_usage_data,
             EntityKeys.RAM_USAGE: self._get_ram_usage_data,
@@ -337,7 +361,7 @@ class Coordinator(DataUpdateCoordinator):
     def get_data(
         self,
         entity_description: IntegrationEntityDescription,
-        monitor_id: str | None = None,
+        item_id: str | None = None,
     ) -> dict | None:
         result = None
 
@@ -350,11 +374,11 @@ class Coordinator(DataUpdateCoordinator):
                 )
 
             else:
-                if monitor_id is None:
+                if item_id is None:
                     result = handler(entity_description)
 
                 else:
-                    result = handler(entity_description, monitor_id)
+                    result = handler(entity_description, item_id)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -419,7 +443,7 @@ class Coordinator(DataUpdateCoordinator):
     def _get_last_restart_data(self, _entity_description) -> dict | None:
         data = self._system_processor.get()
 
-        result = {ATTR_STATE: data.last_reset}
+        result = {ATTR_STATE: data.last_reset.timestamp()}
 
         return result
 
@@ -594,12 +618,16 @@ class Coordinator(DataUpdateCoordinator):
         self, _entity_description, interface_name: str
     ) -> dict | None:
         interface = self._interface_processor.get_data(interface_name)
+        interface_attributes = interface.to_dict()
+        attributes = {
+            attribute: interface_attributes[attribute]
+            for attribute in interface_attributes
+            if attribute not in [INTERFACE_DATA_RECEIVED, INTERFACE_DATA_SENT]
+        }
 
         result = {
             ATTR_IS_ON: interface.up,
-            ATTR_ATTRIBUTES: {
-                ADDRESS_LIST: interface.address,
-            },
+            ATTR_ATTRIBUTES: attributes,
             ATTR_ACTIONS: {
                 ACTION_ENTITY_TURN_ON: self._set_interface_enabled,
                 ACTION_ENTITY_TURN_OFF: self._set_interface_disabled,
@@ -649,15 +677,13 @@ class Coordinator(DataUpdateCoordinator):
     ) -> dict | None:
         device = self._device_processor.get_data(device_mac)
         consider_away_interval = self.config_manager.consider_away_interval
-        now_ts = datetime.now().timestamp()
-        seconds_since_last_activity = now_ts - device.last_activity
-
-        is_on = consider_away_interval >= seconds_since_last_activity
+        last_activity = self._get_date_time_from_timestamp(device.last_activity)
+        is_on = consider_away_interval >= device.last_activity_in_seconds
 
         result = {
             ATTR_IS_ON: is_on,
             ATTR_ATTRIBUTES: {
-                ATTR_LAST_ACTIVITY: device.last_activity,
+                ATTR_LAST_ACTIVITY: last_activity,
                 ATTR_IP: device.ip,
                 ATTR_MAC: device.mac,
             },
@@ -686,11 +712,15 @@ class Coordinator(DataUpdateCoordinator):
 
         await self._api.set_interface_state(interface, True)
 
+        await self._reload_integration()
+
     async def _set_interface_disabled(self, _entity_description, interface_name: str):
         _LOGGER.debug(f"Disable interface {interface_name}")
         interface = self._interface_processor.get_data(interface_name)
 
         await self._api.set_interface_state(interface, False)
+
+        await self._reload_integration()
 
     async def _set_interface_monitor_enabled(
         self, _entity_description, interface_name: str
@@ -699,6 +729,8 @@ class Coordinator(DataUpdateCoordinator):
 
         await self._config_manager.set_monitored_interface(interface_name, True)
 
+        await self._reload_integration()
+
     async def _set_interface_monitor_disabled(
         self, _entity_description, interface_name: str
     ):
@@ -706,15 +738,21 @@ class Coordinator(DataUpdateCoordinator):
 
         await self._config_manager.set_monitored_interface(interface_name, False)
 
+        await self._reload_integration()
+
     async def _set_device_monitor_enabled(self, _entity_description, device_mac: str):
         _LOGGER.debug(f"Enable monitoring for device {device_mac}")
 
         await self._config_manager.set_monitored_device(device_mac, True)
 
+        await self._reload_integration()
+
     async def _set_device_monitor_disabled(self, _entity_description, device_mac: str):
         _LOGGER.debug(f"Disable monitoring for device {device_mac}")
 
         await self._config_manager.set_monitored_device(device_mac, False)
+
+        await self._reload_integration()
 
     async def _set_log_incoming_messages_enabled(self, _entity_description):
         _LOGGER.debug("Enable log incoming messages")

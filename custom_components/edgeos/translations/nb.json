@@ -1,17 +1,17 @@
 {
   "config": {
     "abort": {
-      "already_configured": "EdgeOS-integrasjon ({name}) er allerede konfigurert"
+      "already_configured": "Edgeos integrasjon ({name}) allerede konfigurert"
     },
     "error": {
-      "already_configured": "EdgeOS-integrasjon allerede konfigurert med navnet",
-      "auth_general_error": "Generell feil, pr\u00c3\u00b8v igjen",
-      "empty_device_data": "Kunne ikke hente enhetsdata fra EdgeOS Router",
-      "incompatible_version": "Inkompatibel versjon (p\u00c3\u00a5krevd minst v2.0)",
-      "invalid_credentials": "Ugyldig legitimasjon til EdgeOS Router",
-      "invalid_dpi_configuration": "Konfigurasjon av dyp pakkeinspeksjon (trafikkanalyse) er deaktivert, vennligst aktiver",
-      "invalid_export_configuration": "Eksport (trafikkanalyse) konfigurasjon er deaktivert, vennligst aktiver",
-      "not_found": "EdgeOS URL ikke funne"
+      "already_configured": "Edgeos integrasjon allerede konfigurert med navnet",
+      "auth_general_error": "Generell fiasko, pr\u00f8v igjen",
+      "empty_device_data": "Kunne ikke hente enhetsdata fra Edgeos -ruteren",
+      "incompatible_version": "Ikke st\u00f8ttet firmwareversjon",
+      "invalid_credentials": "Ugyldig legitimasjon til Edgeos -ruteren",
+      "invalid_dpi_configuration": "Dyp pakkeinspeksjon (trafikkanalyse) Konfigurasjon er deaktivert, vennligst aktiver",
+      "invalid_export_configuration": "Eksport (trafikkanalyse) Konfigurasjon er deaktivert, vennligst aktiver",
+      "not_found": "Edgeos url ikke funnet"
     },
     "step": {
       "user": {
@@ -20,8 +20,8 @@
           "password": "Passord",
           "username": "Brukernavn"
         },
-        "description": "Sett opp EdgeOS-ruteren din, v\u00c3\u00a6r oppmerksom p\u00c3\u00a5 at integrasjon vil kommunisere ved hjelp av HTTPS-tilkobling",
-        "title": "Sett opp EdgeOS Router"
+        "description": "Sett opp Edgeos -ruteren, merk at integrasjon vil kommunisere ved hjelp av HTTPS -tilkobling",
+        "title": "Sett opp Edgeos -ruteren"
       }
     }
   },
@@ -106,6 +106,9 @@
         "icon": "MDI: Opplastingsnettverk-utline",
         "name": "Sendte trafikk"
       },
+      "last_restart": {
+        "name": "Siste omstart"
+      },
       "ram_usage": {
         "icon": "MDI: Minne",
         "name": "RAM -bruk"
@@ -136,25 +139,25 @@
   },
   "options": {
     "error": {
-      "already_configured": "EdgeOS-integrasjon allerede konfigurert med navnet",
-      "auth_general_error": "Generell feil, vennligst pr\u00c3\u00b8v igjen",
-      "empty_device_data": "Kunne ikke hente enhetsdata fra EdgeOS Router",
-      "incompatible_version": "Inkompatibel versjon (p\u00c3\u00a5krevd minst v2.0)",
-      "invalid_credentials": "Ugyldig legitimasjon til EdgeOS Router",
-      "invalid_dpi_configuration": "Konfigurasjon av dyp pakkeinspeksjon (trafikkanalyse) er deaktivert, vennligst aktiver",
-      "invalid_export_configuration": "Eksport (trafikkanalyse) konfigurasjon er deaktivert, vennligst aktiver",
-      "not_found": "EdgeOS URL ikke funnet"
+      "already_configured": "Edgeos integrasjon allerede konfigurert med navnet",
+      "auth_general_error": "Generell fiasko, pr\u00f8v igjen",
+      "empty_device_data": "Kunne ikke hente enhetsdata fra Edgeos -ruteren",
+      "incompatible_version": "Ikke st\u00f8ttet firmwareversjon",
+      "invalid_credentials": "Ugyldig legitimasjon til Edgeos -ruteren",
+      "invalid_dpi_configuration": "Dyp pakkeinspeksjon (trafikkanalyse) Konfigurasjon er deaktivert, vennligst aktiver",
+      "invalid_export_configuration": "Eksport (trafikkanalyse) Konfigurasjon er deaktivert, vennligst aktiver",
+      "not_found": "Edgeos url ikke funnet"
     },
     "step": {
       "edge_os_additional_settings": {
         "data": {
-          "clear-credentials": "Fjern legitimasjon",
+          "clear-credentials": "Tydelig legitimasjon",
           "host": "Vert",
           "password": "Passord",
           "username": "Brukernavn"
         },
-        "description": "Sett opp dine overv\u00c3\u00a5kede enheter / grensesnitt og sporede enheter, bruk kommaadskilte verdier, for \u00c3\u00a5 fjerne eksisterende verdi, bruk avkrysningsruten.",
-        "title": "Alternativer for EdgeOS."
+        "description": "Sett opp overv\u00e5kede enheter / grensesnitt og sporede enheter, bruk komma -separerte verdier, for \u00e5 fjerne eksisterende verdi, bruk avkrysningsruten.",
+        "title": "Alternativer for Edgeos."
       }
     }
   }

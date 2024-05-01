@@ -87,7 +87,8 @@ class InterfaceProcessor(BaseProcessor):
                     interface_data = interfaces_data.get(name)
                     interface_item = self._extract_interface(name, interface_data)
 
-                self._update_interface_stats(interface_item, stats)
+                if interface_item is not None:
+                    self._update_interface_stats(interface_item, stats)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -112,22 +113,25 @@ class InterfaceProcessor(BaseProcessor):
                         message = f"Interface {name} is ignored, no entities will be created, Data: {data}"
                         self._unique_log(logging.INFO, message)
 
-                interface.description = data.get(INTERFACE_DATA_DESCRIPTION)
-                interface.duplex = data.get(INTERFACE_DATA_DUPLEX)
-                interface.speed = data.get(INTERFACE_DATA_SPEED)
-                interface.bridge_group = data.get(INTERFACE_DATA_BRIDGE_GROUP)
-                interface.address = data.get(INTERFACE_DATA_ADDRESS)
-                interface.aging = data.get(INTERFACE_DATA_AGING)
-                interface.bridged_conntrack = data.get(INTERFACE_DATA_BRIDGED_CONNTRACK)
-                interface.hello_time = data.get(INTERFACE_DATA_HELLO_TIME)
-                interface.max_age = data.get(INTERFACE_DATA_MAX_AGE)
-                interface.priority = data.get(INTERFACE_DATA_PRIORITY)
-                interface.promiscuous = data.get(INTERFACE_DATA_PROMISCUOUS)
-                interface.stp = (
-                    data.get(INTERFACE_DATA_STP, FALSE_STR).lower() == TRUE_STR
-                )
+                else:
+                    interface.description = data.get(INTERFACE_DATA_DESCRIPTION)
+                    interface.duplex = data.get(INTERFACE_DATA_DUPLEX)
+                    interface.speed = data.get(INTERFACE_DATA_SPEED)
+                    interface.bridge_group = data.get(INTERFACE_DATA_BRIDGE_GROUP)
+                    interface.address = data.get(INTERFACE_DATA_ADDRESS)
+                    interface.aging = data.get(INTERFACE_DATA_AGING)
+                    interface.bridged_conntrack = data.get(
+                        INTERFACE_DATA_BRIDGED_CONNTRACK
+                    )
+                    interface.hello_time = data.get(INTERFACE_DATA_HELLO_TIME)
+                    interface.max_age = data.get(INTERFACE_DATA_MAX_AGE)
+                    interface.priority = data.get(INTERFACE_DATA_PRIORITY)
+                    interface.promiscuous = data.get(INTERFACE_DATA_PROMISCUOUS)
+                    interface.stp = (
+                        data.get(INTERFACE_DATA_STP, FALSE_STR).lower() == TRUE_STR
+                    )
 
-                self._interfaces[interface.unique_id] = interface
+                    self._interfaces[interface.unique_id] = interface
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()

@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from .common.base_entity import IntegrationBaseEntity, async_setup_base_entry
 from .common.consts import ACTION_ENTITY_SELECT_OPTION, ATTR_ATTRIBUTES
 from .common.entity_descriptions import IntegrationSelectEntityDescription
+from .common.enums import DeviceTypes
 from .managers.coordinator import Coordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,9 +35,10 @@ class IntegrationSelectEntity(IntegrationBaseEntity, SelectEntity, ABC):
         hass: HomeAssistant,
         entity_description: IntegrationSelectEntityDescription,
         coordinator: Coordinator,
+        device_type: DeviceTypes,
         item_id: str | None,
     ):
-        super().__init__(hass, entity_description, coordinator, item_id)
+        super().__init__(hass, entity_description, coordinator, device_type, item_id)
 
         self.entity_description = entity_description
 

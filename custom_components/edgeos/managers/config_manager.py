@@ -8,6 +8,7 @@ from homeassistant.config_entries import STORAGE_VERSION, ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
 
@@ -26,6 +27,7 @@ from ..common.consts import (
     STORAGE_DATA_UPDATE_API_INTERVAL,
     STORAGE_DATA_UPDATE_ENTITIES_INTERVAL,
 )
+from ..common.entity_descriptions import IntegrationEntityDescription
 from ..models.config_data import ConfigData
 
 _LOGGER = logging.getLogger(__name__)
@@ -200,11 +202,18 @@ class ConfigManager:
         return translated_value
 
     def get_entity_name(
-        self, key: str, name: str, device_name: str, platform: Platform
+        self,
+        entity_description: IntegrationEntityDescription,
+        device_info: DeviceInfo,
     ) -> str:
-        entity_key = key
+        entity_key = entity_description.key
 
-        translated_name = self.get_translation(platform, entity_key, CONF_NAME, name)
+        device_name = device_info.get("name")
+        platform = entity_description.platform
+
+        translated_name = self.get_translation(
+            platform, entity_key, CONF_NAME, entity_description.key
+        )
 
         entity_name = (
             device_name
@@ -223,8 +232,6 @@ class ConfigManager:
         return data
 
     def get_monitored_interface(self, interface_name: str):
-        _LOGGER.debug(f"Set monitored interface {interface_name}")
-
         is_enabled = self._data.get(STORAGE_DATA_MONITORED_INTERFACES, {}).get(
             interface_name, False
         )
@@ -232,8 +239,6 @@ class ConfigManager:
         return is_enabled
 
     def get_monitored_device(self, device_mac: str):
-        _LOGGER.debug(f"Get monitored device {device_mac}")
-
         is_enabled = self._data.get(STORAGE_DATA_MONITORED_DEVICES, {}).get(
             device_mac, False
         )

@@ -69,7 +69,7 @@ class IntegrationFlowManager:
                 config_data = ConfigData()
                 config_data.update(user_input)
 
-                api = RestAPI(config_data)
+                api = RestAPI(self._hass, config_data)
 
                 await api.validate()
 

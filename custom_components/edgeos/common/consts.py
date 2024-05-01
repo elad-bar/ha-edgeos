@@ -330,11 +330,13 @@ WS_CLOSING_MESSAGE = [
 ]
 
 SPECIAL_INTERFACES = {
-    InterfaceTypes.PPPOE_PREFIX: "Internet Dail-Up",
+    InterfaceTypes.PPPOE_PREFIX: "Internet Dial-Up",
     InterfaceTypes.SWITCH_PREFIX: "Switch",
     InterfaceTypes.VIRTUAL_TUNNEL_PREFIX: "Virtual Tunnel",
     InterfaceTypes.OPEN_VPN_PREFIX: "OpenVPN",
     InterfaceTypes.BONDING_PREFIX: "VLAN",
+    InterfaceTypes.BRIDGE_PREFIX: "Bridge",
+    InterfaceTypes.ETH_PREFIX: "Ethernet",
 }
 
 IGNORED_INTERFACES = [InterfaceTypes.LOOPBACK]

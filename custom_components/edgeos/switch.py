@@ -15,6 +15,7 @@ from .common.consts import (
     ATTR_IS_ON,
 )
 from .common.entity_descriptions import IntegrationSwitchEntityDescription
+from .common.enums import DeviceTypes
 from .managers.coordinator import Coordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,9 +41,10 @@ class IntegrationSwitchEntity(IntegrationBaseEntity, SwitchEntity, ABC):
         hass: HomeAssistant,
         entity_description: IntegrationSwitchEntityDescription,
         coordinator: Coordinator,
+        device_type: DeviceTypes,
         item_id: str | None,
     ):
-        super().__init__(hass, entity_description, coordinator, item_id)
+        super().__init__(hass, entity_description, coordinator, device_type, item_id)
 
         self._attr_device_class = entity_description.device_class
 
