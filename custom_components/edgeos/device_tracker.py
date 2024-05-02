@@ -15,7 +15,7 @@ from homeassistant.const import ATTR_ICON, Platform
 from homeassistant.core import HomeAssistant
 
 from .common.base_entity import IntegrationBaseEntity, async_setup_base_entry
-from .common.consts import ATTR_ATTRIBUTES, ATTR_IS_ON
+from .common.consts import ATTR_ATTRIBUTES, ATTR_HOSTNAME, ATTR_IS_ON
 from .common.entity_descriptions import IntegrationDeviceTrackerEntityDescription
 from .common.enums import DeviceTypes
 from .managers.coordinator import Coordinator
@@ -51,11 +51,17 @@ class IntegrationCoreScannerEntity(IntegrationBaseEntity, ScannerEntity):
         self._attr_mac_address: str | None = None
         self._attr_source_type: SourceType | str | None = SourceType.ROUTER
         self._attr_is_connected: bool = False
+        self._attr_hostname: str | None = None
 
     @property
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return self._attr_ip_address
+
+    @property
+    def hostname(self) -> str | None:
+        """Return the hostname of the device."""
+        return self._attr_hostname
 
     @property
     def mac_address(self) -> str | None:
@@ -82,6 +88,7 @@ class IntegrationCoreScannerEntity(IntegrationBaseEntity, ScannerEntity):
             self._attr_is_connected = is_connected
             self._attr_ip_address = attributes.get(ATTR_IP)
             self._attr_mac_address = attributes.get(ATTR_MAC)
+            self._attr_hostname = attributes.get(ATTR_HOSTNAME)
 
             self._attr_extra_state_attributes = {
                 attribute: attributes[attribute]

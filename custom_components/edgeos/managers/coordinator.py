@@ -24,6 +24,7 @@ from ..common.consts import (
     API_RECONNECT_INTERVAL,
     ATTR_ACTIONS,
     ATTR_ATTRIBUTES,
+    ATTR_HOSTNAME,
     ATTR_IS_ON,
     ATTR_LAST_ACTIVITY,
     DOMAIN,
@@ -734,6 +735,7 @@ class Coordinator(DataUpdateCoordinator):
                 ATTR_LAST_ACTIVITY: last_activity,
                 ATTR_IP: device.ip,
                 ATTR_MAC: device.mac,
+                ATTR_HOSTNAME: device.hostname,
             },
         }
 

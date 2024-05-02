@@ -65,6 +65,7 @@ ATTR_ATTRIBUTES = "attributes"
 ATTR_ACTIONS = "actions"
 ATTR_IS_ON = "is_on"
 ATTR_LAST_ACTIVITY = "last activity"
+ATTR_HOSTNAME = "hostname"
 
 ACTION_ENTITY_TURN_ON = "turn_on"
 ACTION_ENTITY_TURN_OFF = "turn_off"

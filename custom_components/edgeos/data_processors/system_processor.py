@@ -63,8 +63,6 @@ class SystemProcessor(BaseProcessor):
     def get_device_info(self, item_id: str | None = None) -> DeviceInfo:
         name = self._system.hostname.upper()
 
-        _LOGGER.error(self._system)
-
         device_info = DeviceInfo(
             identifiers={(DEFAULT_NAME, name)},
             name=name,

@@ -34,6 +34,11 @@
         "name": "Connected"
       }
     },
+    "device_tracker": {
+      "device_tracker": {
+        "name": "Status"
+      }
+    },
     "number": {
       "consider_away_interval": {
         "name": "Consider Away Interval"
