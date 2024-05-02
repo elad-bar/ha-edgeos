@@ -853,14 +853,14 @@ class Coordinator(DataUpdateCoordinator):
 
         await self._config_manager.set_log_incoming_messages(False)
 
-        await self._reload_integration()
+        self._websockets.update_api_data(
+            self._api.data, self.config_manager.log_incoming_messages
+        )
 
     async def _set_consider_away_interval(self, _entity_description, value: int):
         _LOGGER.debug("Disable log incoming messages")
 
         await self._config_manager.set_consider_away_interval(value)
-
-        await self._reload_integration()
 
     async def _set_update_entities_interval(self, _entity_description, value: int):
         _LOGGER.debug("Disable log incoming messages")
