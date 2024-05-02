@@ -85,11 +85,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await coordinator.terminate()
 
-    await coordinator.config_manager.remove(entry.entry_id)
-
     for platform in PLATFORMS:
         await hass.config_entries.async_forward_entry_unload(entry, platform)
 
     del hass.data[DOMAIN][entry.entry_id]
 
     return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+    _LOGGER.info(f"Removing {DOMAIN} integration, Entry ID: {entry.entry_id}")
+
+    entry_id = entry.entry_id
+
+    coordinator: Coordinator = hass.data[DOMAIN][entry_id]
+
+    await coordinator.config_manager.remove(entry_id)
+
+    result = await async_unload_entry(hass, entry)
+
+    return result

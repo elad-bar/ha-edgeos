@@ -18,13 +18,6 @@ New components:
 - Update Entities Interval - Number
 - Log Incoming Messages - Switch
 
-TODO:
-
-- System device is not using HOSTNAME
-- Check ignored interfaces
-- Monitored state doesn't control which entities to open
-- Configuration update without reloading integration
-
 ## 2.0.32
 
 - Ignore interfaces that were removed

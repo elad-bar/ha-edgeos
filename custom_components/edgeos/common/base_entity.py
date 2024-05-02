@@ -54,8 +54,6 @@ async def async_setup_base_entry(
                 for entity_description in entity_descriptions
             ]
 
-            _LOGGER.debug(f"Setting up {platform} entities: {entities}")
-
             async_add_entities(entities, True)
 
         except Exception as ex:

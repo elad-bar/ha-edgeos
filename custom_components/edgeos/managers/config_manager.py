@@ -250,18 +250,27 @@ class ConfigManager:
 
         await self._load_config_from_file()
 
+        _LOGGER.info(f"loaded: {self._data}")
+        should_save = False
+
         if self._data is None:
+            should_save = True
             self._data = {}
 
         default_configuration = self._get_defaults()
+        _LOGGER.info(f"default_configuration: {default_configuration}")
 
         for key in default_configuration:
             value = default_configuration[key]
 
             if key not in self._data:
+                _LOGGER.info(f"adding {key}")
+                should_save = True
                 self._data[key] = value
 
-        await self._save()
+        if should_save:
+            _LOGGER.info("updated")
+            await self._save()
 
     @staticmethod
     def _get_defaults() -> dict:

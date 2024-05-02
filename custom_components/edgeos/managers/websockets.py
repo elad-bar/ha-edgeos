@@ -138,7 +138,7 @@ class WebSockets:
 
         return api_cookies
 
-    async def update_api_data(self, api_data: dict, can_log_messages: bool):
+    def update_api_data(self, api_data: dict, can_log_messages: bool):
         self._api_data = api_data
         self._can_log_messages = can_log_messages
 
