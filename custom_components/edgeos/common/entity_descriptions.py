@@ -85,11 +85,13 @@ ENTITY_DESCRIPTIONS: list[IntegrationEntityDescription] = [
         key=EntityKeys.CPU_USAGE,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:chip",
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.RAM_USAGE,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:memory",
     ),
     IntegrationBinarySensorEntityDescription(
         key=EntityKeys.FIRMWARE, device_class=BinarySensorDeviceClass.UPDATE
@@ -101,9 +103,12 @@ ENTITY_DESCRIPTIONS: list[IntegrationEntityDescription] = [
         key=EntityKeys.UNKNOWN_DEVICES,
         native_unit_of_measurement="Devices",
         state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:help-network-outline",
     ),
     IntegrationSwitchEntityDescription(
-        key=EntityKeys.LOG_INCOMING_MESSAGES, entity_category=EntityCategory.CONFIG
+        key=EntityKeys.LOG_INCOMING_MESSAGES,
+        entity_category=EntityCategory.CONFIG,
+        icon="mdi:math-log",
     ),
     IntegrationNumberEntityDescription(
         key=EntityKeys.CONSIDER_AWAY_INTERVAL,
@@ -136,96 +141,114 @@ ENTITY_DESCRIPTIONS: list[IntegrationEntityDescription] = [
         native_unit_of_measurement=UnitOfInterface.DROPPED,
         state_class=SensorStateClass.MEASUREMENT,
         filter=lambda is_monitored: is_monitored,
+        icon="mdi:package-variant-minus",
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_SENT_DROPPED,
         native_unit_of_measurement=UnitOfInterface.DROPPED,
         state_class=SensorStateClass.MEASUREMENT,
         filter=lambda is_monitored: is_monitored,
+        icon="mdi:package-variant-minus",
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_RECEIVED_ERRORS,
         native_unit_of_measurement=UnitOfInterface.ERRORS,
         state_class=SensorStateClass.MEASUREMENT,
         filter=lambda is_monitored: is_monitored,
+        icon="mdi:timeline-alert",
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_SENT_ERRORS,
         native_unit_of_measurement=UnitOfInterface.ERRORS,
         state_class=SensorStateClass.MEASUREMENT,
         filter=lambda is_monitored: is_monitored,
+        icon="mdi:timeline-alert",
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_RECEIVED_PACKETS,
         native_unit_of_measurement=UnitOfInterface.PACKETS,
         state_class=SensorStateClass.MEASUREMENT,
         filter=lambda is_monitored: is_monitored,
+        icon="mdi:package-up",
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_SENT_PACKETS,
         native_unit_of_measurement=UnitOfInterface.PACKETS,
         state_class=SensorStateClass.MEASUREMENT,
         filter=lambda is_monitored: is_monitored,
+        icon="mdi:package-up",
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_RECEIVED_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         filter=lambda is_monitored: is_monitored,
+        icon="mdi:download-network-outline",
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_SENT_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         filter=lambda is_monitored: is_monitored,
+        icon="mdi:upload-network-outline",
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_RECEIVED_TRAFFIC,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         filter=lambda is_monitored: is_monitored,
+        icon="mdi:download-network-outline",
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_SENT_TRAFFIC,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         filter=lambda is_monitored: is_monitored,
+        icon="mdi:upload-network-outline",
     ),
     IntegrationSwitchEntityDescription(
-        key=EntityKeys.INTERFACE_MONITORED, entity_category=EntityCategory.CONFIG
+        key=EntityKeys.INTERFACE_MONITORED,
+        entity_category=EntityCategory.CONFIG,
+        icon="mdi:monitor-eye",
     ),
     IntegrationSwitchEntityDescription(
-        key=EntityKeys.INTERFACE_STATUS,
+        key=EntityKeys.INTERFACE_STATUS, icon="mdi:monitor-eye"
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.DEVICE_RECEIVED_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         filter=lambda is_monitored: is_monitored,
+        icon="mdi:download-network-outline",
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.DEVICE_SENT_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         filter=lambda is_monitored: is_monitored,
+        icon="mdi:upload-network-outline",
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.DEVICE_RECEIVED_TRAFFIC,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         filter=lambda is_monitored: is_monitored,
+        icon="mdi:download-network-outline",
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.DEVICE_SENT_TRAFFIC,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         filter=lambda is_monitored: is_monitored,
+        icon="mdi:upload-network-outline",
     ),
     IntegrationDeviceTrackerEntityDescription(
         key=EntityKeys.DEVICE_TRACKER, filter=lambda is_monitored: is_monitored
     ),
     IntegrationSwitchEntityDescription(
-        key=EntityKeys.DEVICE_MONITORED, entity_category=EntityCategory.CONFIG
+        key=EntityKeys.DEVICE_MONITORED,
+        entity_category=EntityCategory.CONFIG,
+        icon="mdi:monitor-eye",
     ),
 ]
 

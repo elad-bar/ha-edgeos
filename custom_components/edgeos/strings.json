@@ -74,90 +74,69 @@
         "name": "Last Restart"
       },
       "cpu_usage": {
-        "name": "CPU Usage",
-        "icon": "mdi:chip"
+        "name": "CPU Usage"
       },
       "ram_usage": {
-        "name": "RAM Usage",
-        "icon": "mdi:memory"
+        "name": "RAM Usage"
       },
       "unknown_devices": {
-        "name": "Unknown Devices",
-        "icon": "mdi:help-network-outline"
+        "name": "Unknown Devices"
       },
       "interface_received_dropped": {
-        "name": "Received Dropped",
-        "icon": "mdi:package-variant-minus"
+        "name": "Received Dropped"
       },
       "interface_sent_dropped": {
-        "name": "Sent Dropped",
-        "icon": "mdi:package-variant-minus"
+        "name": "Sent Dropped"
       },
       "interface_received_errors": {
-        "name": "Received Errors",
-        "icon": "mdi:timeline-alert"
+        "name": "Received Errors"
       },
       "interface_sent_errors": {
-        "name": "Sent Errors",
-        "icon": "mdi:timeline-alert"
+        "name": "Sent Errors"
       },
       "interface_received_packets": {
-        "name": "Received Packets",
-        "icon": "mdi:package-up"
+        "name": "Received Packets"
       },
       "interface_sent_packets": {
-        "name": "Sent Packets",
-        "icon": "mdi:package-up"
+        "name": "Sent Packets"
       },
       "interface_received_rate": {
-        "name": "Received Rate",
-        "icon": "mdi:download-network-outline"
+        "name": "Received Rate"
       },
       "interface_sent_rate": {
-        "name": "Sent Rate",
-        "icon": "mdi:upload-network-outline"
+        "name": "Sent Rate"
       },
       "interface_received_traffic": {
-        "name": "Received Traffic",
-        "icon": "mdi:download-network-outline"
+        "name": "Received Traffic"
       },
       "interface_sent_traffic": {
-        "name": "Sent Traffic",
-        "icon": "mdi:upload-network-outline"
+        "name": "Sent Traffic"
       },
       "device_received_rate": {
-        "name": "Received Rate",
-        "icon": "mdi:download-network-outline"
+        "name": "Received Rate"
       },
       "device_sent_rate": {
-        "name": "Sent Rate",
-        "icon": "mdi:upload-network-outline"
+        "name": "Sent Rate"
       },
       "device_received_traffic": {
-        "name": "Received Traffic",
-        "icon": "mdi:download-network-outline"
+        "name": "Received Traffic"
       },
       "device_sent_traffic": {
-        "name": "device_sent_traffic",
-        "icon": "mdi:upload-network-outline"
+        "name": "Sent Traffic"
       }
     },
     "switch": {
       "log_incoming_messages": {
-        "name": "Log Incoming Messages",
-        "icon": "mdi:math-log"
+        "name": "Log Incoming Messages"
       },
       "interface_monitored": {
-        "name": "Monitored",
-        "icon": "mdi:monitor-eye"
+        "name": "Monitored"
       },
       "interface_status": {
-        "name": "Status",
-        "icon": "mdi:eye-settings"
+        "name": "Status"
       },
       "device_monitored": {
-        "name": "Monitored",
-        "icon": "mdi:monitor-eye"
+        "name": "Monitored"
       }
     }
   }
