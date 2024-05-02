@@ -1,7 +1,7 @@
 """
-This component provides support for Shinobi Video.
+This component provides support for EdgeOS based devices.
 For more details about this component, please refer to the documentation at
-https://github.com/elad-bar/ha-shinobi
+https://github.com/elad-bar/ha-EdgeOS
 """
 import logging
 import sys
@@ -25,7 +25,7 @@ async def async_setup(_hass, _config):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up a Shinobi Video component."""
+    """Set up a EdgeOS component."""
     initialized = False
 
     try:

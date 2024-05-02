@@ -1,6 +1,5 @@
 """
 Support for Ubiquiti EdgeOS routers.
-HEAVILY based on the AsusWRT component
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.edgeos/
 """

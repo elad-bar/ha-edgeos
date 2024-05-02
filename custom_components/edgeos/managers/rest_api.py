@@ -146,7 +146,7 @@ class RestAPI:
         pass
 
     async def initialize(self):
-        _LOGGER.info("Initializing Shinobi Server API")
+        _LOGGER.info("Initializing EdgeOS API")
 
         self._set_status(ConnectivityStatus.Connecting)
 
