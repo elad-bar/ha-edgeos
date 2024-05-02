@@ -168,6 +168,12 @@ class InterfaceProcessor(BaseProcessor):
 
                 self._interfaces[interface.unique_id] = interface
 
+                if not interface.is_supported:
+                    self._unique_log(
+                        logging.INFO,
+                        f"Ignoring interface {interface.name}, Interface type: {interface_type}",
+                    )
+
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno

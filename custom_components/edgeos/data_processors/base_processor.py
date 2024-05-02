@@ -53,7 +53,7 @@ class BaseProcessor:
         if message not in self._unique_messages:
             self._unique_messages.append(message)
 
-            _LOGGER.log(log_level, self._unique_messages)
+            _LOGGER.log(log_level, message)
 
     def get_device_info(self, item_id: str | None = None) -> DeviceInfo:
         device_name = self._get_device_info_name(item_id)

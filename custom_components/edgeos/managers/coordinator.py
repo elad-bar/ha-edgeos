@@ -116,7 +116,6 @@ class Coordinator(DataUpdateCoordinator):
         self._last_heartbeat = 0
 
         self._can_load_components: bool = False
-        self._unique_messages: list[str] = []
 
         self._system_processor = SystemProcessor(config_manager.config_data)
         self._device_processor = DeviceProcessor(config_manager.config_data)
@@ -251,7 +250,6 @@ class Coordinator(DataUpdateCoordinator):
         key = f"{DeviceTypes.INTERFACE} {interface_name}"
 
         if key not in self._discovered_objects:
-            _LOGGER.info(f"_on_interface_discovered: {key}")
             self._discovered_objects.append(key)
 
             async_dispatcher_send(
@@ -297,9 +295,6 @@ class Coordinator(DataUpdateCoordinator):
 
                 if not device.is_leased:
                     self._on_device_discovered(device_mac)
-
-            for interface_name in interfaces:
-                self._on_interface_discovered(interface_name)
 
     async def _async_update_data(self):
         """Fetch parameters from API endpoint.
