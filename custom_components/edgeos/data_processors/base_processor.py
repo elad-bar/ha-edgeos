@@ -36,7 +36,9 @@ class BaseProcessor:
         self._process_ws_data()
 
     def _process_api_data(self):
-        system_details = self._api_data.get(API_DATA_SYSTEM, {})
+        _LOGGER.info(f"Processing API data, Device type: {self.processor_type}")
+        system_section = self._api_data.get(API_DATA_SYSTEM, {})
+        system_details = system_section.get(API_DATA_SYSTEM, {})
 
         self._hostname = system_details.get(SYSTEM_DATA_HOSTNAME)
 

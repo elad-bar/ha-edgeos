@@ -33,10 +33,10 @@ from ..common.consts import (
     INTERFACE_DATA_RECEIVED,
     INTERFACE_DATA_SENT,
     SIGNAL_API_STATUS,
+    SIGNAL_DATA_CHANGED,
     SIGNAL_DEVICE_ADDED,
     SIGNAL_INTERFACE_ADDED,
     SIGNAL_SYSTEM_ADDED,
-    SIGNAL_SYSTEM_DISCOVERED,
     SIGNAL_WS_STATUS,
     SYSTEM_INFO_DATA_FW_LATEST_URL,
     SYSTEM_INFO_DATA_FW_LATEST_VERSION,
@@ -93,7 +93,7 @@ class Coordinator(DataUpdateCoordinator):
         signal_handlers = {
             SIGNAL_API_STATUS: self._on_api_status_changed,
             SIGNAL_WS_STATUS: self._on_ws_status_changed,
-            SIGNAL_SYSTEM_DISCOVERED: self._on_system_discovered,
+            SIGNAL_DATA_CHANGED: self._on_data_changed,
         }
 
         _LOGGER.debug(f"Registering signals for {signal_handlers.keys()}")
@@ -219,16 +219,18 @@ class Coordinator(DataUpdateCoordinator):
             await self._api.initialize()
 
     @callback
-    def _on_system_discovered(self, entry_id: str) -> None:
-        if entry_id == self.config_manager.entry_id:
-            key = DeviceTypes.SYSTEM
+    def _on_system_discovered(self) -> None:
+        key = DeviceTypes.SYSTEM
 
-            if key not in self._discovered_objects:
-                self._discovered_objects.append(key)
+        if key not in self._discovered_objects:
+            self._discovered_objects.append(key)
 
-                async_dispatcher_send(
-                    self.hass, SIGNAL_SYSTEM_ADDED, entry_id, DeviceTypes.SYSTEM
-                )
+            async_dispatcher_send(
+                self.hass,
+                SIGNAL_SYSTEM_ADDED,
+                self._config_manager.entry_id,
+                DeviceTypes.SYSTEM,
+            )
 
     def _on_device_discovered(self, device_mac: str) -> None:
         key = f"{DeviceTypes.DEVICE} {device_mac}"
@@ -258,6 +260,33 @@ class Coordinator(DataUpdateCoordinator):
                 interface_name,
             )
 
+    async def _on_data_changed(self, entry_id: str):
+        if entry_id != self._config_manager.entry_id:
+            return
+
+        api_connected = self._api.status == ConnectivityStatus.Connected
+        aws_client_connected = self._websockets.status == ConnectivityStatus.Connected
+
+        is_ready = api_connected and aws_client_connected
+
+        if is_ready:
+            for processor_type in self._processors:
+                processor = self._processors[processor_type]
+                processor.update(self._api.data, self._websockets.data)
+
+            devices = self._device_processor.get_devices()
+            print(devices)
+            interfaces = self._interface_processor.get_interfaces()
+            print(interfaces)
+
+            self._on_system_discovered()
+
+            for device_mac in devices:
+                self._on_device_discovered(device_mac)
+
+            for interface_name in interfaces:
+                self._on_interface_discovered(interface_name)
+
     async def _async_update_data(self):
         """Fetch parameters from API endpoint.
 
@@ -286,22 +315,6 @@ class Coordinator(DataUpdateCoordinator):
                     await self._api.update()
 
                     self._last_update = now
-
-                for processor_type in self._processors:
-                    processor = self._processors[processor_type]
-                    processor.update(self._api.data, self._websockets.data)
-
-                if self._api.data is not None and self._websockets.data is not None:
-                    devices = self._device_processor.get_devices()
-                    print(devices)
-                    interfaces = self._interface_processor.get_interfaces()
-                    print(interfaces)
-
-                    for device_mac in devices:
-                        self._on_device_discovered(device_mac)
-
-                    for interface_name in interfaces:
-                        self._on_interface_discovered(interface_name)
 
             return {}
 
@@ -369,7 +382,7 @@ class Coordinator(DataUpdateCoordinator):
             handler = self._data_mapping.get(entity_description.key)
 
             if handler is None:
-                _LOGGER.error(
+                _LOGGER.warning(
                     f"Handler was not found for {entity_description.key}, Entity Description: {entity_description}"
                 )
 
@@ -443,7 +456,10 @@ class Coordinator(DataUpdateCoordinator):
     def _get_last_restart_data(self, _entity_description) -> dict | None:
         data = self._system_processor.get()
 
-        result = {ATTR_STATE: data.last_reset.timestamp()}
+        tz = datetime.now().astimezone().tzinfo
+        state = datetime.fromtimestamp(data.last_reset.timestamp(), tz=tz)
+
+        result = {ATTR_STATE: state}
 
         return result
 

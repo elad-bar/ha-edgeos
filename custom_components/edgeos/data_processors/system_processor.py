@@ -74,12 +74,13 @@ class SystemProcessor(BaseProcessor):
         super()._process_api_data()
 
         try:
-            system_details = self._api_data.get(API_DATA_SYSTEM, {})
+            system_section = self._api_data.get(API_DATA_SYSTEM, {})
             system_info = self._api_data.get(API_DATA_SYS_INFO, {})
+            system_details = system_section.get(API_DATA_SYSTEM, {})
 
             system_data = EdgeOSSystemData() if self._system is None else self._system
 
-            system_data.hostname = system_details.get(SYSTEM_DATA_HOSTNAME)
+            system_data.hostname = system_section.get(SYSTEM_DATA_HOSTNAME)
             system_data.timezone = system_details.get(SYSTEM_DATA_TIME_ZONE)
 
             ntp: dict = system_details.get(SYSTEM_DATA_NTP, {})

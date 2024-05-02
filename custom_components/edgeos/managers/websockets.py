@@ -32,6 +32,7 @@ from ..common.consts import (
     INTERFACE_DATA_MULTICAST,
     INTERFACES_MAIN_MAP,
     INTERFACES_STATS,
+    SIGNAL_DATA_CHANGED,
     SIGNAL_WS_STATUS,
     STRING_COLON,
     STRING_COMMA,
@@ -155,8 +156,6 @@ class WebSockets:
                 timeout=WS_TIMEOUT,
                 compress=WS_COMPRESSION_DEFLATE,
             ) as ws:
-                self._set_status(ConnectivityStatus.Connected)
-
                 self._ws = ws
                 await self._listen()
 
@@ -240,6 +239,8 @@ class WebSockets:
         subscription_data = self._get_subscription_data()
         await self._ws.send_str(subscription_data)
 
+        self._set_status(ConnectivityStatus.Connected)
+
         async for msg in self._ws:
             is_ha_running = self._hass.is_running
             is_connected = self.status == ConnectivityStatus.Connected
@@ -295,6 +296,8 @@ class WebSockets:
                     payload_json = json.loads(message_json)
 
                     await self._message_handler(payload_json)
+
+                    self._async_dispatcher_send(SIGNAL_DATA_CHANGED)
             else:
                 self._increase_counter(WS_IGNORED_MESSAGES)
 

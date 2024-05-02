@@ -47,7 +47,7 @@ from ..common.consts import (
     RESPONSE_OUTPUT,
     RESPONSE_SUCCESS_KEY,
     SIGNAL_API_STATUS,
-    SIGNAL_SYSTEM_DISCOVERED,
+    SIGNAL_DATA_CHANGED,
     STRING_DASH,
     STRING_UNDERSCORE,
     SYSTEM_DATA_DISABLE,
@@ -280,9 +280,7 @@ class RestAPI:
         return result
 
     async def update(self):
-        _LOGGER.debug(
-            f"Updating data from Shinobi Video Server ({self._config_data.hostname})"
-        )
+        _LOGGER.debug(f"Updating data from device ({self._config_data.hostname})")
 
         if self.status == ConnectivityStatus.Failed:
             await self.initialize()
@@ -295,10 +293,7 @@ class RestAPI:
 
             self.data[API_DATA_LAST_UPDATE] = datetime.now().isoformat()
 
-            if not self._dispatched_server:
-                self._dispatched_server = True
-
-                self._async_dispatcher_send(SIGNAL_SYSTEM_DISCOVERED)
+            self._async_dispatcher_send(SIGNAL_DATA_CHANGED)
 
     async def login(self):
         try:

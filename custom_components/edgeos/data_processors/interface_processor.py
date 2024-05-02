@@ -110,8 +110,10 @@ class InterfaceProcessor(BaseProcessor):
                     interface.set_type(interface_type)
 
                     if interface.handler == InterfaceHandlers.IGNORED:
-                        message = f"Interface {name} is ignored, no entities will be created, Data: {data}"
-                        self._unique_log(logging.INFO, message)
+                        self._unique_log(
+                            logging.INFO,
+                            f"Interface {name} is ignored, no entities will be created",
+                        )
 
                 else:
                     interface.description = data.get(INTERFACE_DATA_DESCRIPTION)
