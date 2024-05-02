@@ -7,7 +7,7 @@ from typing import Callable
 from homeassistant.components.device_tracker import ATTR_IP, ATTR_MAC
 from homeassistant.components.homeassistant import SERVICE_RELOAD_CONFIG_ENTRY
 from homeassistant.const import ATTR_STATE
-from homeassistant.core import Event, callback
+from homeassistant.core import Event
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -25,13 +25,10 @@ from ..common.consts import (
     ATTR_ATTRIBUTES,
     ATTR_IS_ON,
     ATTR_LAST_ACTIVITY,
-    DHCP_SERVER_LEASED,
     DOMAIN,
     ENTITY_CONFIG_ENTRY_ID,
     HA_NAME,
     HEARTBEAT_INTERVAL,
-    INTERFACE_DATA_RECEIVED,
-    INTERFACE_DATA_SENT,
     SIGNAL_API_STATUS,
     SIGNAL_DATA_CHANGED,
     SIGNAL_DEVICE_ADDED,
@@ -106,10 +103,8 @@ class Coordinator(DataUpdateCoordinator):
         config_data = config_manager.config_data
         entry_id = config_manager.entry_id
 
-        _LOGGER.debug("Initializing API")
         self._api = RestAPI(self.hass, config_data, entry_id)
 
-        _LOGGER.debug("Initializing WS")
         self._websockets = WebSockets(self.hass, config_data, entry_id)
 
         self._config_manager = config_manager
@@ -122,7 +117,6 @@ class Coordinator(DataUpdateCoordinator):
         self._can_load_components: bool = False
         self._unique_messages: list[str] = []
 
-        _LOGGER.debug("Setting up data processors")
         self._system_processor = SystemProcessor(config_manager.config_data)
         self._device_processor = DeviceProcessor(config_manager.config_data)
         self._interface_processor = InterfaceProcessor(config_manager.config_data)
@@ -178,8 +172,15 @@ class Coordinator(DataUpdateCoordinator):
 
         data = {
             "config": config_data,
-            "api": self._api.data,
-            "websockets": self._websockets.data,
+            "data": {
+                "api": self._api.data,
+                "websockets": self._websockets.data,
+            },
+            "processors": {
+                DeviceTypes.DEVICE: self._device_processor.get_all(),
+                DeviceTypes.INTERFACE: self._interface_processor.get_all(),
+                DeviceTypes.SYSTEM: self._system_processor.get().to_dict(),
+            },
         }
 
         return data
@@ -218,7 +219,6 @@ class Coordinator(DataUpdateCoordinator):
 
             await self._api.initialize()
 
-    @callback
     def _on_system_discovered(self) -> None:
         key = DeviceTypes.SYSTEM
 
@@ -265,24 +265,36 @@ class Coordinator(DataUpdateCoordinator):
             return
 
         api_connected = self._api.status == ConnectivityStatus.Connected
-        aws_client_connected = self._websockets.status == ConnectivityStatus.Connected
+        ws_client_connected = self._websockets.status == ConnectivityStatus.Connected
 
-        is_ready = api_connected and aws_client_connected
+        is_ready = api_connected and ws_client_connected
 
         if is_ready:
             for processor_type in self._processors:
                 processor = self._processors[processor_type]
                 processor.update(self._api.data, self._websockets.data)
 
-            devices = self._device_processor.get_devices()
-            print(devices)
-            interfaces = self._interface_processor.get_interfaces()
-            print(interfaces)
+            system = self._system_processor.get()
+
+            if system.hostname is None:
+                return
 
             self._on_system_discovered()
 
+            devices = self._device_processor.get_devices()
+            interfaces = self._interface_processor.get_interfaces()
+
+            for interface_name in interfaces:
+                interface = self._interface_processor.get_data(interface_name)
+
+                if interface.is_supported:
+                    self._on_interface_discovered(interface_name)
+
             for device_mac in devices:
-                self._on_device_discovered(device_mac)
+                device = self._device_processor.get_data(device_mac)
+
+                if not device.is_leased:
+                    self._on_device_discovered(device_mac)
 
             for interface_name in interfaces:
                 self._on_interface_discovered(interface_name)
@@ -297,11 +309,11 @@ class Coordinator(DataUpdateCoordinator):
             _LOGGER.debug("Updating data")
 
             api_connected = self._api.status == ConnectivityStatus.Connected
-            aws_client_connected = (
+            ws_client_connected = (
                 self._websockets.status == ConnectivityStatus.Connected
             )
 
-            is_ready = api_connected and aws_client_connected
+            is_ready = api_connected and ws_client_connected
 
             if is_ready:
                 now = datetime.now().timestamp()
@@ -315,6 +327,8 @@ class Coordinator(DataUpdateCoordinator):
                     await self._api.update()
 
                     self._last_update = now
+
+                    await self._on_data_changed(self.config_manager.entry_id)
 
             return {}
 
@@ -369,6 +383,12 @@ class Coordinator(DataUpdateCoordinator):
 
         device_info = processor.get_device_info(item_id)
 
+        if device_type not in [DeviceTypes.DEVICE, DeviceTypes.INTERFACE]:
+            _LOGGER.error(device_type)
+            _LOGGER.error(item_id)
+            _LOGGER.error(device_info)
+            _LOGGER.error(self._system_processor.get().to_dict())
+
         return device_info
 
     def get_data(
@@ -402,6 +422,34 @@ class Coordinator(DataUpdateCoordinator):
             )
 
         return result
+
+    def get_device_identifiers(
+        self, device_type: DeviceTypes, item_id: str | None = None
+    ) -> set[tuple[str, str]]:
+        if device_type == DeviceTypes.DEVICE:
+            device_info = self._device_processor.get_device_info(item_id)
+
+        elif device_type == DeviceTypes.INTERFACE:
+            device_info = self._interface_processor.get_device_info(item_id)
+
+        else:
+            device_info = self._system_processor.get_device_info()
+
+        identifiers = device_info.get("identifiers")
+
+        return identifiers
+
+    def get_device_data(self, model: str, identifiers: set[tuple[str, str]]):
+        if model == str(DeviceTypes.DEVICE):
+            device_data = self._device_processor.get_device(identifiers)
+
+        elif model == str(DeviceTypes.INTERFACE):
+            device_data = self._interface_processor.get_interface(identifiers)
+
+        else:
+            device_data = self._system_processor.get().to_dict()
+
+        return device_data
 
     def get_device_action(
         self,
@@ -468,9 +516,7 @@ class Coordinator(DataUpdateCoordinator):
 
         result = {
             ATTR_STATE: len(leased_devices.keys()),
-            ATTR_ATTRIBUTES: {
-                DHCP_SERVER_LEASED: leased_devices,
-            },
+            ATTR_ATTRIBUTES: leased_devices,
         }
 
         return result
@@ -634,16 +680,11 @@ class Coordinator(DataUpdateCoordinator):
         self, _entity_description, interface_name: str
     ) -> dict | None:
         interface = self._interface_processor.get_data(interface_name)
-        interface_attributes = interface.to_dict()
-        attributes = {
-            attribute: interface_attributes[attribute]
-            for attribute in interface_attributes
-            if attribute not in [INTERFACE_DATA_RECEIVED, INTERFACE_DATA_SENT]
-        }
+        interface_attributes = interface.get_attributes()
 
         result = {
             ATTR_IS_ON: interface.up,
-            ATTR_ATTRIBUTES: attributes,
+            ATTR_ATTRIBUTES: interface_attributes,
             ATTR_ACTIONS: {
                 ACTION_ENTITY_TURN_ON: self._set_interface_enabled,
                 ACTION_ENTITY_TURN_OFF: self._set_interface_disabled,
@@ -711,9 +752,12 @@ class Coordinator(DataUpdateCoordinator):
         self, _entity_description, device_mac: str
     ) -> dict | None:
         state = self.config_manager.get_monitored_device(device_mac)
+        device = self._device_processor.get_data(device_mac)
+        device_attributes = device.get_attributes()
 
         result = {
             ATTR_IS_ON: state,
+            ATTR_ATTRIBUTES: device_attributes,
             ATTR_ACTIONS: {
                 ACTION_ENTITY_TURN_ON: self._set_device_monitor_enabled,
                 ACTION_ENTITY_TURN_OFF: self._set_device_monitor_disabled,

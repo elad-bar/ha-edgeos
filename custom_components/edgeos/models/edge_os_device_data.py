@@ -86,6 +86,17 @@ class EdgeOSDeviceData:
 
         return obj
 
+    def get_attributes(self):
+        device_attributes = self.to_dict()
+
+        attributes = {
+            attribute: device_attributes[attribute]
+            for attribute in device_attributes
+            if attribute not in [DEVICE_DATA_RECEIVED, DEVICE_DATA_SENT]
+        }
+
+        return attributes
+
     def __repr__(self):
         to_string = f"{self.to_dict()}"
 

@@ -5,20 +5,13 @@ import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .component.helpers import get_ha
-from .component.helpers.const import (
-    API_DATA_INTERFACES,
-    API_DATA_SYSTEM,
-    DEVICE_LIST,
-    MESSAGES_COUNTER_SECTION,
-)
-from .component.managers.home_assistant import EdgeOSHomeAssistantManager
-from .configuration.helpers.const import DOMAIN
+from .common.consts import DEVICE_DATA_MAC, DOMAIN, INTERFACE_DATA_NAME
+from .common.enums import DeviceTypes
+from .managers.coordinator import Coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,107 +22,90 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     _LOGGER.debug("Starting diagnostic tool")
 
-    manager = get_ha(hass, entry.entry_id)
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    return _async_get_diagnostics(hass, manager, entry)
+    return _async_get_diagnostics(hass, coordinator, entry)
 
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
-    manager = get_ha(hass, entry.entry_id)
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    return _async_get_diagnostics(hass, manager, entry, device)
+    return _async_get_diagnostics(hass, coordinator, entry, device)
 
 
 @callback
 def _async_get_diagnostics(
     hass: HomeAssistant,
-    manager: EdgeOSHomeAssistantManager,
+    coordinator: Coordinator,
     entry: ConfigEntry,
     device: DeviceEntry | None = None,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     _LOGGER.debug("Getting diagnostic information")
 
-    data = manager.config_data.to_dict()
-    configuration = manager.config_data.to_dict()
-    additional_data = manager.get_debug_data()
+    debug_data = coordinator.get_debug_data()
 
-    system = additional_data[API_DATA_SYSTEM]
-    device_list = additional_data[DEVICE_LIST]
-    interfaces = additional_data[API_DATA_INTERFACES]
-    data[MESSAGES_COUNTER_SECTION] = additional_data[MESSAGES_COUNTER_SECTION]
-
-    if CONF_PASSWORD in configuration:
-        configuration.pop(CONF_PASSWORD)
-
-    for configuration_key in configuration:
-        data[configuration_key] = configuration[configuration_key]
-
-    data["disabled_by"] = entry.disabled_by
-    data["disabled_polling"] = entry.pref_disable_polling
-
-    if CONF_PASSWORD in data:
-        data.pop(CONF_PASSWORD)
+    data = {
+        "disabled_by": entry.disabled_by,
+        "disabled_polling": entry.pref_disable_polling,
+    }
 
     if device:
-        device_name = next(iter(device.identifiers))[1]
+        data["config"] = debug_data["config"]
+        data["data"] = debug_data["data"]
+        data["processors"] = debug_data["processors"]
 
-        if device_name == manager.system_name:
-            data |= _async_device_as_dict(hass, system.to_dict(), manager.system_name)
+        device_data = coordinator.get_device_data(device.model, device.identifiers)
 
-        elif " Device " in device_name:
-            for network_device_id in device_list:
-                network_device = device_list.get(network_device_id)
+        data |= _async_device_as_dict(
+            hass,
+            device.identifiers,
+            device_data,
+        )
 
-                if manager.get_device_name(network_device) == device_name:
-                    _LOGGER.debug(
-                        f"Getting diagnostic information for device #{network_device.unique_id}"
-                    )
-
-                    data |= _async_device_as_dict(
-                        hass, network_device.to_dict(), network_device.unique_id
-                    )
-
-                    break
-
-        elif " Interface " in device_name:
-            for unique_id in interfaces:
-                interface = interfaces.get(unique_id)
-
-                if manager.get_interface_name(interface) == device_name:
-                    _LOGGER.debug(
-                        f"Getting diagnostic information for interface #{interface.unique_id}"
-                    )
-
-                    data |= _async_device_as_dict(
-                        hass, interface.to_dict(), interface.unique_id
-                    )
-
-                    break
     else:
         _LOGGER.debug("Getting diagnostic information for all devices")
+
+        data = {
+            "config": debug_data["config"],
+            "data": debug_data["data"],
+            "processors": debug_data["processors"],
+        }
+
+        processor_data = debug_data["processors"]
+        system_data = processor_data[DeviceTypes.SYSTEM]
+        device_data = processor_data[DeviceTypes.DEVICE]
+        interface_data = processor_data[DeviceTypes.INTERFACE]
 
         data.update(
             devices=[
                 _async_device_as_dict(
                     hass,
-                    device_list[device_id].to_dict(),
-                    device_list[device_id].unique_id,
+                    coordinator.get_device_identifiers(
+                        DeviceTypes.DEVICE, item.get(DEVICE_DATA_MAC)
+                    ),
+                    item,
                 )
-                for device_id in device_list
+                for item in device_data
             ],
             interfaces=[
                 _async_device_as_dict(
                     hass,
-                    interfaces[interface_id].to_dict(),
-                    interfaces[interface_id].unique_id,
+                    coordinator.get_device_identifiers(
+                        DeviceTypes.INTERFACE, item.get(INTERFACE_DATA_NAME)
+                    ),
+                    item,
                 )
-                for interface_id in interfaces
+                for item in interface_data
             ],
-            system=_async_device_as_dict(hass, system.to_dict(), manager.system_name),
+            system=_async_device_as_dict(
+                hass,
+                coordinator.get_device_identifiers(DeviceTypes.SYSTEM),
+                system_data,
+            ),
         )
 
     return data
@@ -137,19 +113,22 @@ def _async_get_diagnostics(
 
 @callback
 def _async_device_as_dict(
-    hass: HomeAssistant, data: dict, unique_id: str
+    hass: HomeAssistant, identifiers, additional_data: dict
 ) -> dict[str, Any]:
-    """Represent a Device as a dictionary."""
+    """Represent a Shinobi monitor as a dictionary."""
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
-    ha_device = device_registry.async_get_device(identifiers={(DOMAIN, unique_id)})
+
+    ha_device = device_registry.async_get_device(identifiers=identifiers)
+    data = {}
 
     if ha_device:
-        data["home_assistant"] = {
+        data["device"] = {
             "name": ha_device.name,
             "name_by_user": ha_device.name_by_user,
             "disabled": ha_device.disabled,
             "disabled_by": ha_device.disabled_by,
+            "data": additional_data,
             "entities": [],
         }
 
@@ -168,7 +147,7 @@ def _async_device_as_dict(
                 # The context doesn't provide useful information in this case.
                 state_dict.pop("context", None)
 
-            data["home_assistant"]["entities"].append(
+            data["device"]["entities"].append(
                 {
                     "disabled": entity_entry.disabled,
                     "disabled_by": entity_entry.disabled_by,

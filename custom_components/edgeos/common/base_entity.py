@@ -160,8 +160,6 @@ class IntegrationBaseEntity(CoordinatorEntity):
             )
 
             if self._data != new_data:
-                _LOGGER.debug(f"Data for {self.unique_id}: {new_data}")
-
                 self.update_component(new_data)
 
                 self._data = new_data

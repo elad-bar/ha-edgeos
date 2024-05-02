@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
-from .enums import InterfaceTypes
+from .enums import DynamicInterfaceTypes
 
 ENTITY_CONFIG_ENTRY_ID = "entry_id"
 
@@ -139,6 +139,7 @@ API_DATA_DHCP_STATS = "dhcp_stats"
 API_DATA_SYS_INFO = "sys_info"
 API_DATA_DHCP_LEASES = "dhcp-leases"
 
+DATA_SYSTEM_SYSTEM = "system"
 DATA_SYSTEM_SERVICE = "service"
 DATA_SYSTEM_SERVICE_DHCP_SERVER = "dhcp-server"
 
@@ -250,7 +251,7 @@ INTERFACE_DATA_STATS = "stats"
 INTERFACE_DATA_UP = "up"
 INTERFACE_DATA_LINK_UP = "l1up"
 INTERFACE_DATA_MAC = "mac"
-INTERFACE_DATA_HANDLER = "handler"
+INTERFACE_DATA_IS_SUPPORTED = "is_supported"
 
 DEVICE_DATA_NAME = "hostname"
 DEVICE_DATA_DOMAIN = "domain"
@@ -331,17 +332,13 @@ WS_CLOSING_MESSAGE = [
     aiohttp.WSMsgType.CLOSING,
 ]
 
-SPECIAL_INTERFACES = {
-    InterfaceTypes.PPPOE_PREFIX: "Internet Dial-Up",
-    InterfaceTypes.SWITCH_PREFIX: "Switch",
-    InterfaceTypes.VIRTUAL_TUNNEL_PREFIX: "Virtual Tunnel",
-    InterfaceTypes.OPEN_VPN_PREFIX: "OpenVPN",
-    InterfaceTypes.BONDING_PREFIX: "VLAN",
-    InterfaceTypes.BRIDGE_PREFIX: "Bridge",
-    InterfaceTypes.ETH_PREFIX: "Ethernet",
-}
-
-IGNORED_INTERFACES = [InterfaceTypes.LOOPBACK]
+INTERFACE_DYNAMIC_SUPPORTED = [
+    DynamicInterfaceTypes.PPPOE,
+    DynamicInterfaceTypes.SWITCH,
+    DynamicInterfaceTypes.VIRTUAL_TUNNEL,
+    DynamicInterfaceTypes.OPEN_VPN,
+    DynamicInterfaceTypes.BONDING,
+]
 
 RECEIVED_RATE_PREFIX = "Received Rate"
 RECEIVED_TRAFFIC_PREFIX = "Received Traffic"

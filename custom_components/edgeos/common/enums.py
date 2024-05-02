@@ -1,4 +1,4 @@
-from enum import Enum, StrEnum
+from enum import StrEnum
 
 
 class DeviceTypes(StrEnum):
@@ -11,17 +11,18 @@ class InterfaceTypes(StrEnum):
     BRIDGE = "bridge"
     LOOPBACK = "loopback"
     ETHERNET = "ethernet"
+    DYNAMIC = "dynamic"
 
-    PPPOE_PREFIX = "pppoe"
-    SWITCH_PREFIX = "switch"
-    VIRTUAL_TUNNEL_PREFIX = "vtun"
-    OPEN_VPN_PREFIX = "openvpn"
-    BONDING_PREFIX = "bond"
-    INTERMEDIATE_QUEUEING_DEVICE_PREFIX = "imq"
-    NETWORK_PROGRAMMING_INTERFACE_PREFIX = "npi"
-    LOOPBACK_PREFIX = "lo"
-    BRIDGE_PREFIX = "br"
-    ETH_PREFIX = "eth"
+
+class DynamicInterfaceTypes(StrEnum):
+    PPPOE = "pppoe"
+    SWITCH = "switch"
+    VIRTUAL_TUNNEL = "vtun"
+    OPEN_VPN = "openvpn"
+    BONDING = "bond"
+    INTERMEDIATE_QUEUEING_DEVICE = "imq"
+    NETWORK_PROGRAMMING_INTERFACE = "npi"
+    LOOPBACK = "lo"
 
 
 class EntityKeys(StrEnum):
@@ -55,12 +56,6 @@ class EntityKeys(StrEnum):
     DEVICE_SENT_TRAFFIC = "device_sent_traffic"
     DEVICE_TRACKER = "device_tracker"
     DEVICE_MONITORED = "device_monitored"
-
-
-class InterfaceHandlers(Enum):
-    REGULAR = 0
-    SPECIAL = 1
-    IGNORED = 99
 
 
 class UnitOfInterface(StrEnum):

@@ -8,6 +8,7 @@ from ..common.consts import (
     API_DATA_DHCP_STATS,
     API_DATA_SYS_INFO,
     API_DATA_SYSTEM,
+    DATA_SYSTEM_SYSTEM,
     DEFAULT_NAME,
     DHCP_SERVER_LEASED,
     DHCP_SERVER_STATS,
@@ -60,9 +61,13 @@ class SystemProcessor(BaseProcessor):
         return self._system
 
     def get_device_info(self, item_id: str | None = None) -> DeviceInfo:
+        name = self._system.hostname.upper()
+
+        _LOGGER.error(self._system)
+
         device_info = DeviceInfo(
-            identifiers={(DEFAULT_NAME, self._system.hostname)},
-            name=self._system.hostname,
+            identifiers={(DEFAULT_NAME, name)},
+            name=name,
             model=self._system.product,
             manufacturer=DEFAULT_NAME,
             hw_version=self._system.fw_version,
@@ -75,12 +80,13 @@ class SystemProcessor(BaseProcessor):
 
         try:
             system_section = self._api_data.get(API_DATA_SYSTEM, {})
-            system_info = self._api_data.get(API_DATA_SYS_INFO, {})
-            system_details = system_section.get(API_DATA_SYSTEM, {})
+            system_info_section = self._api_data.get(API_DATA_SYS_INFO, {})
+
+            system_details = system_section.get(DATA_SYSTEM_SYSTEM, {})
 
             system_data = EdgeOSSystemData() if self._system is None else self._system
 
-            system_data.hostname = system_section.get(SYSTEM_DATA_HOSTNAME)
+            system_data.hostname = system_details.get(SYSTEM_DATA_HOSTNAME)
             system_data.timezone = system_details.get(SYSTEM_DATA_TIME_ZONE)
 
             ntp: dict = system_details.get(SYSTEM_DATA_NTP, {})
@@ -110,8 +116,8 @@ class SystemProcessor(BaseProcessor):
             system_data.deep_packet_inspection = dpi
             system_data.traffic_analysis_export = traffic_analysis_export
 
-            sw_latest = system_info.get(SYSTEM_INFO_DATA_SW_VER)
-            fw_latest = system_info.get(SYSTEM_INFO_DATA_FW_LATEST, {})
+            sw_latest = system_info_section.get(SYSTEM_INFO_DATA_SW_VER)
+            fw_latest = system_info_section.get(SYSTEM_INFO_DATA_FW_LATEST, {})
 
             fw_latest_state = fw_latest.get(SYSTEM_INFO_DATA_FW_LATEST_STATE)
             fw_latest_version = fw_latest.get(SYSTEM_INFO_DATA_FW_LATEST_VERSION)
@@ -197,9 +203,9 @@ class SystemProcessor(BaseProcessor):
     def _update_leased_devices(self):
         try:
             unknown_devices = 0
-            data_leases_stats = self._api_data.get(API_DATA_DHCP_STATS, {})
+            data_leases_stats_section = self._api_data.get(API_DATA_DHCP_STATS, {})
 
-            subnets = data_leases_stats.get(DHCP_SERVER_STATS, {})
+            subnets = data_leases_stats_section.get(DHCP_SERVER_STATS, {})
 
             for subnet in subnets:
                 subnet_data = subnets.get(subnet, {})

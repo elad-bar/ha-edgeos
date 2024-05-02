@@ -3,7 +3,12 @@ import logging
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.util import slugify
 
-from ..common.consts import API_DATA_SYSTEM, DEFAULT_NAME, SYSTEM_DATA_HOSTNAME
+from ..common.consts import (
+    API_DATA_SYSTEM,
+    DATA_SYSTEM_SYSTEM,
+    DEFAULT_NAME,
+    SYSTEM_DATA_HOSTNAME,
+)
 from ..common.enums import DeviceTypes
 from ..models.config_data import ConfigData
 
@@ -36,11 +41,10 @@ class BaseProcessor:
         self._process_ws_data()
 
     def _process_api_data(self):
-        _LOGGER.info(f"Processing API data, Device type: {self.processor_type}")
         system_section = self._api_data.get(API_DATA_SYSTEM, {})
-        system_details = system_section.get(API_DATA_SYSTEM, {})
+        system_details = system_section.get(DATA_SYSTEM_SYSTEM, {})
 
-        self._hostname = system_details.get(SYSTEM_DATA_HOSTNAME)
+        self._hostname = system_details.get(SYSTEM_DATA_HOSTNAME).upper()
 
     def _process_ws_data(self):
         pass
@@ -61,7 +65,7 @@ class BaseProcessor:
             name=device_name,
             model=self.processor_type,
             manufacturer=DEFAULT_NAME,
-            # via_device=(DEFAULT_NAME, self._hostname)
+            via_device=(DEFAULT_NAME, self._hostname),
         )
 
         return device_info

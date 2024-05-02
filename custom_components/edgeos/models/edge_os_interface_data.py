@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 from ..common.consts import (
-    IGNORED_INTERFACES,
     INTERFACE_DATA_ADDRESS,
     INTERFACE_DATA_AGING,
     INTERFACE_DATA_BRIDGE_GROUP,
     INTERFACE_DATA_BRIDGED_CONNTRACK,
     INTERFACE_DATA_DESCRIPTION,
     INTERFACE_DATA_DUPLEX,
-    INTERFACE_DATA_HANDLER,
     INTERFACE_DATA_HELLO_TIME,
+    INTERFACE_DATA_IS_SUPPORTED,
     INTERFACE_DATA_MAX_AGE,
     INTERFACE_DATA_MULTICAST,
     INTERFACE_DATA_NAME,
@@ -20,6 +19,7 @@ from ..common.consts import (
     INTERFACE_DATA_SPEED,
     INTERFACE_DATA_STP,
     INTERFACE_DATA_TYPE,
+    INTERFACE_DYNAMIC_SUPPORTED,
     RECEIVED_DROPPED_PREFIX,
     RECEIVED_ERRORS_PREFIX,
     RECEIVED_PACKETS_PREFIX,
@@ -30,17 +30,16 @@ from ..common.consts import (
     SENT_PACKETS_PREFIX,
     SENT_RATE_PREFIX,
     SENT_TRAFFIC_PREFIX,
-    SPECIAL_INTERFACES,
     TRAFFIC_DATA_DIRECTION_RECEIVED,
     TRAFFIC_DATA_DIRECTION_SENT,
 )
-from ..common.enums import InterfaceHandlers
+from ..common.enums import DynamicInterfaceTypes, InterfaceTypes
 from .edge_os_traffic_data import EdgeOSTrafficData
 
 
 class EdgeOSInterfaceData:
     name: str
-    interface_type: str | None
+    interface_type: InterfaceTypes | None
     duplex: str | None
     speed: str | None
     description: str | None
@@ -59,11 +58,11 @@ class EdgeOSInterfaceData:
     up: bool | None
     l1up: bool | None
     mac: str | None
-    handler: InterfaceHandlers
+    is_supported: bool
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, interface_type: InterfaceTypes):
         self.name = name
-        self.interface_type = None
+        self.interface_type = interface_type
         self.description = None
         self.duplex = None
         self.speed = None
@@ -83,7 +82,7 @@ class EdgeOSInterfaceData:
         self.up = None
         self.l1up = None
         self.mac = None
-        self.handler = InterfaceHandlers.IGNORED
+        self.is_supported = self._get_is_supported()
 
     @property
     def unique_id(self) -> str:
@@ -94,7 +93,7 @@ class EdgeOSInterfaceData:
             INTERFACE_DATA_NAME: self.name,
             INTERFACE_DATA_DESCRIPTION: self.description,
             INTERFACE_DATA_TYPE: self.interface_type,
-            INTERFACE_DATA_HANDLER: self.handler.name,
+            INTERFACE_DATA_IS_SUPPORTED: self.is_supported,
             INTERFACE_DATA_DUPLEX: self.duplex,
             INTERFACE_DATA_SPEED: self.speed,
             INTERFACE_DATA_BRIDGE_GROUP: self.bridge_group,
@@ -113,23 +112,21 @@ class EdgeOSInterfaceData:
 
         return obj
 
-    def set_type(self, interface_type: str | None):
-        handler = InterfaceHandlers.IGNORED
+    def _get_is_supported(self):
+        is_supported = self.interface_type in [
+            InterfaceTypes.ETHERNET,
+            InterfaceTypes.BRIDGE,
+        ]
 
-        if interface_type is None:
-            for special_interface in SPECIAL_INTERFACES:
-                if self.name.startswith(special_interface):
-                    handler = InterfaceHandlers.SPECIAL
-                    interface_type = SPECIAL_INTERFACES.get(special_interface)
+        if self.interface_type == InterfaceTypes.DYNAMIC:
+            prefixes = list(DynamicInterfaceTypes)
 
+            for prefix in prefixes:
+                if self.name.startswith(str(prefix)):
+                    is_supported = prefix in INTERFACE_DYNAMIC_SUPPORTED
                     break
 
-        else:
-            if interface_type not in IGNORED_INTERFACES:
-                handler = InterfaceHandlers.REGULAR
-
-        self.handler = handler
-        self.interface_type = interface_type
+        return is_supported
 
     def get_stats(self):
         data = {
@@ -146,6 +143,23 @@ class EdgeOSInterfaceData:
         }
 
         return data
+
+    def get_attributes(self):
+        interface_attributes = self.to_dict()
+
+        attributes = {
+            attribute: interface_attributes[attribute]
+            for attribute in interface_attributes
+            if attribute
+            not in [
+                INTERFACE_DATA_RECEIVED,
+                INTERFACE_DATA_SENT,
+                INTERFACE_DATA_IS_SUPPORTED,
+            ]
+            and interface_attributes[attribute] is not None
+        }
+
+        return attributes
 
     def __repr__(self):
         to_string = f"{self.to_dict()}"

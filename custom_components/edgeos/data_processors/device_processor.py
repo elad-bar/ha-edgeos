@@ -1,10 +1,14 @@
 import logging
 import sys
 
+from homeassistant.helpers.device_registry import DeviceInfo
+
 from ..common.consts import (
     API_DATA_DHCP_LEASES,
+    API_DATA_SYSTEM,
     DATA_SYSTEM_SERVICE,
     DATA_SYSTEM_SERVICE_DHCP_SERVER,
+    DEFAULT_NAME,
     DEVICE_DATA_MAC,
     DHCP_SERVER_IP_ADDRESS,
     DHCP_SERVER_LEASES,
@@ -41,10 +45,43 @@ class DeviceProcessor(BaseProcessor):
     def get_devices(self) -> list[str]:
         return list(self._devices.keys())
 
-    def get_data(self, interface_name: str) -> EdgeOSDeviceData:
-        interface_data = self._devices.get(interface_name)
+    def get_all(self) -> list[dict]:
+        items = [self._devices[item_key].to_dict() for item_key in self._devices]
+
+        return items
+
+    def get_device(self, identifiers: set[tuple[str, str]]) -> dict | None:
+        device: dict | None = None
+        device_identifier = list(identifiers)[0][1]
+
+        for device_mac in self._devices:
+            unique_id = self._get_device_info_unique_id(device_mac)
+
+            if unique_id == device_identifier:
+                device = self._devices[device_mac].to_dict()
+
+        return device
+
+    def get_data(self, device_mac: str) -> EdgeOSDeviceData:
+        interface_data = self._devices.get(device_mac)
 
         return interface_data
+
+    def get_device_info(self, item_id: str | None = None) -> DeviceInfo:
+        device = self.get_data(item_id)
+        device_name = self._get_device_info_name(device.hostname)
+
+        unique_id = self._get_device_info_unique_id(device.hostname)
+
+        device_info = DeviceInfo(
+            identifiers={(DEFAULT_NAME, unique_id)},
+            name=device_name,
+            model=self.processor_type,
+            manufacturer=DEFAULT_NAME,
+            via_device=(DEFAULT_NAME, self._hostname),
+        )
+
+        return device_info
 
     def get_leased_devices(self) -> dict:
         return self._leased_devices
@@ -53,7 +90,9 @@ class DeviceProcessor(BaseProcessor):
         super()._process_api_data()
 
         try:
-            service = self._api_data.get(DATA_SYSTEM_SERVICE, {})
+            system_section = self._api_data.get(API_DATA_SYSTEM, {})
+            service = system_section.get(DATA_SYSTEM_SERVICE, {})
+
             dhcp_server = service.get(DATA_SYSTEM_SERVICE_DHCP_SERVER, {})
             shared_network_names = dhcp_server.get(DHCP_SERVER_SHARED_NETWORK_NAME, {})
 

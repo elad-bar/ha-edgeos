@@ -20,8 +20,7 @@ New components:
 
 TODO:
 
-- Data processors not retrieving HOSTNAME
-- Devices are not loaded
+- System device is not using HOSTNAME
 - Check ignored interfaces
 - Monitored state doesn't control which entities to open
 - Configuration update without reloading integration
