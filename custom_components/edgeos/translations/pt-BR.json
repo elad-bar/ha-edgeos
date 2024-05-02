@@ -47,92 +47,71 @@
     },
     "sensor": {
       "cpu_usage": {
-        "icon": "MDI: Chip",
         "name": "Utiliza\u00e7\u00e3o do CPU"
       },
       "device_received_rate": {
-        "icon": "MDI: Download-Network-Outline",
         "name": "Taxa recebeu"
       },
       "device_received_traffic": {
-        "icon": "MDI: Download-Network-Outline",
         "name": "Tr\u00e1fego recebeu"
       },
       "device_sent_rate": {
-        "icon": "MDI: Upload-Network-Outline",
         "name": "Taxa enviada"
       },
       "device_sent_traffic": {
-        "icon": "MDI: Upload-Network-Outline",
-        "name": "Device_Sent_traffic"
+        "name": "Enviou tr\u00e1fego"
       },
       "interface_received_dropped": {
-        "icon": "MDI: Pacote-Variante-Minus",
         "name": "Recebido caiu"
       },
       "interface_received_errors": {
-        "icon": "MDI: Linha do tempo Alert",
         "name": "Erros recebidos"
       },
       "interface_received_packets": {
-        "icon": "MD: Pachkage-up",
         "name": "Pacotes recebidos"
       },
       "interface_received_rate": {
-        "icon": "MDI: Download-Network-Outline",
         "name": "Taxa recebeu"
       },
       "interface_received_traffic": {
-        "icon": "MDI: Download-Network-Outline",
         "name": "Tr\u00e1fego recebeu"
       },
       "interface_sent_dropped": {
-        "icon": "MDI: Pacote-Variante-Minus",
         "name": "Enviado caiu"
       },
       "interface_sent_errors": {
-        "icon": "MDI: Linha do tempo Alert",
         "name": "Erros enviados"
       },
       "interface_sent_packets": {
-        "icon": "MD: Pachkage-up",
         "name": "Pacotes enviados"
       },
       "interface_sent_rate": {
-        "icon": "MDI: Upload-Network-Outline",
         "name": "Taxa enviada"
       },
       "interface_sent_traffic": {
-        "icon": "MDI: Upload-Network-Outline",
         "name": "Enviou tr\u00e1fego"
       },
       "last_restart": {
         "name": "\u00daltima reinicializa\u00e7\u00e3o"
       },
       "ram_usage": {
-        "icon": "MDI: Mem\u00f3ria",
         "name": "Uso da RAM"
       },
       "unknown_devices": {
-        "icon": "MDI: Help-Network-Outline",
         "name": "Dispositivos desconhecidos"
       }
     },
     "switch": {
       "device_monitored": {
-        "icon": "MDI: Monitor-Eye",
         "name": "Monitorou"
       },
       "interface_monitored": {
-        "icon": "MDI: Monitor-Eye",
         "name": "Monitorou"
       },
       "interface_status": {
-        "icon": "MDI: Olhos",
         "name": "Status"
       },
       "log_incoming_messages": {
-        "icon": "MDI: Math-Log",
         "name": "Registrar mensagens recebidas"
       }
     }

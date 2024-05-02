@@ -47,92 +47,71 @@
     },
     "sensor": {
       "cpu_usage": {
-        "icon": "MDI: Chip",
         "name": "CPU bruk"
       },
       "device_received_rate": {
-        "icon": "MDI: Nedlastingsnettverk",
         "name": "Mottatt rente"
       },
       "device_received_traffic": {
-        "icon": "MDI: Nedlastingsnettverk",
         "name": "Mottatt trafikk"
       },
       "device_sent_rate": {
-        "icon": "MDI: Opplastingsnettverk-utline",
         "name": "Sendt rente"
       },
       "device_sent_traffic": {
-        "icon": "MDI: Opplastingsnettverk-utline",
-        "name": "enhet_sent_traffic"
+        "name": "Sendte trafikk"
       },
       "interface_received_dropped": {
-        "icon": "MDI: Package-Variant-Minus",
         "name": "Mottatt droppet"
       },
       "interface_received_errors": {
-        "icon": "MDI: Tidslinje-alert",
         "name": "Mottok feil"
       },
       "interface_received_packets": {
-        "icon": "MD: Pachkage-up",
         "name": "Mottatte pakker"
       },
       "interface_received_rate": {
-        "icon": "MDI: Nedlastingsnettverk",
         "name": "Mottatt rente"
       },
       "interface_received_traffic": {
-        "icon": "MDI: Nedlastingsnettverk",
         "name": "Mottatt trafikk"
       },
       "interface_sent_dropped": {
-        "icon": "MDI: Package-Variant-Minus",
         "name": "Sendt droppet"
       },
       "interface_sent_errors": {
-        "icon": "MDI: Tidslinje-alert",
         "name": "Sendte feil"
       },
       "interface_sent_packets": {
-        "icon": "MD: Pachkage-up",
         "name": "Sendte pakker"
       },
       "interface_sent_rate": {
-        "icon": "MDI: Opplastingsnettverk-utline",
         "name": "Sendt rente"
       },
       "interface_sent_traffic": {
-        "icon": "MDI: Opplastingsnettverk-utline",
         "name": "Sendte trafikk"
       },
       "last_restart": {
         "name": "Siste omstart"
       },
       "ram_usage": {
-        "icon": "MDI: Minne",
         "name": "RAM -bruk"
       },
       "unknown_devices": {
-        "icon": "MDI: Hjelp-nettverk-UTLINE",
         "name": "Ukjente enheter"
       }
     },
     "switch": {
       "device_monitored": {
-        "icon": "MDI: Monitor-Eye",
         "name": "Overv\u00e5ket"
       },
       "interface_monitored": {
-        "icon": "MDI: Monitor-Eye",
         "name": "Overv\u00e5ket"
       },
       "interface_status": {
-        "icon": "MDI: \u00d8yetetting",
         "name": "Status"
       },
       "log_incoming_messages": {
-        "icon": "MDI: Math-log",
         "name": "Logg innkommende meldinger"
       }
     }

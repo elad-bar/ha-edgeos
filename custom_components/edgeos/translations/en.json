@@ -47,92 +47,71 @@
     },
     "sensor": {
       "cpu_usage": {
-        "icon": "mdi:chip",
         "name": "CPU Usage"
       },
       "device_received_rate": {
-        "icon": "mdi:download-network-outline",
         "name": "Received Rate"
       },
       "device_received_traffic": {
-        "icon": "mdi:download-network-outline",
         "name": "Received Traffic"
       },
       "device_sent_rate": {
-        "icon": "mdi:upload-network-outline",
         "name": "Sent Rate"
       },
       "device_sent_traffic": {
-        "icon": "mdi:upload-network-outline",
-        "name": "device_sent_traffic"
+        "name": "Sent Traffic"
       },
       "interface_received_dropped": {
-        "icon": "mdi:package-variant-minus",
         "name": "Received Dropped"
       },
       "interface_received_errors": {
-        "icon": "mdi:timeline-alert",
         "name": "Received Errors"
       },
       "interface_received_packets": {
-        "icon": "mdi:package-up",
         "name": "Received Packets"
       },
       "interface_received_rate": {
-        "icon": "mdi:download-network-outline",
         "name": "Received Rate"
       },
       "interface_received_traffic": {
-        "icon": "mdi:download-network-outline",
         "name": "Received Traffic"
       },
       "interface_sent_dropped": {
-        "icon": "mdi:package-variant-minus",
         "name": "Sent Dropped"
       },
       "interface_sent_errors": {
-        "icon": "mdi:timeline-alert",
         "name": "Sent Errors"
       },
       "interface_sent_packets": {
-        "icon": "mdi:package-up",
         "name": "Sent Packets"
       },
       "interface_sent_rate": {
-        "icon": "mdi:upload-network-outline",
         "name": "Sent Rate"
       },
       "interface_sent_traffic": {
-        "icon": "mdi:upload-network-outline",
         "name": "Sent Traffic"
       },
       "last_restart": {
         "name": "Last Restart"
       },
       "ram_usage": {
-        "icon": "mdi:memory",
         "name": "RAM Usage"
       },
       "unknown_devices": {
-        "icon": "mdi:help-network-outline",
         "name": "Unknown Devices"
       }
     },
     "switch": {
       "device_monitored": {
-        "icon": "mdi:monitor-eye",
         "name": "Monitored"
       },
       "interface_monitored": {
-        "icon": "mdi:monitor-eye",
         "name": "Monitored"
       },
       "interface_status": {
-        "icon": "mdi:eye-settings",
         "name": "Status"
       },
       "log_incoming_messages": {
-        "icon": "mdi:math-log",
         "name": "Log Incoming Messages"
       }
     }
