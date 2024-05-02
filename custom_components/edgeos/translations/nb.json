@@ -1,52 +1,148 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Sett opp EdgeOS Router",
-        "description": "Sett opp EdgeOS-ruteren din, vær oppmerksom på at integrasjon vil kommunisere ved hjelp av HTTPS-tilkobling",
-        "data": {
-          "host": "Vert",
-          "username": "Brukernavn",
-          "password": "Passord"
-        }
-      }
-    },
     "abort": {
-      "already_configured": "EdgeOS-integrasjon ({name}) er allerede konfigurert"
+      "already_configured": "Edgeos integrasjon ({name}) allerede konfigurert"
     },
     "error": {
-      "invalid_credentials": "Ugyldig legitimasjon til EdgeOS Router",
-      "auth_general_error": "Generell feil, prøv igjen",
-      "not_found": "EdgeOS URL ikke funne",
-      "invalid_export_configuration": "Eksport (trafikkanalyse) konfigurasjon er deaktivert, vennligst aktiver",
-      "invalid_dpi_configuration": "Konfigurasjon av dyp pakkeinspeksjon (trafikkanalyse) er deaktivert, vennligst aktiver",
-      "empty_device_data": "Kunne ikke hente enhetsdata fra EdgeOS Router",
-      "already_configured": "EdgeOS-integrasjon allerede konfigurert med navnet",
-      "incompatible_version": "Inkompatibel versjon (påkrevd minst v2.0)"
+      "already_configured": "Edgeos integrasjon allerede konfigurert med navnet",
+      "auth_general_error": "Generell fiasko, pr\u00f8v igjen",
+      "empty_device_data": "Kunne ikke hente enhetsdata fra Edgeos -ruteren",
+      "incompatible_version": "Ikke st\u00f8ttet firmwareversjon",
+      "invalid_credentials": "Ugyldig legitimasjon til Edgeos -ruteren",
+      "invalid_dpi_configuration": "Dyp pakkeinspeksjon (trafikkanalyse) Konfigurasjon er deaktivert, vennligst aktiver",
+      "invalid_export_configuration": "Eksport (trafikkanalyse) Konfigurasjon er deaktivert, vennligst aktiver",
+      "not_found": "Edgeos url ikke funnet"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "Vert",
+          "password": "Passord",
+          "username": "Brukernavn"
+        },
+        "description": "Sett opp Edgeos -ruteren, merk at integrasjon vil kommunisere ved hjelp av HTTPS -tilkobling",
+        "title": "Sett opp Edgeos -ruteren"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "firmware": {
+        "name": "Firmwareoppgradering"
+      },
+      "interface_connected": {
+        "name": "Tilkoblet"
+      }
+    },
+    "device_tracker": {
+      "device_tracker": {
+        "name": "Status"
+      }
+    },
+    "number": {
+      "consider_away_interval": {
+        "name": "Vurder bort intervall"
+      },
+      "update_api_interval": {
+        "name": "Oppdater API -intervall"
+      },
+      "update_entities_interval": {
+        "name": "Oppdater enheter intervall"
+      }
+    },
+    "sensor": {
+      "cpu_usage": {
+        "name": "CPU bruk"
+      },
+      "device_received_rate": {
+        "name": "Mottatt rente"
+      },
+      "device_received_traffic": {
+        "name": "Mottatt trafikk"
+      },
+      "device_sent_rate": {
+        "name": "Sendt rente"
+      },
+      "device_sent_traffic": {
+        "name": "Sendte trafikk"
+      },
+      "interface_received_dropped": {
+        "name": "Mottatt droppet"
+      },
+      "interface_received_errors": {
+        "name": "Mottok feil"
+      },
+      "interface_received_packets": {
+        "name": "Mottatte pakker"
+      },
+      "interface_received_rate": {
+        "name": "Mottatt rente"
+      },
+      "interface_received_traffic": {
+        "name": "Mottatt trafikk"
+      },
+      "interface_sent_dropped": {
+        "name": "Sendt droppet"
+      },
+      "interface_sent_errors": {
+        "name": "Sendte feil"
+      },
+      "interface_sent_packets": {
+        "name": "Sendte pakker"
+      },
+      "interface_sent_rate": {
+        "name": "Sendt rente"
+      },
+      "interface_sent_traffic": {
+        "name": "Sendte trafikk"
+      },
+      "last_restart": {
+        "name": "Siste omstart"
+      },
+      "ram_usage": {
+        "name": "RAM -bruk"
+      },
+      "unknown_devices": {
+        "name": "Ukjente enheter"
+      }
+    },
+    "switch": {
+      "device_monitored": {
+        "name": "Overv\u00e5ket"
+      },
+      "interface_monitored": {
+        "name": "Overv\u00e5ket"
+      },
+      "interface_status": {
+        "name": "Status"
+      },
+      "log_incoming_messages": {
+        "name": "Logg innkommende meldinger"
+      }
     }
   },
   "options": {
+    "error": {
+      "already_configured": "Edgeos integrasjon allerede konfigurert med navnet",
+      "auth_general_error": "Generell fiasko, pr\u00f8v igjen",
+      "empty_device_data": "Kunne ikke hente enhetsdata fra Edgeos -ruteren",
+      "incompatible_version": "Ikke st\u00f8ttet firmwareversjon",
+      "invalid_credentials": "Ugyldig legitimasjon til Edgeos -ruteren",
+      "invalid_dpi_configuration": "Dyp pakkeinspeksjon (trafikkanalyse) Konfigurasjon er deaktivert, vennligst aktiver",
+      "invalid_export_configuration": "Eksport (trafikkanalyse) Konfigurasjon er deaktivert, vennligst aktiver",
+      "not_found": "Edgeos url ikke funnet"
+    },
     "step": {
       "edge_os_additional_settings": {
-        "title": "Alternativer for EdgeOS.",
-        "description": "Sett opp dine overvåkede enheter / grensesnitt og sporede enheter, bruk kommaadskilte verdier, for å fjerne eksisterende verdi, bruk avkrysningsruten.",
         "data": {
+          "clear-credentials": "Tydelig legitimasjon",
           "host": "Vert",
-          "username": "Brukernavn",
           "password": "Passord",
-          "clear-credentials": "Fjern legitimasjon"
-        }
+          "username": "Brukernavn"
+        },
+        "description": "Sett opp overv\u00e5kede enheter / grensesnitt og sporede enheter, bruk komma -separerte verdier, for \u00e5 fjerne eksisterende verdi, bruk avkrysningsruten.",
+        "title": "Alternativer for Edgeos."
       }
-    },
-    "error": {
-      "invalid_credentials": "Ugyldig legitimasjon til EdgeOS Router",
-      "auth_general_error": "Generell feil, vennligst prøv igjen",
-      "not_found": "EdgeOS URL ikke funnet",
-      "invalid_export_configuration": "Eksport (trafikkanalyse) konfigurasjon er deaktivert, vennligst aktiver",
-      "invalid_dpi_configuration": "Konfigurasjon av dyp pakkeinspeksjon (trafikkanalyse) er deaktivert, vennligst aktiver",
-      "empty_device_data": "Kunne ikke hente enhetsdata fra EdgeOS Router",
-      "already_configured": "EdgeOS-integrasjon allerede konfigurert med navnet",
-      "incompatible_version": "Inkompatibel versjon (påkrevd minst v2.0)"
     }
   }
 }
