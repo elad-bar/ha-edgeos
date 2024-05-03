@@ -11,6 +11,7 @@ class InterfaceTypes(StrEnum):
     BRIDGE = "bridge"
     LOOPBACK = "loopback"
     ETHERNET = "ethernet"
+    SWITCH = "switch"
     DYNAMIC = "dynamic"
 
 
@@ -35,6 +36,7 @@ class EntityKeys(StrEnum):
     CONSIDER_AWAY_INTERVAL = "consider_away_interval"
     UPDATE_ENTITIES_INTERVAL = "update_entities_interval"
     UPDATE_API_INTERVAL = "update_api_interval"
+    UNIT = "unit"
 
     INTERFACE_CONNECTED = "interface_connected"
     INTERFACE_RECEIVED_DROPPED = "interface_received_dropped"
@@ -58,7 +60,8 @@ class EntityKeys(StrEnum):
     DEVICE_MONITORED = "device_monitored"
 
 
-class UnitOfInterface(StrEnum):
+class UnitOfEdgeOS(StrEnum):
     ERRORS = "Errors"
     DROPPED = "Dropped"
     PACKETS = "Packets"
+    DEVICES = "Devices"

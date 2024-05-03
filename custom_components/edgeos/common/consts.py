@@ -6,10 +6,16 @@ from datetime import timedelta
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    UnitOfDataRate,
+    UnitOfInformation,
+)
 import homeassistant.helpers.config_validation as cv
 
-from .enums import DynamicInterfaceTypes
+from .enums import DeviceTypes, DynamicInterfaceTypes, UnitOfEdgeOS
 
 ENTITY_CONFIG_ENTRY_ID = "entry_id"
 
@@ -70,7 +76,7 @@ ATTR_HOSTNAME = "hostname"
 ACTION_ENTITY_TURN_ON = "turn_on"
 ACTION_ENTITY_TURN_OFF = "turn_off"
 ACTION_ENTITY_SET_NATIVE_VALUE = "set_native_value"
-ACTION_ENTITY_SELECT_OPTION = "select"
+ACTION_ENTITY_SELECT_OPTION = "select_option"
 
 CONF_DEVICE_ID = "device_id"
 
@@ -102,6 +108,7 @@ STORAGE_DATA_LOG_INCOMING_MESSAGES = "log-incoming-messages"
 STORAGE_DATA_CONSIDER_AWAY_INTERVAL = "consider-away-interval"
 STORAGE_DATA_UPDATE_ENTITIES_INTERVAL = "update-entities-interval"
 STORAGE_DATA_UPDATE_API_INTERVAL = "update-api-interval"
+STORAGE_DATA_UNIT = "unit"
 
 API_DATA_LAST_UPDATE = "lastUpdate"
 
@@ -390,3 +397,31 @@ STATS_UNITS = {
     SENT_ERRORS_PREFIX: TRAFFIC_DATA_ERRORS,
     SENT_PACKETS_PREFIX: TRAFFIC_DATA_PACKETS,
 }
+
+ATTR_UNIT_INFORMATION = "information"
+ATTR_UNIT_RATE = "rate"
+ATTR_UNIT_CONVERTOR = "unit_convertor"
+
+UNIT_MAPPING = {
+    str(UnitOfInformation.BYTES).lower(): {
+        ATTR_UNIT_INFORMATION: UnitOfInformation.BYTES,
+        ATTR_UNIT_RATE: UnitOfDataRate.BYTES_PER_SECOND,
+        ATTR_UNIT_CONVERTOR: lambda v: v,
+    },
+    str(UnitOfInformation.KILOBYTES).lower(): {
+        ATTR_UNIT_INFORMATION: UnitOfInformation.KILOBYTES,
+        ATTR_UNIT_RATE: UnitOfDataRate.KILOBYTES_PER_SECOND,
+        ATTR_UNIT_CONVERTOR: lambda v: v / 1024,
+    },
+    str(UnitOfInformation.MEGABYTES).lower(): {
+        ATTR_UNIT_INFORMATION: UnitOfInformation.MEGABYTES,
+        ATTR_UNIT_RATE: UnitOfDataRate.MEGABYTES_PER_SECOND,
+        ATTR_UNIT_CONVERTOR: lambda v: v / 1024 / 1024,
+    },
+}
+
+DEFAULT_UNIT = str(UnitOfInformation.BYTES)
+
+ALL_EDGE_OS_UNITS = [str(unit) for unit in list(UnitOfEdgeOS)]
+
+SUPPORTED_REMOVED_ENTITIES_DEVICE_TYPES = [DeviceTypes.DEVICE, DeviceTypes.INTERFACE]

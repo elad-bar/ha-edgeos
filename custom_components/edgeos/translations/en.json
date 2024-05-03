@@ -50,6 +50,16 @@
         "name": "Update Entities Interval"
       }
     },
+    "select": {
+      "unit": {
+        "name": "Unit",
+        "options": {
+          "b": "Byte",
+          "kb": "Kilo Byte",
+          "mb": "Mega Byte"
+        }
+      }
+    },
     "sensor": {
       "cpu_usage": {
         "name": "CPU Usage"

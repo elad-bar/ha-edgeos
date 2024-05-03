@@ -74,6 +74,16 @@
         "name": "Update API Interval"
       }
     },
+    "select": {
+      "unit": {
+        "name": "Unit",
+        "options": {
+          "b": "Byte",
+          "kb": "Kilo Byte",
+          "mb": "Mega Byte"
+        }
+      }
+    },
     "sensor": {
       "last_restart": {
         "name": "Last Restart"

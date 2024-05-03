@@ -50,6 +50,16 @@
         "name": "Oppdater enheter intervall"
       }
     },
+    "select": {
+      "unit": {
+        "name": "Enhet",
+        "options": {
+          "b": "Byte",
+          "kb": "Kilo byttedyr",
+          "mb": "Mega byte"
+        }
+      }
+    },
     "sensor": {
       "cpu_usage": {
         "name": "CPU bruk"

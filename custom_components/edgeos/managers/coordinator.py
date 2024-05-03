@@ -1,4 +1,5 @@
 from asyncio import sleep
+from copy import copy
 from datetime import datetime, timedelta
 import logging
 import sys
@@ -18,6 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from ..common.connectivity_status import ConnectivityStatus
 from ..common.consts import (
+    ACTION_ENTITY_SELECT_OPTION,
     ACTION_ENTITY_SET_NATIVE_VALUE,
     ACTION_ENTITY_TURN_OFF,
     ACTION_ENTITY_TURN_ON,
@@ -37,15 +39,12 @@ from ..common.consts import (
     SIGNAL_INTERFACE_ADDED,
     SIGNAL_SYSTEM_ADDED,
     SIGNAL_WS_STATUS,
+    SUPPORTED_REMOVED_ENTITIES_DEVICE_TYPES,
     SYSTEM_INFO_DATA_FW_LATEST_URL,
     SYSTEM_INFO_DATA_FW_LATEST_VERSION,
     WS_RECONNECT_INTERVAL,
 )
-from ..common.entity_descriptions import (
-    ENTITY_DEVICE_MAPPING,
-    PLATFORMS,
-    IntegrationEntityDescription,
-)
+from ..common.entity_descriptions import PLATFORMS, IntegrationEntityDescription
 from ..common.enums import DeviceTypes, EntityKeys
 from ..data_processors.base_processor import BaseProcessor
 from ..data_processors.device_processor import DeviceProcessor
@@ -346,6 +345,7 @@ class Coordinator(DataUpdateCoordinator):
             EntityKeys.CONSIDER_AWAY_INTERVAL: self._get_consider_away_interval_data,
             EntityKeys.UPDATE_ENTITIES_INTERVAL: self._get_update_entities_interval_data,
             EntityKeys.UPDATE_API_INTERVAL: self._get_update_api_interval_data,
+            EntityKeys.UNIT: self._get_unit_data,
             EntityKeys.INTERFACE_CONNECTED: self._get_interface_connected_data,
             EntityKeys.INTERFACE_RECEIVED_DROPPED: self._get_interface_received_dropped_data,
             EntityKeys.INTERFACE_SENT_DROPPED: self._get_interface_sent_dropped_data,
@@ -369,15 +369,12 @@ class Coordinator(DataUpdateCoordinator):
 
         self._data_mapping = data_mapping
 
-        _LOGGER.debug(f"Data retrieval mapping created, Mapping: {self._data_mapping}")
-
     def get_device_info(
         self,
         entity_description: IntegrationEntityDescription,
         item_id: str | None = None,
     ) -> DeviceInfo:
-        device_type = ENTITY_DEVICE_MAPPING.get(entity_description.key)
-        processor = self._processors[device_type]
+        processor = self._processors[entity_description.device_type]
 
         device_info = processor.get_device_info(item_id)
 
@@ -554,6 +551,16 @@ class Coordinator(DataUpdateCoordinator):
 
         return result
 
+    def _get_unit_data(self, _entity_description) -> dict | None:
+        result = {
+            ATTR_STATE: self.config_manager.unit,
+            ATTR_ACTIONS: {
+                ACTION_ENTITY_SELECT_OPTION: self._set_unit,
+            },
+        }
+
+        return result
+
     def _get_interface_connected_data(
         self, _entity_description, interface_name: str
     ) -> dict | None:
@@ -622,7 +629,7 @@ class Coordinator(DataUpdateCoordinator):
     ) -> dict | None:
         interface = self._interface_processor.get_data(interface_name)
 
-        result = {ATTR_STATE: interface.received.total}
+        result = {ATTR_STATE: interface.received.rate}
 
         return result
 
@@ -778,7 +785,7 @@ class Coordinator(DataUpdateCoordinator):
 
         await self._config_manager.set_monitored_interface(interface_name, True)
 
-        self._remove_entities_of_device(DeviceTypes.INTERFACE, interface_name)
+        await self._remove_entities_of_device(DeviceTypes.INTERFACE, interface_name)
 
     async def _set_interface_monitor_disabled(
         self, _entity_description, interface_name: str
@@ -787,54 +794,21 @@ class Coordinator(DataUpdateCoordinator):
 
         await self._config_manager.set_monitored_interface(interface_name, False)
 
-        self._remove_entities_of_device(DeviceTypes.INTERFACE, interface_name)
+        await self._remove_entities_of_device(DeviceTypes.INTERFACE, interface_name)
 
     async def _set_device_monitor_enabled(self, _entity_description, device_mac: str):
         _LOGGER.debug(f"Enable monitoring for device {device_mac}")
 
         await self._config_manager.set_monitored_device(device_mac, True)
 
-        self._remove_entities_of_device(DeviceTypes.DEVICE, device_mac)
+        await self._remove_entities_of_device(DeviceTypes.DEVICE, device_mac)
 
     async def _set_device_monitor_disabled(self, _entity_description, device_mac: str):
         _LOGGER.debug(f"Disable monitoring for device {device_mac}")
 
         await self._config_manager.set_monitored_device(device_mac, False)
 
-        self._remove_entities_of_device(DeviceTypes.DEVICE, device_mac)
-
-    def _remove_entities_of_device(self, device_type: DeviceTypes, item_id: str):
-        key = f"{device_type} {item_id}"
-
-        if device_type == DeviceTypes.DEVICE:
-            device_info = self._device_processor.get_device_info(item_id)
-
-        elif device_type == DeviceTypes.INTERFACE:
-            device_info = self._interface_processor.get_device_info(item_id)
-
-        else:
-            return
-
-        entity_registry = er.async_get(self.hass)
-        device_registry = dr.async_get(self.hass)
-
-        device_info_identifier = device_info.get("identifiers")
-        device_data = device_registry.async_get_device(
-            identifiers=device_info_identifier
-        )
-        device_id = device_data.id
-
-        entities = entity_registry.entities.get_entries_for_device_id(device_id)
-        for entity in entities:
-            entity_registry.async_remove(entity.entity_id)
-
-        self._discovered_objects.remove(key)
-
-        if device_type == DeviceTypes.DEVICE:
-            self._on_device_discovered(item_id)
-
-        elif device_type == DeviceTypes.INTERFACE:
-            self._on_interface_discovered(item_id)
+        await self._remove_entities_of_device(DeviceTypes.DEVICE, device_mac)
 
     async def _set_log_incoming_messages_enabled(self, _entity_description):
         _LOGGER.debug("Enable log incoming messages")
@@ -860,18 +834,86 @@ class Coordinator(DataUpdateCoordinator):
         await self._config_manager.set_consider_away_interval(value)
 
     async def _set_update_entities_interval(self, _entity_description, value: int):
-        _LOGGER.debug("Disable log incoming messages")
+        _LOGGER.debug("Change update entities interval")
 
         await self._config_manager.set_update_entities_interval(value)
 
         await self._reload_integration()
 
     async def _set_update_api_interval(self, _entity_description, value: int):
-        _LOGGER.debug("Disable log incoming messages")
+        _LOGGER.debug("Change update API interval")
 
         await self._config_manager.set_update_api_interval(value)
 
         await self._reload_integration()
+
+    async def _set_unit(self, _entity_description, option: str):
+        _LOGGER.debug("Change unit settings")
+
+        await self._config_manager.set_unit(option)
+
+        await self._remove_entities_of_device()
+
+    async def _remove_entities_of_device(
+        self, device_type: DeviceTypes | None = None, item_id: str | None = None
+    ):
+        entity_registry = er.async_get(self.hass)
+        device_registry = dr.async_get(self.hass)
+
+        handle_device_types = (
+            SUPPORTED_REMOVED_ENTITIES_DEVICE_TYPES
+            if device_type is None
+            else [device_type]
+        )
+        handle_items = None if item_id is None else [item_id]
+
+        if (
+            device_type is not None
+            and device_type not in SUPPORTED_REMOVED_ENTITIES_DEVICE_TYPES
+        ):
+            return
+
+        for device_type_item in handle_device_types:
+            is_device = device_type_item == DeviceTypes.DEVICE
+            if handle_items is None:
+                if is_device:
+                    monitored_items = copy(self._config_manager.monitored_devices)
+
+                else:
+                    monitored_items = copy(self._config_manager.monitored_interfaces)
+
+                handle_items = [
+                    monitored_item
+                    for monitored_item in monitored_items
+                    if monitored_items[monitored_item]
+                ]
+
+            for item_id in handle_items:
+                key = f"{device_type_item} {item_id}"
+
+                if is_device:
+                    device_info = self._device_processor.get_device_info(item_id)
+
+                else:
+                    device_info = self._interface_processor.get_device_info(item_id)
+
+                _LOGGER.debug(f"Refreshing {device_type_item} {key}: {device_info}")
+
+                device_info_identifier = device_info.get("identifiers")
+                device_data = device_registry.async_get_device(
+                    identifiers=device_info_identifier
+                )
+                device_id = device_data.id
+
+                entities = entity_registry.entities.get_entries_for_device_id(device_id)
+                for entity in entities:
+                    entity_registry.async_remove(entity.entity_id)
+
+                self._discovered_objects.remove(key)
+
+            handle_items = None
+
+        await self.async_refresh()
 
     async def _reload_integration(self):
         data = {ENTITY_CONFIG_ENTRY_ID: self.config_manager.entry_id}

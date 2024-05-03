@@ -50,6 +50,16 @@
         "name": "Atualizar intervalos de entidades"
       }
     },
+    "select": {
+      "unit": {
+        "name": "Unidade",
+        "options": {
+          "b": "Byte",
+          "kb": "Quilo presa",
+          "mb": "Mega byte"
+        }
+      }
+    },
     "sensor": {
       "cpu_usage": {
         "name": "Utiliza\u00e7\u00e3o do CPU"
