@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.1.1
+
+- Fix interface received rate sensor [#133](https://github.com/elad-bar/ha-edgeos/issues/133)
+- Re-added ability to set unit (Byte, KByte, MByte) - using SELECT component [#133](https://github.com/elad-bar/ha-edgeos/issues/133)
+- Re-added sensor state number format (number of digits):
+  - Data (Traffic / Rate) - 0 digits if unit is bytes, otherwise - 3 digits
+  - Devices, Dropped, Errors, Packets - 3 digits
+- Re-added support for switch interfaces [#130](https://github.com/elad-bar/ha-edgeos/issues/130)
+
 ## 2.1.0
 
 Major refactor:

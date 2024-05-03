@@ -16,6 +16,7 @@ from ..common.consts import (
     CONFIGURATION_FILE,
     DEFAULT_CONSIDER_AWAY_INTERVAL,
     DEFAULT_NAME,
+    DEFAULT_UNIT,
     DEFAULT_UPDATE_API_INTERVAL,
     DEFAULT_UPDATE_ENTITIES_INTERVAL,
     DOMAIN,
@@ -24,6 +25,7 @@ from ..common.consts import (
     STORAGE_DATA_LOG_INCOMING_MESSAGES,
     STORAGE_DATA_MONITORED_DEVICES,
     STORAGE_DATA_MONITORED_INTERFACES,
+    STORAGE_DATA_UNIT,
     STORAGE_DATA_UPDATE_API_INTERVAL,
     STORAGE_DATA_UPDATE_ENTITIES_INTERVAL,
 )
@@ -137,6 +139,12 @@ class ConfigManager:
         return result
 
     @property
+    def unit(self):
+        result = self._data.get(STORAGE_DATA_UNIT, DEFAULT_UNIT)
+
+        return result
+
+    @property
     def config_data(self) -> ConfigData:
         config_data = self._config_data
 
@@ -155,10 +163,6 @@ class ConfigManager:
                 self._translations = await translation.async_get_translations(
                     self._hass, self._hass.config.language, "entity", {DOMAIN}
                 )
-
-            _LOGGER.debug(
-                f"Translations loaded, Data: {json.dumps(self._translations)}"
-            )
 
             self._is_initialized = True
 
@@ -191,13 +195,6 @@ class ConfigManager:
         )
 
         translated_value = self._translations.get(translation_key, default_value)
-
-        _LOGGER.debug(
-            "Translations requested, "
-            f"Key: {translation_key}, "
-            f"Default value: {default_value}, "
-            f"Value: {translated_value}"
-        )
 
         return translated_value
 
@@ -232,16 +229,12 @@ class ConfigManager:
         return data
 
     def get_monitored_interface(self, interface_name: str):
-        is_enabled = self._data.get(STORAGE_DATA_MONITORED_INTERFACES, {}).get(
-            interface_name, False
-        )
+        is_enabled = self.monitored_interfaces.get(interface_name, False)
 
         return is_enabled
 
     def get_monitored_device(self, device_mac: str):
-        is_enabled = self._data.get(STORAGE_DATA_MONITORED_DEVICES, {}).get(
-            device_mac, False
-        )
+        is_enabled = self.monitored_devices.get(device_mac, False)
 
         return is_enabled
 
@@ -281,6 +274,7 @@ class ConfigManager:
             STORAGE_DATA_CONSIDER_AWAY_INTERVAL: DEFAULT_CONSIDER_AWAY_INTERVAL.total_seconds(),
             STORAGE_DATA_UPDATE_ENTITIES_INTERVAL: DEFAULT_UPDATE_ENTITIES_INTERVAL.total_seconds(),
             STORAGE_DATA_UPDATE_API_INTERVAL: DEFAULT_UPDATE_API_INTERVAL.total_seconds(),
+            STORAGE_DATA_UNIT: DEFAULT_UNIT,
         }
 
         return data
@@ -344,43 +338,44 @@ class ConfigManager:
             await self._store.async_save(store_data)
 
     async def set_monitored_interface(self, interface_name: str, is_enabled: bool):
-        _LOGGER.debug(f"Set monitored interface {interface_name} to {is_enabled}")
-
-        self._data[STORAGE_DATA_MONITORED_INTERFACES][interface_name] = is_enabled
-
-        await self._save()
+        await self._set_storage_sub_parameter(
+            STORAGE_DATA_MONITORED_INTERFACES, interface_name, is_enabled
+        )
 
     async def set_monitored_device(self, device_mac: str, is_enabled: bool):
-        _LOGGER.debug(f"Set monitored device {device_mac} to {is_enabled}")
-
-        self._data[STORAGE_DATA_MONITORED_DEVICES][device_mac] = is_enabled
-
-        await self._save()
+        await self._set_storage_sub_parameter(
+            STORAGE_DATA_MONITORED_DEVICES, device_mac, is_enabled
+        )
 
     async def set_log_incoming_messages(self, enabled: bool):
-        _LOGGER.debug(f"Set log incoming messages to {enabled}")
-
-        self._data[STORAGE_DATA_LOG_INCOMING_MESSAGES] = enabled
-
-        await self._save()
+        await self._set_storage_parameter(STORAGE_DATA_LOG_INCOMING_MESSAGES, enabled)
 
     async def set_consider_away_interval(self, interval: int):
-        _LOGGER.debug(f"Changing {STORAGE_DATA_CONSIDER_AWAY_INTERVAL}: {interval}")
-
-        self._data[STORAGE_DATA_CONSIDER_AWAY_INTERVAL] = interval
-
-        await self._save()
+        await self._set_storage_parameter(STORAGE_DATA_CONSIDER_AWAY_INTERVAL, interval)
 
     async def set_update_entities_interval(self, interval: int):
-        _LOGGER.debug(f"Changing {STORAGE_DATA_UPDATE_ENTITIES_INTERVAL}: {interval}")
+        await self._set_storage_parameter(
+            STORAGE_DATA_UPDATE_ENTITIES_INTERVAL, interval
+        )
 
-        self._data[STORAGE_DATA_UPDATE_ENTITIES_INTERVAL] = interval
+    async def set_update_api_interval(self, interval: int):
+        await self._set_storage_parameter(STORAGE_DATA_UPDATE_API_INTERVAL, interval)
+
+    async def set_unit(self, unit: str):
+        await self._set_storage_parameter(STORAGE_DATA_UNIT, unit)
+
+    async def _set_storage_parameter(self, storage_key: str, value: int | str | bool):
+        _LOGGER.debug(f"Changing {storage_key}: {value}")
+
+        self._data[storage_key] = value
 
         await self._save()
 
-    async def set_update_api_interval(self, interval: int):
-        _LOGGER.debug(f"Changing {STORAGE_DATA_UPDATE_API_INTERVAL}: {interval}")
+    async def _set_storage_sub_parameter(
+        self, storage_key: str, storage_item_id, value: int | str | bool
+    ):
+        _LOGGER.debug(f"Set {storage_key}, {storage_item_id}: {value}")
 
-        self._data[STORAGE_DATA_UPDATE_API_INTERVAL] = interval
+        self._data[storage_key][storage_item_id] = value
 
         await self._save()
