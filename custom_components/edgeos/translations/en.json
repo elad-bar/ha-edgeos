@@ -53,7 +53,7 @@
     "select": {
       "unit": {
         "name": "Unit",
-        "options": {
+        "state": {
           "b": "Byte",
           "kb": "Kilo Byte",
           "mb": "Mega Byte"

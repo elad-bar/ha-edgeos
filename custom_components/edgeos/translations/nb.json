@@ -53,7 +53,7 @@
     "select": {
       "unit": {
         "name": "Enhet",
-        "options": {
+        "state": {
           "b": "Byte",
           "kb": "Kilo byttedyr",
           "mb": "Mega byte"

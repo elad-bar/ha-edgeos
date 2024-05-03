@@ -53,7 +53,7 @@
     "select": {
       "unit": {
         "name": "Unidade",
-        "options": {
+        "state": {
           "b": "Byte",
           "kb": "Quilo presa",
           "mb": "Mega byte"
