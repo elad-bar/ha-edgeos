@@ -32,6 +32,9 @@
       },
       "interface_connected": {
         "name": "Tilkoblet"
+      },
+      "interface_status": {
+        "name": "Status"
       }
     },
     "device_tracker": {
