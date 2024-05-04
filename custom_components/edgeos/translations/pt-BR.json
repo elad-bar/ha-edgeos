@@ -32,6 +32,9 @@
       },
       "interface_connected": {
         "name": "Conectada Conectado"
+      },
+      "interface_status": {
+        "name": "Status"
       }
     },
     "device_tracker": {

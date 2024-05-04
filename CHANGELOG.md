@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.2
+
+- Re-add interface status (Binary Sensor and Switch) [#135](https://github.com/elad-bar/ha-edgeos/issues/135)
+
 ## 2.1.1
 
 - Fix interface received rate sensor [#133](https://github.com/elad-bar/ha-edgeos/issues/133)

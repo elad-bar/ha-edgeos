@@ -231,8 +231,15 @@ ENTITY_DESCRIPTIONS: list[IntegrationEntityDescription] = [
         icon="mdi:monitor-eye",
         device_type=DeviceTypes.INTERFACE,
     ),
+    IntegrationBinarySensorEntityDescription(
+        key=EntityKeys.INTERFACE_STATUS,
+        icon="mdi:monitor-eye",
+        device_type=DeviceTypes.INTERFACE,
+    ),
     IntegrationSwitchEntityDescription(
-        key=EntityKeys.INTERFACE_STATUS, icon="mdi:monitor-eye"
+        key=EntityKeys.INTERFACE_STATUS,
+        icon="mdi:monitor-eye",
+        device_type=DeviceTypes.INTERFACE,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.DEVICE_RECEIVED_RATE,
