@@ -4,18 +4,10 @@ Support for Constants.
 from datetime import timedelta
 
 import aiohttp
-import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    UnitOfDataRate,
-    UnitOfInformation,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import UnitOfDataRate, UnitOfInformation
 
-from .enums import DeviceTypes, DynamicInterfaceTypes, UnitOfEdgeOS
+from .enums import DeviceTypes, DynamicInterfaceTypes, InterfaceTypes, UnitOfEdgeOS
 
 ENTITY_CONFIG_ENTRY_ID = "entry_id"
 
@@ -27,18 +19,11 @@ MANUFACTURER = "Ubiquiti"
 
 STORAGE_DATA_KEY = "key"
 
-SIGNAL_INTERFACE_DISCOVERED = f"{DOMAIN}_INTERFACE_DISCOVERED_SIGNAL"
 SIGNAL_INTERFACE_ADDED = f"{DOMAIN}_INTERFACE_ADDED_SIGNAL"
-
-SIGNAL_DEVICE_DISCOVERED = f"{DOMAIN}_DEVICE_DISCOVERED_SIGNAL"
 SIGNAL_DEVICE_ADDED = f"{DOMAIN}_DEVICE_ADDED_SIGNAL"
-
-SIGNAL_SYSTEM_DISCOVERED = f"{DOMAIN}_SYSTEM_DISCOVERED_SIGNAL"
 SIGNAL_SYSTEM_ADDED = f"{DOMAIN}_SYSTEM_ADDED_SIGNAL"
-
 SIGNAL_DATA_CHANGED = f"{DOMAIN}_DATA_CHANGED_SIGNAL"
 
-SIGNAL_WS_READY = f"{DOMAIN}_WS_READY_SIGNAL"
 SIGNAL_WS_STATUS = f"{DOMAIN}_WS_STATUS_SIGNAL"
 SIGNAL_API_STATUS = f"{DOMAIN}_API_STATUS_SIGNAL"
 
@@ -47,8 +32,6 @@ ADD_COMPONENT_SIGNALS = [
     SIGNAL_DEVICE_ADDED,
     SIGNAL_SYSTEM_ADDED,
 ]
-
-DATA_KEYS = [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]
 
 MAXIMUM_RECONNECT = 3
 CONFIGURATION_FILE = f"{DOMAIN}.config.json"
@@ -66,7 +49,6 @@ HEADER_CSRF_TOKEN = "X-Csrf-token"
 EMPTY_STRING = ""
 CONF_TITLE = "title"
 
-ATTR_FRIENDLY_NAME = "friendly_name"
 ATTR_ATTRIBUTES = "attributes"
 ATTR_ACTIONS = "actions"
 ATTR_IS_ON = "is_on"
@@ -78,29 +60,19 @@ ACTION_ENTITY_TURN_OFF = "turn_off"
 ACTION_ENTITY_SET_NATIVE_VALUE = "set_native_value"
 ACTION_ENTITY_SELECT_OPTION = "select_option"
 
-CONF_DEVICE_ID = "device_id"
-
 WS_MAX_MSG_SIZE = 0
 DISCONNECT_INTERVAL = 5
 
 WS_RECONNECT_INTERVAL = timedelta(seconds=30)
 WS_TIMEOUT = timedelta(minutes=1)
-WS_WARNING_INTERVAL = timedelta(seconds=95)
 
 WS_COMPRESSION_DEFLATE = 15
 
 DEFAULT_UPDATE_API_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_ENTITIES_INTERVAL = timedelta(seconds=1)
-DEFAULT_HEARTBEAT_INTERVAL = timedelta(seconds=50)
 DEFAULT_CONSIDER_AWAY_INTERVAL = timedelta(minutes=3)
 API_RECONNECT_INTERVAL = timedelta(seconds=30)
 HEARTBEAT_INTERVAL = timedelta(seconds=25)
-
-STORAGE_DATA_FILE_CONFIG = "config"
-
-STORAGE_DATA_FILES = [STORAGE_DATA_FILE_CONFIG]
-
-MESSAGES_COUNTER_SECTION = "messages"
 
 STORAGE_DATA_MONITORED_INTERFACES = "monitored-interfaces"
 STORAGE_DATA_MONITORED_DEVICES = "monitored-devices"
@@ -137,9 +109,6 @@ API_URL_DATA_SUBSET = f"{API_URL_DATA}?data={{subset}}"
 TRUE_STR = "true"
 FALSE_STR = "false"
 
-LINK_ENABLED = "up"
-LINK_CONNECTED = "l1up"
-
 INTERFACES_STATS = "stats"
 
 # CHANGE TO API DATA
@@ -168,9 +137,6 @@ WS_DISCOVER_KEY = "discover"
 
 WS_RECEIVED_MESSAGES = "received-messages"
 WS_IGNORED_MESSAGES = "ignored-messages"
-WS_ERROR_MESSAGES = "error-messages"
-
-WS_MESSAGES = [WS_RECEIVED_MESSAGES, WS_IGNORED_MESSAGES, WS_ERROR_MESSAGES]
 
 UPDATE_DATE_ENDPOINTS = [API_DATA_SYS_INFO, API_DATA_DHCP_STATS, API_DATA_DHCP_LEASES]
 
@@ -183,10 +149,8 @@ SYSTEM_STATS_DATA_MEM = "mem"
 
 DEVICE_LIST = "devices"
 ADDRESS_LIST = "addresses"
-FW_LATEST = "addresses"
 ADDRESS_IPV4 = "ipv4"
 ADDRESS_HW_ADDR = "hwaddr"
-LAST_ACTIVITY = "Last Activity"
 
 RESPONSE_SUCCESS_KEY = "success"
 RESPONSE_ERROR_KEY = "error"
@@ -199,8 +163,6 @@ WS_TOPIC_NAME = "name"
 WS_TOPIC_UNSUBSCRIBE = "UNSUBSCRIBE"
 WS_TOPIC_SUBSCRIBE = "SUBSCRIBE"
 WS_SESSION_ID = "SESSION_ID"
-
-SERVICE_UPDATE_CONFIGURATION = "update_configuration"
 
 BEGINS_WITH_SIX_DIGITS = "^([0-9]{1,6})"
 
@@ -255,7 +217,6 @@ INTERFACE_DATA_STP = "stp"
 INTERFACE_DATA_RECEIVED = "received"
 INTERFACE_DATA_SENT = "sent"
 INTERFACE_DATA_MULTICAST = "multicast"
-INTERFACE_DATA_STATS = "stats"
 INTERFACE_DATA_UP = "up"
 INTERFACE_DATA_LINK_UP = "l1up"
 INTERFACE_DATA_MAC = "mac"
@@ -314,89 +275,25 @@ DISCOVER_DEVICE_ITEMS = [
     "system_status",
 ]
 
-SERVICE_SCHEMA_UPDATE_CONFIGURATION = vol.Schema(
-    {
-        vol.Required(CONF_DEVICE_ID): cv.string,
-        vol.Optional(
-            STORAGE_DATA_CONSIDER_AWAY_INTERVAL.replace(STRING_DASH, STRING_UNDERSCORE)
-        ): vol.Range(10, 1800),
-        vol.Optional(
-            STORAGE_DATA_UPDATE_ENTITIES_INTERVAL.replace(
-                STRING_DASH, STRING_UNDERSCORE
-            )
-        ): vol.Range(1, 60),
-        vol.Optional(
-            STORAGE_DATA_UPDATE_API_INTERVAL.replace(STRING_DASH, STRING_UNDERSCORE)
-        ): vol.Range(30, 180),
-        vol.Optional(
-            STORAGE_DATA_LOG_INCOMING_MESSAGES.replace(STRING_DASH, STRING_UNDERSCORE)
-        ): cv.boolean,
-    }
-)
-
 WS_CLOSING_MESSAGE = [
     aiohttp.WSMsgType.CLOSE,
     aiohttp.WSMsgType.CLOSED,
     aiohttp.WSMsgType.CLOSING,
 ]
 
-INTERFACE_DYNAMIC_SUPPORTED = [
-    DynamicInterfaceTypes.PPPOE,
-    DynamicInterfaceTypes.SWITCH,
-    DynamicInterfaceTypes.VIRTUAL_TUNNEL,
-    DynamicInterfaceTypes.OPEN_VPN,
-    DynamicInterfaceTypes.BONDING,
+SUPPORTED_INTERFACES = [
+    InterfaceTypes.ETHERNET,
+    InterfaceTypes.BRIDGE,
+    InterfaceTypes.SWITCH,
+    InterfaceTypes.OPEN_VPN,
+    InterfaceTypes.WIREGUARD,
 ]
 
-RECEIVED_RATE_PREFIX = "Received Rate"
-RECEIVED_TRAFFIC_PREFIX = "Received Traffic"
-RECEIVED_DROPPED_PREFIX = "Received Dropped"
-RECEIVED_ERRORS_PREFIX = "Received Errors"
-RECEIVED_PACKETS_PREFIX = "Received Packets"
-
-SENT_RATE_PREFIX = "Sent Rate"
-SENT_TRAFFIC_PREFIX = "Sent Traffic"
-SENT_DROPPED_PREFIX = "Sent Dropped"
-SENT_ERRORS_PREFIX = "Sent Errors"
-SENT_PACKETS_PREFIX = "Sent Packets"
-
-RECEIVED_RATE_ICON = "mdi:download-network-outline"
-RECEIVED_TRAFFIC_ICON = "mdi:download-network-outline"
-RECEIVED_DROPPED_ICON = "mdi:package-variant-minus"
-RECEIVED_ERRORS_ICON = "mdi:timeline-alert"
-RECEIVED_PACKETS_ICON = "mdi:package-up"
-
-SENT_RATE_ICON = "mdi:upload-network-outline"
-SENT_TRAFFIC_ICON = "mdi:upload-network-outline"
-SENT_DROPPED_ICON = "mdi:package-variant-minus"
-SENT_ERRORS_ICON = "mdi:timeline-alert"
-SENT_PACKETS_ICON = "mdi:package-up"
-
-STATS_ICONS = {
-    RECEIVED_RATE_PREFIX: RECEIVED_RATE_ICON,
-    RECEIVED_TRAFFIC_PREFIX: RECEIVED_TRAFFIC_ICON,
-    RECEIVED_DROPPED_PREFIX: RECEIVED_DROPPED_ICON,
-    RECEIVED_ERRORS_PREFIX: RECEIVED_ERRORS_ICON,
-    RECEIVED_PACKETS_PREFIX: RECEIVED_PACKETS_ICON,
-    SENT_RATE_PREFIX: SENT_RATE_ICON,
-    SENT_TRAFFIC_PREFIX: SENT_TRAFFIC_ICON,
-    SENT_DROPPED_PREFIX: SENT_DROPPED_ICON,
-    SENT_ERRORS_PREFIX: SENT_ERRORS_ICON,
-    SENT_PACKETS_PREFIX: SENT_PACKETS_ICON,
-}
-
-STATS_DATA_RATE = [RECEIVED_RATE_PREFIX, SENT_RATE_PREFIX]
-
-STATS_DATA_SIZE = [RECEIVED_TRAFFIC_PREFIX, SENT_TRAFFIC_PREFIX]
-
-STATS_UNITS = {
-    RECEIVED_DROPPED_PREFIX: TRAFFIC_DATA_DROPPED,
-    RECEIVED_ERRORS_PREFIX: TRAFFIC_DATA_ERRORS,
-    RECEIVED_PACKETS_PREFIX: TRAFFIC_DATA_PACKETS,
-    SENT_DROPPED_PREFIX: TRAFFIC_DATA_DROPPED,
-    SENT_ERRORS_PREFIX: TRAFFIC_DATA_ERRORS,
-    SENT_PACKETS_PREFIX: TRAFFIC_DATA_PACKETS,
-}
+SUPPORTED_DYNAMIC_INTERFACES = [
+    DynamicInterfaceTypes.PPPOE,
+    DynamicInterfaceTypes.VIRTUAL_TUNNEL,
+    DynamicInterfaceTypes.BONDING,
+]
 
 ATTR_UNIT_INFORMATION = "information"
 ATTR_UNIT_RATE = "rate"

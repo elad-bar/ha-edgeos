@@ -19,17 +19,8 @@ from ..common.consts import (
     INTERFACE_DATA_SPEED,
     INTERFACE_DATA_STP,
     INTERFACE_DATA_TYPE,
-    INTERFACE_DYNAMIC_SUPPORTED,
-    RECEIVED_DROPPED_PREFIX,
-    RECEIVED_ERRORS_PREFIX,
-    RECEIVED_PACKETS_PREFIX,
-    RECEIVED_RATE_PREFIX,
-    RECEIVED_TRAFFIC_PREFIX,
-    SENT_DROPPED_PREFIX,
-    SENT_ERRORS_PREFIX,
-    SENT_PACKETS_PREFIX,
-    SENT_RATE_PREFIX,
-    SENT_TRAFFIC_PREFIX,
+    SUPPORTED_DYNAMIC_INTERFACES,
+    SUPPORTED_INTERFACES,
     TRAFFIC_DATA_DIRECTION_RECEIVED,
     TRAFFIC_DATA_DIRECTION_SENT,
 )
@@ -113,36 +104,17 @@ class EdgeOSInterfaceData:
         return obj
 
     def _get_is_supported(self):
-        is_supported = self.interface_type in [
-            InterfaceTypes.ETHERNET,
-            InterfaceTypes.BRIDGE,
-        ]
+        is_supported = self.interface_type in SUPPORTED_INTERFACES
 
         if self.interface_type == InterfaceTypes.DYNAMIC:
             prefixes = list(DynamicInterfaceTypes)
 
             for prefix in prefixes:
                 if self.name.startswith(str(prefix)):
-                    is_supported = prefix in INTERFACE_DYNAMIC_SUPPORTED
+                    is_supported = prefix in SUPPORTED_DYNAMIC_INTERFACES
                     break
 
         return is_supported
-
-    def get_stats(self):
-        data = {
-            RECEIVED_RATE_PREFIX: self.received.rate,
-            RECEIVED_TRAFFIC_PREFIX: self.received.total,
-            RECEIVED_DROPPED_PREFIX: self.received.dropped,
-            RECEIVED_ERRORS_PREFIX: self.received.errors,
-            RECEIVED_PACKETS_PREFIX: self.received.packets,
-            SENT_RATE_PREFIX: self.sent.rate,
-            SENT_TRAFFIC_PREFIX: self.sent.total,
-            SENT_DROPPED_PREFIX: self.sent.dropped,
-            SENT_ERRORS_PREFIX: self.sent.errors,
-            SENT_PACKETS_PREFIX: self.sent.packets,
-        }
-
-        return data
 
     def get_attributes(self):
         interface_attributes = self.to_dict()

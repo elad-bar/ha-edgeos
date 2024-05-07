@@ -12,14 +12,14 @@ class InterfaceTypes(StrEnum):
     LOOPBACK = "loopback"
     ETHERNET = "ethernet"
     SWITCH = "switch"
+    OPEN_VPN = "openvpn"
+    WIREGUARD = "wireguard"
     DYNAMIC = "dynamic"
 
 
 class DynamicInterfaceTypes(StrEnum):
     PPPOE = "pppoe"
-    SWITCH = "switch"
     VIRTUAL_TUNNEL = "vtun"
-    OPEN_VPN = "openvpn"
     BONDING = "bond"
     INTERMEDIATE_QUEUEING_DEVICE = "imq"
     NETWORK_PROGRAMMING_INTERFACE = "npi"

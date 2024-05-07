@@ -15,6 +15,7 @@ from ..common.consts import (
     DISCOVER_DATA_FW_VERSION,
     DISCOVER_DATA_PRODUCT,
     FW_LATEST_STATE_CAN_UPGRADE,
+    MANUFACTURER,
     SYSTEM_DATA_HOSTNAME,
     SYSTEM_DATA_LOGIN,
     SYSTEM_DATA_LOGIN_USER,
@@ -67,7 +68,7 @@ class SystemProcessor(BaseProcessor):
             identifiers={(DEFAULT_NAME, name)},
             name=name,
             model=self._system.product,
-            manufacturer=DEFAULT_NAME,
+            manufacturer=MANUFACTURER,
             hw_version=self._system.fw_version,
         )
 
