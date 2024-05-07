@@ -10,10 +10,6 @@ from ..common.consts import (
     DEVICE_DATA_RECEIVED,
     DEVICE_DATA_SENT,
     DHCP_SERVER_LEASED,
-    RECEIVED_RATE_PREFIX,
-    RECEIVED_TRAFFIC_PREFIX,
-    SENT_RATE_PREFIX,
-    SENT_TRAFFIC_PREFIX,
     TRAFFIC_DATA_DIRECTION_RECEIVED,
     TRAFFIC_DATA_DIRECTION_SENT,
 )
@@ -42,16 +38,6 @@ class EdgeOSDeviceData:
     @property
     def unique_id(self) -> str:
         return self.mac
-
-    def get_stats(self):
-        data = {
-            RECEIVED_RATE_PREFIX: self.received.rate,
-            RECEIVED_TRAFFIC_PREFIX: self.received.total,
-            SENT_RATE_PREFIX: self.sent.rate,
-            SENT_TRAFFIC_PREFIX: self.sent.total,
-        }
-
-        return data
 
     @property
     def last_activity(self) -> int:

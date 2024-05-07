@@ -1,6 +1,5 @@
+from custom_components.edgeos.common.connectivity_status import ConnectivityStatus
 from homeassistant.exceptions import HomeAssistantError
-
-from ...core.helpers.enums import ConnectivityStatus
 
 
 class MonitorNotFoundError(HomeAssistantError):

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.3
+
+- Update supported interfaces [#137](https://github.com/elad-bar/ha-edgeos/issues/137)
+- Removed unused constants
+
 ## 2.1.2
 
 - Re-add interface status (Binary Sensor and Switch) [#135](https://github.com/elad-bar/ha-edgeos/issues/135)
