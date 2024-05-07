@@ -65,3 +65,9 @@ class UnitOfEdgeOS(StrEnum):
     DROPPED = "Dropped"
     PACKETS = "Packets"
     DEVICES = "Devices"
+
+
+class EntityValidation(StrEnum):
+    MONITORED = "monitored"
+    ADMIN_ONLY = "admin-only"
+    NON_ADMIN_ONLY = "non-admin-only"

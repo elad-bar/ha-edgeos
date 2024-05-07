@@ -1,9 +1,13 @@
 from copy import copy
 from dataclasses import dataclass
-from typing import Callable
 
-from custom_components.edgeos.common.consts import UNIT_MAPPING
-from custom_components.edgeos.common.enums import DeviceTypes, EntityKeys, UnitOfEdgeOS
+from custom_components.edgeos.common.consts import ENTITY_VALIDATIONS, UNIT_MAPPING
+from custom_components.edgeos.common.enums import (
+    DeviceTypes,
+    EntityKeys,
+    EntityValidation,
+    UnitOfEdgeOS,
+)
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
@@ -24,7 +28,7 @@ from homeassistant.helpers.entity import EntityDescription
 class IntegrationEntityDescription(EntityDescription):
     platform: Platform | None = None
     device_type: DeviceTypes | None = None
-    filter: Callable[[bool], bool] | None = lambda is_monitored: True
+    entity_validation: EntityValidation | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -142,88 +146,87 @@ ENTITY_DESCRIPTIONS: list[IntegrationEntityDescription] = [
     IntegrationBinarySensorEntityDescription(
         key=EntityKeys.INTERFACE_CONNECTED,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        filter=lambda is_monitored: is_monitored,
         device_type=DeviceTypes.INTERFACE,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_RECEIVED_DROPPED,
         native_unit_of_measurement=UnitOfEdgeOS.DROPPED,
         state_class=SensorStateClass.MEASUREMENT,
-        filter=lambda is_monitored: is_monitored,
         icon="mdi:package-variant-minus",
         device_type=DeviceTypes.INTERFACE,
+        entity_validation=EntityValidation.MONITORED,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_SENT_DROPPED,
         native_unit_of_measurement=UnitOfEdgeOS.DROPPED,
         state_class=SensorStateClass.MEASUREMENT,
-        filter=lambda is_monitored: is_monitored,
         icon="mdi:package-variant-minus",
         device_type=DeviceTypes.INTERFACE,
+        entity_validation=EntityValidation.MONITORED,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_RECEIVED_ERRORS,
         native_unit_of_measurement=UnitOfEdgeOS.ERRORS,
         state_class=SensorStateClass.MEASUREMENT,
-        filter=lambda is_monitored: is_monitored,
         icon="mdi:timeline-alert",
         device_type=DeviceTypes.INTERFACE,
+        entity_validation=EntityValidation.MONITORED,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_SENT_ERRORS,
         native_unit_of_measurement=UnitOfEdgeOS.ERRORS,
         state_class=SensorStateClass.MEASUREMENT,
-        filter=lambda is_monitored: is_monitored,
         icon="mdi:timeline-alert",
         device_type=DeviceTypes.INTERFACE,
+        entity_validation=EntityValidation.MONITORED,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_RECEIVED_PACKETS,
         native_unit_of_measurement=UnitOfEdgeOS.PACKETS,
         state_class=SensorStateClass.MEASUREMENT,
-        filter=lambda is_monitored: is_monitored,
         icon="mdi:package-up",
         device_type=DeviceTypes.INTERFACE,
+        entity_validation=EntityValidation.MONITORED,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_SENT_PACKETS,
         native_unit_of_measurement=UnitOfEdgeOS.PACKETS,
         state_class=SensorStateClass.MEASUREMENT,
-        filter=lambda is_monitored: is_monitored,
         icon="mdi:package-up",
         device_type=DeviceTypes.INTERFACE,
+        entity_validation=EntityValidation.MONITORED,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_RECEIVED_RATE,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
-        filter=lambda is_monitored: is_monitored,
         icon="mdi:download-network-outline",
         device_type=DeviceTypes.INTERFACE,
+        entity_validation=EntityValidation.MONITORED,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_SENT_RATE,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
-        filter=lambda is_monitored: is_monitored,
         icon="mdi:upload-network-outline",
         device_type=DeviceTypes.INTERFACE,
+        entity_validation=EntityValidation.MONITORED,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_RECEIVED_TRAFFIC,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        filter=lambda is_monitored: is_monitored,
         icon="mdi:download-network-outline",
         device_type=DeviceTypes.INTERFACE,
+        entity_validation=EntityValidation.MONITORED,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.INTERFACE_SENT_TRAFFIC,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        filter=lambda is_monitored: is_monitored,
         icon="mdi:upload-network-outline",
         device_type=DeviceTypes.INTERFACE,
+        entity_validation=EntityValidation.MONITORED,
     ),
     IntegrationSwitchEntityDescription(
         key=EntityKeys.INTERFACE_MONITORED,
@@ -235,48 +238,50 @@ ENTITY_DESCRIPTIONS: list[IntegrationEntityDescription] = [
         key=EntityKeys.INTERFACE_STATUS,
         icon="mdi:monitor-eye",
         device_type=DeviceTypes.INTERFACE,
+        entity_validation=EntityValidation.NON_ADMIN_ONLY,
     ),
     IntegrationSwitchEntityDescription(
         key=EntityKeys.INTERFACE_STATUS,
-        icon="mdi:monitor-eye",
+        icon="mdi:ethernet",
         device_type=DeviceTypes.INTERFACE,
+        entity_validation=EntityValidation.ADMIN_ONLY,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.DEVICE_RECEIVED_RATE,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
-        filter=lambda is_monitored: is_monitored,
         icon="mdi:download-network-outline",
         device_type=DeviceTypes.DEVICE,
+        entity_validation=EntityValidation.MONITORED,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.DEVICE_SENT_RATE,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
-        filter=lambda is_monitored: is_monitored,
         icon="mdi:upload-network-outline",
         device_type=DeviceTypes.DEVICE,
+        entity_validation=EntityValidation.MONITORED,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.DEVICE_RECEIVED_TRAFFIC,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        filter=lambda is_monitored: is_monitored,
         icon="mdi:download-network-outline",
         device_type=DeviceTypes.DEVICE,
+        entity_validation=EntityValidation.MONITORED,
     ),
     IntegrationSensorEntityDescription(
         key=EntityKeys.DEVICE_SENT_TRAFFIC,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        filter=lambda is_monitored: is_monitored,
         icon="mdi:upload-network-outline",
         device_type=DeviceTypes.DEVICE,
+        entity_validation=EntityValidation.MONITORED,
     ),
     IntegrationDeviceTrackerEntityDescription(
         key=EntityKeys.DEVICE_TRACKER,
-        filter=lambda is_monitored: is_monitored,
         device_type=DeviceTypes.DEVICE,
+        entity_validation=EntityValidation.MONITORED,
     ),
     IntegrationSwitchEntityDescription(
         key=EntityKeys.DEVICE_MONITORED,
@@ -288,7 +293,10 @@ ENTITY_DESCRIPTIONS: list[IntegrationEntityDescription] = [
 
 
 def get_entity_descriptions(
-    platform: Platform, device_type: DeviceTypes, is_monitored: bool
+    platform: Platform,
+    device_type: DeviceTypes,
+    is_monitored: bool | None,
+    is_admin: bool | None,
 ) -> list[IntegrationEntityDescription]:
     entity_descriptions = copy(ENTITY_DESCRIPTIONS)
 
@@ -297,10 +305,24 @@ def get_entity_descriptions(
         for entity_description in entity_descriptions
         if entity_description.platform == platform
         and entity_description.device_type == device_type
-        and entity_description.filter(is_monitored)
+        and is_valid_entity(entity_description, is_monitored, is_admin)
     ]
 
     return result
+
+
+def is_valid_entity(
+    entity_description: IntegrationEntityDescription,
+    is_monitored: bool | None,
+    is_admin: bool | None,
+):
+    is_valid = entity_description.entity_validation is None
+
+    if entity_description.entity_validation is not None:
+        validation = ENTITY_VALIDATIONS[entity_description.entity_validation]
+        is_valid = validation(is_monitored, is_admin)
+
+    return is_valid
 
 
 def get_platforms() -> list[str]:

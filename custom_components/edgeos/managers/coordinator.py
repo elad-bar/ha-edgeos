@@ -50,6 +50,7 @@ from ..data_processors.base_processor import BaseProcessor
 from ..data_processors.device_processor import DeviceProcessor
 from ..data_processors.interface_processor import InterfaceProcessor
 from ..data_processors.system_processor import SystemProcessor
+from ..models.edge_os_system_data import EdgeOSSystemData
 from .config_manager import ConfigManager
 from .rest_api import RestAPI
 from .websockets import WebSockets
@@ -130,6 +131,12 @@ class Coordinator(DataUpdateCoordinator):
         }
 
         _LOGGER.debug("Initializing done")
+
+    @property
+    def system(self) -> EdgeOSSystemData | None:
+        system = self._system_processor.get()
+
+        return system
 
     @property
     def api(self) -> RestAPI:

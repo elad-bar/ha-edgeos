@@ -137,30 +137,10 @@ class SystemProcessor(BaseProcessor):
 
             self._system = system_data
 
-            message = (
-                f"User {self._config_data.username} level is {self._system.user_level}, "
-                f"Interface status switch will not be created as it requires admin role"
-            )
-
-            self._unique_log(logging.INFO, message)
-
             self._update_leased_devices()
 
-            warning_messages = []
-
-            if not self._system.deep_packet_inspection:
-                warning_messages.append("DPI (deep packet inspection) is turned off")
-
-            if not self._system.traffic_analysis_export:
-                warning_messages.append("Traffic Analysis Export is turned off")
-
-            if len(warning_messages) > 0:
-                warning_message = " and ".join(warning_messages)
-
-                self._unique_log(
-                    logging.WARNING,
-                    f"Integration will not work correctly since {warning_message}",
-                )
+            self._validate_admin()
+            self._validate_unit_settings()
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -218,6 +198,50 @@ class SystemProcessor(BaseProcessor):
 
             _LOGGER.error(
                 f"Failed to extract Unknown Devices data, Error: {ex}, Line: {line_number}"
+            )
+
+    def _validate_admin(self):
+        try:
+            if not self._system.is_admin:
+                message = (
+                    f"User {self._config_data.username} level is {self._system.user_level}, "
+                    f"Interface status switch will not be created as it requires admin role"
+                )
+
+                self._unique_log(logging.INFO, message)
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(
+                f"Failed to validate if user is admin, Error: {ex}, Line: {line_number}"
+            )
+
+    def _validate_unit_settings(self):
+        try:
+            warning_messages = []
+
+            if not self._system.deep_packet_inspection:
+                warning_messages.append("DPI (deep packet inspection) is turned off")
+
+            if not self._system.traffic_analysis_export:
+                warning_messages.append("Traffic Analysis Export is turned off")
+
+            if len(warning_messages) > 0:
+                warning_message = " and ".join(warning_messages)
+
+                self._unique_log(
+                    logging.WARNING,
+                    f"Integration will not work correctly since {warning_message}",
+                )
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(
+                f"Failed to validate unit settings, Error: {ex}, Line: {line_number}"
             )
 
     @staticmethod

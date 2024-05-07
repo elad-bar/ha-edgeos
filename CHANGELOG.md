@@ -4,6 +4,8 @@
 
 - Update supported interfaces [#137](https://github.com/elad-bar/ha-edgeos/issues/137)
 - Removed unused constants
+- Fix status entities, if EdgeOS user is admin, the switch will be available, if not, binary sensor
+- Adjusted the code of entity validations (whether) to present or not
 
 ## 2.1.2
 

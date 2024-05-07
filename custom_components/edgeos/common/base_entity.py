@@ -34,19 +34,11 @@ async def async_setup_base_entry(
         try:
             coordinator = hass.data[DOMAIN][entry.entry_id]
 
-            if device_type == DeviceTypes.DEVICE:
-                is_monitored = coordinator.config_manager.get_monitored_device(item_id)
-
-            elif device_type == DeviceTypes.INTERFACE:
-                is_monitored = coordinator.config_manager.get_monitored_interface(
-                    item_id
-                )
-
-            else:
-                is_monitored = True
+            is_admin = coordinator.system.is_admin
+            is_monitored = coordinator.config_manager.is_monitored(device_type, item_id)
 
             entity_descriptions = get_entity_descriptions(
-                platform, device_type, is_monitored
+                platform, device_type, is_monitored, is_admin
             )
 
             entities = [
@@ -133,6 +125,22 @@ class IntegrationBaseEntity(CoordinatorEntity):
     @property
     def data(self) -> dict | None:
         return self._data
+
+    @property
+    def _is_allowed_for_monitoring(self) -> bool:
+        is_allowed_for_monitoring = False
+
+        if self._device_type == DeviceTypes.DEVICE:
+            is_allowed_for_monitoring = (
+                self.coordinator.config_manager.get_monitored_interface(self._item_id)
+            )
+
+        if self._device_type == DeviceTypes.DEVICE:
+            is_allowed_for_monitoring = (
+                self.coordinator.config_manager.get_monitored_device(self._item_id)
+            )
+
+        return is_allowed_for_monitoring
 
     async def async_execute_device_action(self, key: str, *kwargs: Any):
         async_device_action = self._local_coordinator.get_device_action(
