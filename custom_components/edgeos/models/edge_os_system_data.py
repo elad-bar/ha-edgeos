@@ -13,6 +13,7 @@ from ..common.consts import (
     SYSTEM_DATA_TIME_ZONE,
     SYSTEM_DATA_TRAFFIC_ANALYSIS_DPI,
     SYSTEM_DATA_TRAFFIC_ANALYSIS_EXPORT,
+    USER_LEVEL_ADMIN,
 )
 
 
@@ -58,6 +59,12 @@ class EdgeOSSystemData:
         self.upgrade_url = None
         self.upgrade_version = None
         self.user_level = None
+
+    @property
+    def is_admin(self) -> bool:
+        is_admin = self.user_level == USER_LEVEL_ADMIN
+
+        return is_admin
 
     @staticmethod
     def is_enabled(data: dict, key: str) -> bool:

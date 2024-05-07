@@ -30,6 +30,7 @@ from ..common.consts import (
     STORAGE_DATA_UPDATE_ENTITIES_INTERVAL,
 )
 from ..common.entity_descriptions import IntegrationEntityDescription
+from ..common.enums import DeviceTypes
 from ..models.config_data import ConfigData
 
 _LOGGER = logging.getLogger(__name__)
@@ -228,15 +229,28 @@ class ConfigManager:
 
         return data
 
-    def get_monitored_interface(self, interface_name: str):
+    def get_monitored_interface(self, interface_name: str) -> bool:
         is_enabled = self.monitored_interfaces.get(interface_name, False)
 
         return is_enabled
 
-    def get_monitored_device(self, device_mac: str):
+    def get_monitored_device(self, device_mac: str) -> bool:
         is_enabled = self.monitored_devices.get(device_mac, False)
 
         return is_enabled
+
+    def is_monitored(
+        self, device_type: DeviceTypes, item_id: str | None = None
+    ) -> bool:
+        is_monitored = False
+
+        if device_type == DeviceTypes.DEVICE:
+            is_monitored = self.get_monitored_device(item_id)
+
+        elif device_type == DeviceTypes.INTERFACE:
+            is_monitored = self.get_monitored_interface(item_id)
+
+        return is_monitored
 
     async def _load(self):
         self._data = None

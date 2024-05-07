@@ -7,7 +7,13 @@ import aiohttp
 
 from homeassistant.const import UnitOfDataRate, UnitOfInformation
 
-from .enums import DeviceTypes, DynamicInterfaceTypes, InterfaceTypes, UnitOfEdgeOS
+from .enums import (
+    DeviceTypes,
+    DynamicInterfaceTypes,
+    EntityValidation,
+    InterfaceTypes,
+    UnitOfEdgeOS,
+)
 
 ENTITY_CONFIG_ENTRY_ID = "entry_id"
 
@@ -322,3 +328,9 @@ DEFAULT_UNIT = str(UnitOfInformation.BYTES)
 ALL_EDGE_OS_UNITS = [str(unit) for unit in list(UnitOfEdgeOS)]
 
 SUPPORTED_REMOVED_ENTITIES_DEVICE_TYPES = [DeviceTypes.DEVICE, DeviceTypes.INTERFACE]
+
+ENTITY_VALIDATIONS = {
+    EntityValidation.MONITORED: lambda is_monitored, is_admin: is_monitored,
+    EntityValidation.ADMIN_ONLY: lambda is_monitored, is_admin: is_admin,
+    EntityValidation.NON_ADMIN_ONLY: lambda is_monitored, is_admin: not is_admin,
+}
