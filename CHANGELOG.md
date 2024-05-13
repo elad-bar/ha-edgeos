@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.4
+
+- Update supported interfaces, including interface type [#137](https://github.com/elad-bar/ha-edgeos/issues/137)
+
 ## 2.1.3
 
 - Update supported interfaces [#137](https://github.com/elad-bar/ha-edgeos/issues/137)
