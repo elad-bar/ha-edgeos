@@ -79,6 +79,14 @@ class EdgeOSInterfaceData:
     def unique_id(self) -> str:
         return self.name
 
+    def update_interface_type(self, interface_type: InterfaceTypes):
+        if (
+            self.interface_type == InterfaceTypes.DYNAMIC
+            and self.interface_type != interface_type
+        ):
+            self.interface_type = interface_type
+            self.is_supported = self._get_is_supported()
+
     def to_dict(self):
         obj = {
             INTERFACE_DATA_NAME: self.name,

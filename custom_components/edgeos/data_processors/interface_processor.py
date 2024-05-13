@@ -150,6 +150,8 @@ class InterfaceProcessor(BaseProcessor):
             if data is not None:
                 if interface is None:
                     interface = EdgeOSInterfaceData(name, interface_type)
+                else:
+                    interface.update_interface_type(interface_type)
 
                 interface.description = data.get(INTERFACE_DATA_DESCRIPTION)
                 interface.duplex = data.get(INTERFACE_DATA_DUPLEX)
