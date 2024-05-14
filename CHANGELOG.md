@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.6
+
+- Fix update interface state [#145](https://github.com/elad-bar/ha-edgeos/issues/145)
+
 ## 2.1.5
 
 - Handling undefined interface types [#137](https://github.com/elad-bar/ha-edgeos/issues/137)
