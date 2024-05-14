@@ -253,11 +253,11 @@ class RestAPI:
 
         return headers
 
-    async def _async_post(self, endpoint, data):
+    async def _async_post(self, endpoint, data, action: str | None = None):
         result = None
 
         try:
-            url = self._build_endpoint(endpoint)
+            url = self._build_endpoint(endpoint, action=action)
 
             if self._session is not None:
                 headers = self._get_post_headers()
@@ -506,7 +506,7 @@ class RestAPI:
         _LOGGER.info(f"Set state of interface {interface.name} to {is_enabled}")
 
         modified = False
-        endpoint = API_DELETE if is_enabled else API_SET
+        action = API_DELETE if is_enabled else API_SET
 
         data = {
             API_DATA_INTERFACES: {
@@ -514,7 +514,7 @@ class RestAPI:
             }
         }
 
-        result_json = await self._async_post(endpoint, data)
+        result_json = await self._async_post(API_URL_DATA, data, action=action)
 
         if result_json is not None:
             set_response = result_json.get(API_DATA_SAVE.upper(), {})
