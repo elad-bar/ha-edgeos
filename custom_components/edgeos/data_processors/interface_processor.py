@@ -46,6 +46,7 @@ class InterfaceProcessor(BaseProcessor):
         self.processor_type = DeviceTypes.INTERFACE
 
         self._interfaces: dict[str, EdgeOSInterfaceData] = {}
+        self._supported_interface_types = list(InterfaceTypes)
 
     def get_interfaces(self) -> list[str]:
         return list(self._interfaces.keys())
@@ -102,11 +103,17 @@ class InterfaceProcessor(BaseProcessor):
                 if interfaces is not None:
                     for interface_name in interfaces:
                         interface_data = interfaces.get(interface_name, {})
-                        int_type = InterfaceTypes(interface_type)
 
-                        self._extract_interface(
-                            interface_name, interface_data, int_type
-                        )
+                        if interface_type in self._supported_interface_types:
+                            int_type = InterfaceTypes(interface_type)
+
+                            self._extract_interface(
+                                interface_name, interface_data, int_type
+                            )
+                        else:
+                            _LOGGER.info(
+                                f"Skip loading interface {interface_name}, Type: {interface_type} is not supported"
+                            )
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
