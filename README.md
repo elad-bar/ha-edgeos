@@ -65,17 +65,6 @@ _Configuration -> Integrations -> {Integration} -> Options_ <br />
 | Password          | Textbox   | +        | -         |                                                                                                                                                  |
 | Clear credentials | Check-box | +        | Unchecked | Will reset username and password (Not being stored under options)                                                                                |
 
-#### Debugging
-
-To set the log level of the component to DEBUG, please set it from the options of the component if installed, otherwise, set it within configuration YAML of HA:
-
-```yaml
-logger:
-  default: warning
-  logs:
-    custom_components.edgeos: debug
-```
-
 ## Components
 
 ### System
@@ -120,26 +109,32 @@ logger:
 | {Router Name} {Interface Name} Sent Errors              | Sensor        | Sent errors                                                                  | Statistics: Total Increment                 |
 | {Router Name} {Interface Name} Sent Packets             | Sensor        | Sent packets                                                                 | Statistics: Total Increment                 |
 
-## Services
+## Troubleshooting
 
-### Update configuration
+### Debug logs
 
-Allows to set:
-
-- Consider away interval - Time to consider a device without activity as AWAY (any value between 10 and 1800 in seconds)
-- Log incoming messages - Enable / Disable logging of incoming WebSocket messages for debug
-- Store debug data - Enable / Disable store debug data to './storage' directory of HA for API (edgeos.debug.api.json) and WS (edgeos.debug.ws.json) data for faster debugging or just to get more ideas for additional features
-- Update API interval - Interval in seconds to update API data
-- Update Entities interval - Interval in seconds to update entities
-
-More details available in `Developer tools` -> `Services` -> `edgeos.update_configuration`
+To set the log level of the component to DEBUG, please set it from the options of the component if installed, otherwise, set it within configuration YAML of HA:
 
 ```yaml
-service: edgeos.update_configuration
-data:
-  device_id: { Main device ID }
-  log_incoming_messages: true
-  consider_away_interval: 180
-  update_api_interval: 30
-  update_entities_interval: 1
+logger:
+  default: warning
+  logs:
+    custom_components.edgeos: debug
 ```
+
+### Diagnostic file
+
+In Settings -> Devices & services, look for the device, click on the 3 dots menu and download diagnostic file,
+
+Diagnostic file contains sensitive details, go over it and clean it or send it directly to my [email](elad.bar@hotmail)
+
+### Known issues and workarounds
+
+**Upgrading to v2.1.x**
+In case the following error appear:
+
+`ERROR (MainThread) [custom_components.edgeos] Failed to load EdgeOS, error: , line: 36`
+
+Before opening an issue, please try to remove integration from `Settings -> Devices & services`,
+
+Restart HA and try to add again, if still happen, open an issue and provide log with debug level as described above.
