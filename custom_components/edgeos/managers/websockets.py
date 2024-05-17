@@ -14,7 +14,7 @@ from aiohttp import ClientSession
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 from ..common.connectivity_status import ConnectivityStatus
 from ..common.consts import (
@@ -395,15 +395,15 @@ class WebSockets:
                 status,
             )
 
-    def set_local_async_dispatcher_send(self, dispatcher_send):
-        self._local_async_dispatcher_send = dispatcher_send
+    def set_local_async_dispatcher_send(self, callback):
+        self._local_async_dispatcher_send = callback
 
     def _async_dispatcher_send(self, signal: str, *args: Any) -> None:
         if self._hass is None:
             self._local_async_dispatcher_send(signal, self._entry_id, *args)
 
         else:
-            async_dispatcher_send(self._hass, signal, self._entry_id, *args)
+            dispatcher_send(self._hass, signal, self._entry_id, *args)
 
     def _increase_counter(self, key):
         counter = self.data.get(key, 0)

@@ -12,7 +12,7 @@ from aiohttp import ClientSession, CookieJar
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 from ..common.connectivity_status import ConnectivityStatus
 from ..common.consts import (
@@ -400,7 +400,7 @@ class RestAPI:
             self._local_async_dispatcher_send(signal, None, *args)
 
         else:
-            async_dispatcher_send(self._hass, signal, self._entry_id, *args)
+            dispatcher_send(self._hass, signal, self._entry_id, *args)
 
     async def async_send_heartbeat(self, max_age=HEARTBEAT_MAX_AGE):
         ts = None

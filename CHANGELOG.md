@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.7
+
+- Fix async dispatcher send
+
 ## 2.1.6
 
 - Fix update interface state [#145](https://github.com/elad-bar/ha-edgeos/issues/145)
