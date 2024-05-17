@@ -1,0 +1,161 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "EdgeOS Integration ({name}) bereits konfiguriert"
+    },
+    "error": {
+      "already_configured": "EdgeOS Integration bereits konfiguriert mit diesem Namen",
+      "auth_general_error": "Allgemeiner Fehler, bitte erneut versuchen",
+      "empty_device_data": "Konnte keine Geräte-Daten vom EdgeOS Router abrufen",
+      "incompatible_version": "Nicht unterstützte Firmware Version",
+      "invalid_credentials": "Ungültige Anmeldedaten zum EdgeOS Router",
+      "invalid_dpi_configuration": "Deep Packet Inspection (traffic-analysis) Konfiguration ist deaktiviert, bitte aktivieren",
+      "invalid_export_configuration": "Export (traffic-analysis) Konfiguration ist deaktiviert, bitte aktivieren",
+      "not_found": "EdgeOS URL nicht gefunden"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host",
+          "password": "Passwort",
+          "username": "Benutzername"
+        },
+        "description": "Richte Deinen EdgeOS Router ein, beachte dass die Integration per HTTPS Verbindung kommuniziert",
+        "title": "EdgeOS Router einrichten"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "firmware": {
+        "name": "Firmware Aktualisierung"
+      },
+      "interface_connected": {
+        "name": "Verbunden"
+      },
+      "interface_status": {
+        "name": "Status"
+      }
+    },
+    "device_tracker": {
+      "device_tracker": {
+        "name": "Status"
+      }
+    },
+    "number": {
+      "consider_away_interval": {
+        "name": "Betrachte als Abwesend Intervall"
+      },
+      "update_api_interval": {
+        "name": "Aktualisiere API Intervall"
+      },
+      "update_entities_interval": {
+        "name": "Aktualisiere Entitäten Intervall"
+      }
+    },
+    "select": {
+      "unit": {
+        "name": "Einheit",
+        "state": {
+          "b": "Byte",
+          "kb": "Kilo Byte",
+          "mb": "Mega Byte"
+        }
+      }
+    },
+    "sensor": {
+      "cpu_usage": {
+        "name": "CPU Benutzung"
+      },
+      "device_received_rate": {
+        "name": "Empfang Rate"
+      },
+      "device_received_traffic": {
+        "name": "Empfang Traffic"
+      },
+      "device_sent_rate": {
+        "name": "Versandt Rate"
+      },
+      "device_sent_traffic": {
+        "name": "Versandt Traffic"
+      },
+      "interface_received_dropped": {
+        "name": "Empfang Ausgelassen"
+      },
+      "interface_received_errors": {
+        "name": "Empfang Fehler"
+      },
+      "interface_received_packets": {
+        "name": "Empfang Pakete"
+      },
+      "interface_received_rate": {
+        "name": "Empfang Rate"
+      },
+      "interface_received_traffic": {
+        "name": "Empfang Traffic"
+      },
+      "interface_sent_dropped": {
+        "name": "Versandt Ausgelassen"
+      },
+      "interface_sent_errors": {
+        "name": "Versandt Fehler"
+      },
+      "interface_sent_packets": {
+        "name": "Versandt Pakete"
+      },
+      "interface_sent_rate": {
+        "name": "Versandt Rate"
+      },
+      "interface_sent_traffic": {
+        "name": "Versandt Traffic"
+      },
+      "last_restart": {
+        "name": "Letzter Neustart"
+      },
+      "ram_usage": {
+        "name": "RAM Benutzung"
+      },
+      "unknown_devices": {
+        "name": "Unbekannte Geräte"
+      }
+    },
+    "switch": {
+      "device_monitored": {
+        "name": "Überwacht"
+      },
+      "interface_monitored": {
+        "name": "Überwacht"
+      },
+      "interface_status": {
+        "name": "Status"
+      },
+      "log_incoming_messages": {
+        "name": "Protokolliere eingehende Nachrichten"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "already_configured": "EdgeOS Integration bereits konfiguriert mit diesem Namen",
+      "auth_general_error": "Allgemeiner Fehler, bitte erneut versuchen",
+      "empty_device_data": "Konnte keine Geräte-Daten vom EdgeOS Router abrufen",
+      "incompatible_version": "Nicht unterstützte Firmware Version",
+      "invalid_credentials": "Ungültige Anmeldedaten zum EdgeOS Router",
+      "invalid_dpi_configuration": "Deep Packet Inspection (traffic-analysis) Konfiguration ist deaktiviert, bitte aktivieren",
+      "invalid_export_configuration": "Export (traffic-analysis) Konfiguration ist deaktiviert, bitte aktivieren",
+      "not_found": "EdgeOS URL nicht gefunden"
+    },
+    "step": {
+      "edge_os_additional_settings": {
+        "data": {
+          "clear-credentials": "Lösche Anmeldedaten",
+          "host": "Host",
+          "password": "Passwort",
+          "username": "Benutzername"
+        },
+        "description": "Richte Deine überwachten Geräte / Schnittstellen und verfolgten Geräte ein, benutze kommaseparierte Werte, um vorhandene Werte zu löschen, benutze die Kontrollkästchen.",
+        "title": "Optionen für EdgeOS."
+      }
+    }
+  }
+}
