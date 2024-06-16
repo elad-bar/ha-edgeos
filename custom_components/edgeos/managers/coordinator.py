@@ -8,7 +8,7 @@ from typing import Callable
 from homeassistant.components.device_tracker import ATTR_IP, ATTR_MAC
 from homeassistant.components.homeassistant import SERVICE_RELOAD_CONFIG_ENTRY
 from homeassistant.const import ATTR_STATE
-from homeassistant.core import Event
+from homeassistant.core import Event, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
@@ -87,21 +87,6 @@ class Coordinator(DataUpdateCoordinator):
 
         _LOGGER.debug("Initializing")
 
-        entry = config_manager.entry
-
-        signal_handlers = {
-            SIGNAL_API_STATUS: self._on_api_status_changed,
-            SIGNAL_WS_STATUS: self._on_ws_status_changed,
-            SIGNAL_DATA_CHANGED: self._on_data_changed,
-        }
-
-        _LOGGER.debug(f"Registering signals for {signal_handlers.keys()}")
-
-        for signal in signal_handlers:
-            handler = signal_handlers[signal]
-
-            entry.async_on_unload(async_dispatcher_connect(hass, signal, handler))
-
         config_data = config_manager.config_data
         entry_id = config_manager.entry_id
 
@@ -129,6 +114,8 @@ class Coordinator(DataUpdateCoordinator):
             DeviceTypes.DEVICE: self._device_processor,
             DeviceTypes.INTERFACE: self._interface_processor,
         }
+
+        self._load_signal_handlers()
 
         _LOGGER.debug("Initializing done")
 
@@ -158,6 +145,36 @@ class Coordinator(DataUpdateCoordinator):
 
     async def on_home_assistant_start(self, _event_data: Event):
         await self.initialize()
+
+    def _load_signal_handlers(self):
+        loop = self.hass.loop
+
+        @callback
+        def on_api_status_changed(entry_id: str, status: ConnectivityStatus):
+            loop.create_task(self._on_api_status_changed(entry_id, status)).__await__()
+
+        @callback
+        def on_ws_status_changed(entry_id: str, status: ConnectivityStatus):
+            loop.create_task(self._on_ws_status_changed(entry_id, status)).__await__()
+
+        @callback
+        def on_data_changed(entry_id: str):
+            loop.create_task(self._on_data_changed(entry_id)).__await__()
+
+        signal_handlers = {
+            SIGNAL_API_STATUS: on_api_status_changed,
+            SIGNAL_WS_STATUS: on_ws_status_changed,
+            SIGNAL_DATA_CHANGED: on_data_changed,
+        }
+
+        _LOGGER.debug(f"Registering signals for {signal_handlers.keys()}")
+
+        for signal in signal_handlers:
+            handler = signal_handlers[signal]
+
+            self._config_manager.entry.async_on_unload(
+                async_dispatcher_connect(self.hass, signal, handler)
+            )
 
     async def initialize(self):
         self._build_data_mapping()

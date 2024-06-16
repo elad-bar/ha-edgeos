@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.8
+
+- Fix blocking call on startup
+
 ## 2.1.7
 
 - Fix async dispatcher send
