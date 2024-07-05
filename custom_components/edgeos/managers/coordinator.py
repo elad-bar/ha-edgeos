@@ -533,7 +533,7 @@ class Coordinator(DataUpdateCoordinator):
 
         result = {
             ATTR_STATE: len(leased_devices.keys()),
-            ATTR_ATTRIBUTES: DHCP_SERVER_LEASED: leased_devices,
+            ATTR_ATTRIBUTES: { DHCP_SERVER_LEASED: leased_devices },
         }
 
         return result
