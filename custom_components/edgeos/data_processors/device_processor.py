@@ -93,6 +93,10 @@ class DeviceProcessor(BaseProcessor):
             system_section = self._api_data.get(API_DATA_SYSTEM, {})
             service = system_section.get(DATA_SYSTEM_SERVICE, {})
 
+            if len(self._devices.keys()) != 0:
+                for existing_device in self._devices:
+                    self._devices.get(existing_device).is_leased = False
+
             dhcp_server = service.get(DATA_SYSTEM_SERVICE_DHCP_SERVER, {})
             shared_network_names = dhcp_server.get(DHCP_SERVER_SHARED_NETWORK_NAME, {})
 
@@ -148,6 +152,12 @@ class DeviceProcessor(BaseProcessor):
             data_leases = self._api_data.get(API_DATA_DHCP_LEASES, {})
             data_server_leases = data_leases.get(DHCP_SERVER_LEASES, {})
 
+            if len(self._devices.keys()) != 0:
+                for existing_device in self._devices:
+                    existing_device_data = self._devices.get(existing_device)
+                    existing_device_data.is_leased = False
+                    self._devices[existing_device_data.unique_id] = existing_device_data
+
             for subnet in data_server_leases:
                 subnet_data = data_server_leases.get(subnet, {})
 
@@ -202,6 +212,7 @@ class DeviceProcessor(BaseProcessor):
 
         else:
             device_data = existing_device_data
+            existing_device_data.is_leased = True
 
         self._devices[device_data.unique_id] = device_data
         self._devices_ip_mapping[device_data.ip] = device_data.unique_id
