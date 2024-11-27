@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.9
+
+- Initialize data using `async_request_refresh` instead of `async_config_entry_first_refresh` to remove warning message
+
 ## 2.1.8
 
 - Fix blocking call on startup
