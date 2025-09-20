@@ -29,6 +29,7 @@ from ..common.consts import (
     ATTR_HOSTNAME,
     ATTR_IS_ON,
     ATTR_LAST_ACTIVITY,
+    DHCP_SERVER_LEASED,
     DOMAIN,
     ENTITY_CONFIG_ENTRY_ID,
     HA_NAME,
@@ -65,11 +66,14 @@ class Coordinator(DataUpdateCoordinator):
     _websockets: WebSockets | None
     _processors: dict[DeviceTypes, BaseProcessor] | None = None
 
-    _data_mapping: dict[
-        str,
-        Callable[[IntegrationEntityDescription], dict | None]
-        | Callable[[IntegrationEntityDescription, str], dict | None],
-    ] | None
+    _data_mapping: (
+        dict[
+            str,
+            Callable[[IntegrationEntityDescription], dict | None]
+            | Callable[[IntegrationEntityDescription, str], dict | None],
+        ]
+        | None
+    )
     _system_status_details: dict | None
 
     _last_update: float
@@ -529,7 +533,7 @@ class Coordinator(DataUpdateCoordinator):
 
         result = {
             ATTR_STATE: len(leased_devices.keys()),
-            ATTR_ATTRIBUTES: leased_devices,
+            ATTR_ATTRIBUTES: { DHCP_SERVER_LEASED: leased_devices },
         }
 
         return result
