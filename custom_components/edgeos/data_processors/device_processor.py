@@ -168,12 +168,8 @@ class DeviceProcessor(BaseProcessor):
             for device_mac in self._devices:
                 device = self._devices.get(device_mac)
                 if device.is_leased:
-                    device_name = device.mac
-
-                    if device.hostname not in ["", "?"]:
-                        device_name = f"{device.mac} ({device.hostname})"
-
-                    self._leased_devices[device.ip] = device_name
+                    device_dict = dict(mac=device.mac, hostname=device.hostname)
+                    self._leased_devices[device.ip] = device_dict
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
