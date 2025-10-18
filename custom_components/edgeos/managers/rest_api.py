@@ -315,10 +315,15 @@ class RestAPI:
 
                 response.raise_for_status()
 
-                logged_in = (
-                    self.beaker_session_id is not None
-                    and self.beaker_session_id == self.session_id
-                )
+                logged_in = True  # EdgeOS 3.x: assume success after HTTP 200; subsequent calls will fail if unauthenticated
+                _LOGGER.debug("LOGIN: logged_in=%s -> proceeding to _load_system_data()", logged_in)
+                try:
+                    self._set_status(ConnectivityStatus.Connected)
+                    await self._load_system_data()
+                    self._update_interfaces_from_system_cache()
+                except Exception as ex:
+                    _LOGGER.debug("LOGIN: post-login chain failed: %r", ex, exc_info=True)
+
 
                 if logged_in:
                     html = await response.text()
@@ -420,10 +425,7 @@ class RestAPI:
                         _LOGGER.debug(f"Heartbeat response: {response}")
 
                         self._last_valid = ts
-            else:
-                _LOGGER.debug(
-                    "Ignoring request to send heartbeat, Reason: closed session"
-                )
+                
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -437,10 +439,66 @@ class RestAPI:
         if not is_valid:
             self._set_status(ConnectivityStatus.Disconnected)
 
+
+    def _parse_interfaces_from_get_dict(self, get_dict: dict | None) -> list[str]:
+        """Extract interface names from the GET section (EdgeOS 3.x)."""
+        names: list[str] = []
+        if not isinstance(get_dict, dict):
+            return names
+
+        ifaces = get_dict.get("interfaces", {})
+        if not isinstance(ifaces, dict):
+            return names
+
+        eth = ifaces.get("ethernet", {})
+        if isinstance(eth, dict):
+            names.extend(list(eth.keys()))
+
+        sw = ifaces.get("switch", {})
+        if isinstance(sw, dict):
+            for sw_name, sw_data in sw.items():
+                names.append(sw_name)
+                if isinstance(sw_data, dict):
+                    vif = sw_data.get("vif")
+                    if isinstance(vif, dict):
+                        for vid in vif.keys():
+                            names.append(f"{sw_name}.{vid}")
+
+        names = [n for n in names if n != "lo"]
+
+        out, seen = [], set()
+        for n in names:
+            if n not in seen:
+                seen.add(n)
+                out.append(n)
+        return out
+
+    def _update_interfaces_from_system_cache(self) -> None:
+        """Populate API_DATA_INTERFACES from cached GET data if available."""
+        try:
+            get_dict = self.data.get(API_DATA_SYSTEM)
+            names = self._parse_interfaces_from_get_dict(get_dict)
+            if names:
+                self.data[API_DATA_INTERFACES] = {n: True for n in names}
+        except Exception as ex:
+            _LOGGER.debug("IFACES: derive failed: %r", ex, exc_info=True)
+
     async def _load_system_data(self):
+        _LOGGER.debug("Fetching system data")
         try:
             if self.status == ConnectivityStatus.Connected:
                 result_json = await self._async_get(API_URL_DATA, action=API_GET)
+                # EdgeOS 3.x: capture SESSION_ID from get.json for WS
+                try:
+                    sid = result_json.get("SESSION_ID") if isinstance(result_json, dict) else None
+                    if sid:
+                        # Do NOT assign to self.session_id (read-only)
+                        try:
+                            self.data[API_DATA_SESSION_ID] = sid
+                        except Exception:
+                            pass
+                except Exception as ex:
+                    _LOGGER.debug("SYS: failed to capture SESSION_ID: %r", ex, exc_info=True)
 
                 if result_json is not None:
                     if RESPONSE_SUCCESS_KEY in result_json:
@@ -450,9 +508,8 @@ class RestAPI:
 
                         if success_key == TRUE_STR:
                             if API_GET.upper() in result_json:
-                                self.data[API_DATA_SYSTEM] = result_json.get(
-                                    API_GET.upper(), {}
-                                )
+                                self.data[API_DATA_SYSTEM] = result_json.get(API_GET.upper(), {})
+                                self._update_interfaces_from_system_cache()
                         else:
                             error_message = result_json[RESPONSE_ERROR_KEY]
                             _LOGGER.error(f"Failed, Error: {error_message}")
