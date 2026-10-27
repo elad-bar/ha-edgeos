@@ -400,9 +400,34 @@ class Coordinator(DataUpdateCoordinator):
     ) -> DeviceInfo:
         processor = self._processors[entity_description.device_type]
 
-        device_info = processor.get_device_info(item_id)
+        if entity_description.device_type == DeviceTypes.SYSTEM:
+            return processor.get_device_info(item_id)
+
+        via_device_id = self._get_parent_device_id()
+        device_info = processor.get_device_info(
+            item_id, via_device_id=via_device_id
+        )
 
         return device_info
+
+    def _get_parent_device_id(self) -> str:
+        parent_device_info = self._system_processor.get_device_info()
+        device_registry = dr.async_get(self.hass)
+        parent_device = device_registry.async_get_device(
+            identifiers=parent_device_info["identifiers"]
+        )
+
+        if parent_device is None:
+            parent_device = device_registry.async_get_or_create(
+                config_entry_id=self._config_manager.entry_id,
+                identifiers=parent_device_info["identifiers"],
+                name=parent_device_info.get("name"),
+                manufacturer=parent_device_info.get("manufacturer"),
+                model=parent_device_info.get("model"),
+                hw_version=parent_device_info.get("hw_version"),
+            )
+
+        return parent_device.id
 
     def get_data(
         self,

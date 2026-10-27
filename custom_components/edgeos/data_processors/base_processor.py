@@ -55,7 +55,9 @@ class BaseProcessor:
 
             _LOGGER.log(log_level, message)
 
-    def get_device_info(self, item_id: str | None = None) -> DeviceInfo:
+    def get_device_info(
+        self, item_id: str | None = None, via_device_id: str | None = None
+    ) -> DeviceInfo:
         device_name = self._get_device_info_name(item_id)
 
         unique_id = self._get_device_info_unique_id(item_id)
@@ -65,7 +67,7 @@ class BaseProcessor:
             name=device_name,
             model=self.processor_type,
             manufacturer=DEFAULT_NAME,
-            via_device=(DEFAULT_NAME, self._hostname),
+            via_device_id=via_device_id,
         )
 
         return device_info
